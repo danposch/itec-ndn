@@ -12,6 +12,9 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 
 # Building:
 
+    * mkdir ndnSIM
+    * cd ndnSIM
+
     # Building Brite
 		* hg clone http://code.nsnam.org/BRITE
 		* cd BRITE
@@ -24,13 +27,9 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		* cd ../..
 
     # fetch NS-3 + ndnSIM
-
     * sudo apt-get install python-dev python-pygraphviz python-kiwi
     * sudo apt-get install python-pygoocanvas python-gnome2
     * sudo apt-get install python-rsvg ipython
-
-    * mkdir ndnSIM
-    * cd ndnSIM
 
     * git clone https://github.com/named-data/ndn-cxx.git ndn-cxx
     * git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3

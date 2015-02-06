@@ -2,3 +2,5 @@ extensions/randnetworks
 /usr/local/include/ns3-dev/
 /usr/local/include/libdash/
 /usr/local/include/ns3-dev/ns3/ndnSIM
+/usr/local/include/ns3-dev/ns3/ndnSIM/NFD/
+/usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/
