@@ -7,3 +7,5 @@ extensions/utils/parameterconfiguration.h
 scenarios/ndn-simple.cc
 topologies/small.top
 scenarios/example.cc
+extensions/fw/saf.h
+extensions/fw/saf.cc

@@ -44,3 +44,4 @@ Makefile
 
 #exclude the libdash directory
 libdash/
+/last_seed_file

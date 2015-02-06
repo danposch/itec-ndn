@@ -100,7 +100,7 @@ def build (bld):
         source = bld.path.ant_glob(['extensions/**/*.cc']),
         use = deps,
         cxxflags = [bld.env.CXX11_CMD],
-        includes = ' libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/'
+        includes = ' libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/'
         )
 
     #framework = bld.objects (
@@ -119,7 +119,7 @@ def build (bld):
             features = ['cxx'],
             source = [scenario],        #added by dposch
             use = deps + " extensions DASH BRITE",
-            includes = " extensions libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/"
+            includes = " extensions libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/"
             )
 
 def shutdown (ctx):

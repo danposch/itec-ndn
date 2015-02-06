@@ -5,6 +5,7 @@
 #include "ns3/ndn-all.hpp"
 
 #include "../extensions/randnetworks/networkgenerator.h"
+#include "../extensions/fw/saf.h"
 
 using namespace ns3;
 using namespace ns3::ndn;
@@ -65,7 +66,9 @@ int main (int argc, char *argv[])
   ndnHelper.Install (client);
   ndnHelper.Install (server);
 
-  StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
+  //StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
+  //StrategyChoiceHelper::Install(gen.getAllASNodes (),"/", "/localhost/nfd/strategy/brodcast");
+  StrategyChoiceHelper::InstallAll<nfd::itec::SAF>("/");
 
   GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
@@ -91,8 +94,8 @@ int main (int argc, char *argv[])
   }
 
    // Calculate and install FIBs
-  GlobalRoutingHelper::CalculateRoutes ();
-  //GlobalRoutingHelper::CalculateAllPossibleRoutes ();
+  //GlobalRoutingHelper::CalculateRoutes ();
+  GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   // Run the simulator
   Simulator::Stop (Seconds (simTime+0.5)); // 10 min
