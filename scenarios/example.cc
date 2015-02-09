@@ -8,19 +8,16 @@
 #include "../extensions/fw/saf.h"
 
 using namespace ns3;
-using namespace ns3::ndn;
-using namespace ns3::itec;
 
 int main (int argc, char *argv[])
 {
-
   CommandLine cmd;
   cmd.Parse(argc, argv);
 
   // BRITE needs a configuration file to build its graph.
   std::string confFile = "brite_configs/example.conf";
 
-  NetworkGenerator gen(confFile);
+  ns3::ndn::NetworkGenerator gen(confFile);
   fprintf(stderr, "Number of ASs = %d\n",gen.getNumberOfAS ());
   fprintf(stderr, "Number of ASNodes = %d\n",gen.getAllASNodes ().size ());
   fprintf(stderr, "Number of LeafNodes = %d\n",gen.getAllLeafNodes ().size ());
@@ -43,7 +40,7 @@ int main (int argc, char *argv[])
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
 
-  StackHelper ndnHelper;
+  ns3::ndn::StackHelper ndnHelper;
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "25000"); // all entities can store up to 1k chunks in cache (about 100MB)
 
   //2. create server and clients nodes
@@ -51,10 +48,10 @@ int main (int argc, char *argv[])
   p2p->SetChannelAttribute ("Delay", StringValue ("2ms"));
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  gen.randomlyPlaceNodes (3, "Server",NetworkGenerator::ASNode, p2p);
+  gen.randomlyPlaceNodes (3, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("3Mbps"));
-  gen.randomlyPlaceNodes (9, "Client",NetworkGenerator::LeafNode, p2p);
+  gen.randomlyPlaceNodes (9, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
 
   //3. install strategies for network nodes
   ndnHelper.Install(gen.getAllASNodes ());// install all on network nodes...
@@ -66,14 +63,16 @@ int main (int argc, char *argv[])
   ndnHelper.Install (client);
   ndnHelper.Install (server);
 
+  ns3::ndn::Name prefix("/");
+
   //StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
   //StrategyChoiceHelper::Install(gen.getAllASNodes (),"/", "/localhost/nfd/strategy/brodcast");
-  StrategyChoiceHelper::InstallAll<nfd::itec::SAF>("/");
+  ns3::ndn::StrategyChoiceHelper::InstallAll<nfd::fw::SAF>(prefix);
 
-  GlobalRoutingHelper ndnGlobalRoutingHelper;
+  ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
 
-  AppHelper producerHelper ("ns3::ndn::Producer");
+  ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   producerHelper.SetAttribute ("PayloadSize", StringValue("4096"));
   for(int i=0; i<server.size (); i++)
   {
@@ -84,7 +83,7 @@ int main (int argc, char *argv[])
                                       Names::Find<Node>(std::string("Server_" + boost::lexical_cast<std::string>(i))));
   }
 
-  AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
+  ns3::ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
   consumerHelper.SetAttribute ("Frequency", StringValue ("30")); // X interests a second roughly 1 MBIT
   consumerHelper.SetAttribute ("Randomize", StringValue ("uniform"));
   for(int i=0; i<client.size (); i++)
@@ -95,7 +94,7 @@ int main (int argc, char *argv[])
 
    // Calculate and install FIBs
   //GlobalRoutingHelper::CalculateRoutes ();
-  GlobalRoutingHelper::CalculateAllPossibleRoutes ();
+  ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   // Run the simulator
   Simulator::Stop (Seconds (simTime+0.5)); // 10 min

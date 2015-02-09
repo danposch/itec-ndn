@@ -8,7 +8,7 @@
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
-#include "ns3/ndn-link-control-helper.h"
+#include "helper/ndn-link-control-helper.hpp"
 
 #include "ns3/names.h"
 #include "ns3/log.h"
@@ -16,7 +16,7 @@
 
 namespace ns3
 {
-namespace itec
+namespace ndn
 {
 
 class NetworkGenerator
@@ -57,7 +57,7 @@ public:
    * specified by the BRITE config file.
    * @param p2p specifies the connection between the nodes in terms of delay, bandwith, etc.
    */
-  void randomlyPlaceNodes(int nodeCount, std::string setIdentifier, NodePlacement place, PointToPointHelper *p2p, std::vector<int> ASnumbers);
+  void randomlyPlaceNodes(int nodeCount, std::string setIdentifier, NodePlacement place, ns3::PointToPointHelper *p2p, std::vector<int> ASnumbers);
 
   /**
    * @brief randomlyAddConnectionsBetweenAllAS adds connections between each AS pair with randomized ressources.
@@ -102,34 +102,34 @@ public:
    * @brief getAllASNodes
    * @return all nodes in of the current topology that are specified by the BRITE config file.
    */
-  NodeContainer getAllASNodes();
+  ns3::NodeContainer getAllASNodes();
 
   /**
    * @brief getAllASNodesFromAS
    * @param ASnumber
    * @return all nodes of single AS that are specified by the BRITE config file.
    */
-  NodeContainer getAllASNodesFromAS(int ASnumber);
+  ns3::NodeContainer getAllASNodesFromAS(int ASnumber);
 
   /**
    * @brief getAllLeafNodes
    * @return all LeafNodes that are specified by the BRITE config file. Note that the intersection of LeafNodes and ASNodes is not NULL!
    */
-  NodeContainer getAllLeafNodes();
+  ns3::NodeContainer getAllLeafNodes();
 
   /**
    * @brief getAllLeafNodesFromAS
    * @param ASnumber
    * @return all LeafNodes for the current AS that are specified by the BRITE config file. Note that the intersection of LeafNodes and ASNodes is not NULL!
    */
-  NodeContainer getAllLeafNodesFromAS(int ASnumber);
+  ns3::NodeContainer getAllLeafNodesFromAS(int ASnumber);
 
   /**
    * @brief getCustomNodes
    * @param setIdentifier the identifier used to create the nodes
    * @return returns all randomly added nodes with a given identifier.
    */
-  NodeContainer getCustomNodes(std::string setIdentifier);
+  ns3::NodeContainer getCustomNodes(std::string setIdentifier);
 
   /**
    * @brief creatRandomLinkFailure creates a random linkfailure between a given node
@@ -143,16 +143,16 @@ public:
 
 
 private:
-  ndn::NDNBriteHelper *briteHelper;
+  NDNBriteHelper *briteHelper;
 
   typedef
   std::map<
   std::string /*label*/,
-  NodeContainer/*nodes*/
+  ns3::NodeContainer/*nodes*/
   > CustomNodesMap;
 
   CustomNodesMap nodeContainerMap;
-  Ptr<UniformRandomVariable> rvariable;
+  ns3::Ptr<ns3::UniformRandomVariable> rvariable;
 };
 }
 }

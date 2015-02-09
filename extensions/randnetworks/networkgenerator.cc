@@ -2,7 +2,6 @@
 #include "ns3/double.h"
 
 using namespace ns3;
-using namespace ns3::itec;
 using namespace ns3::ndn;
 
 NS_LOG_COMPONENT_DEFINE ("NetworkGenerator");
@@ -81,8 +80,8 @@ void NetworkGenerator::randomlyAddConnectionsBetweenAllAS(int numberOfConnection
         std::string bw(boost::lexical_cast<std::string>(rvariable->GetValue (minBW_kbits,maxBw_kbits)));
         bw.append ("Kbps");
 
-        p2p.SetDeviceAttribute ("DataRate", ns3::StringValue (bw));
-        p2p.SetChannelAttribute ("Delay", ns3::StringValue (delay));
+        p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
+        p2p.SetChannelAttribute ("Delay", StringValue (delay));
 
         int rand_node_i = rvariable->GetInteger (0,getAllASNodesFromAS (i).size ()-1);
         int rand_node_j = rvariable->GetInteger (0,getAllASNodesFromAS (j).size ()-1);
@@ -111,8 +110,8 @@ void NetworkGenerator::randomlyAddConnectionsBetweenTwoAS(int numberOfConnection
     std::string bw(boost::lexical_cast<std::string>(rvariable->GetValue (minBW_kbits,maxBw_kbits)));
     bw.append ("Kbps");
 
-    p2p.SetDeviceAttribute ("DataRate", ns3::StringValue (bw));
-    p2p.SetChannelAttribute ("Delay", ns3::StringValue (delay));
+    p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
+    p2p.SetChannelAttribute ("Delay", StringValue (delay));
 
     int number_as1 = rvariable->GetInteger (0,getNumberOfAS()-1);
     int number_as2 = number_as1;
@@ -141,8 +140,8 @@ void NetworkGenerator::randomlyAddConnectionsBetweenTwoNodesPerAS(int numberOfCo
       std::string bw(boost::lexical_cast<std::string>(rvariable->GetValue (minBW_kbits,maxBw_kbits)));
       bw.append ("Kbps");
 
-      p2p.SetDeviceAttribute ("DataRate", ns3::StringValue (bw));
-      p2p.SetChannelAttribute ("Delay", ns3::StringValue (delay));
+      p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
+      p2p.SetChannelAttribute ("Delay", StringValue (delay));
 
       int rand_node_1 = rvariable->GetInteger (0,getAllASNodesFromAS (as).size ()-1);
       int rand_node_2 = rand_node_1;
@@ -169,7 +168,7 @@ int NetworkGenerator::getNumberOfNodesInAS (int ASnumber)
   return 0;
 }
 
-ns3::NodeContainer NetworkGenerator::getAllASNodes()
+NodeContainer NetworkGenerator::getAllASNodes()
 {
   NodeContainer container;
 
@@ -180,7 +179,7 @@ ns3::NodeContainer NetworkGenerator::getAllASNodes()
   return container;
 }
 
-ns3::NodeContainer NetworkGenerator::getAllASNodesFromAS(int ASnumber)
+NodeContainer NetworkGenerator::getAllASNodesFromAS(int ASnumber)
 {
   NodeContainer container;
 
@@ -195,7 +194,7 @@ ns3::NodeContainer NetworkGenerator::getAllASNodesFromAS(int ASnumber)
   return container;
 }
 
-ns3::NodeContainer NetworkGenerator::getAllLeafNodes()
+NodeContainer NetworkGenerator::getAllLeafNodes()
 {
   NodeContainer container;
 
@@ -207,7 +206,7 @@ ns3::NodeContainer NetworkGenerator::getAllLeafNodes()
   return container;
 }
 
-ns3::NodeContainer NetworkGenerator::getAllLeafNodesFromAS(int ASnumber)
+NodeContainer NetworkGenerator::getAllLeafNodesFromAS(int ASnumber)
 {
   NodeContainer container;
 
@@ -221,7 +220,7 @@ ns3::NodeContainer NetworkGenerator::getAllLeafNodesFromAS(int ASnumber)
   return container;
 }
 
-ns3::NodeContainer NetworkGenerator::getCustomNodes(std::string setIdentifier)
+NodeContainer NetworkGenerator::getCustomNodes(std::string setIdentifier)
 {
   return nodeContainerMap[setIdentifier];
 }
@@ -253,8 +252,8 @@ void NetworkGenerator::creatRandomLinkFailure(double minTimestamp, double maxTim
     double startTime = rvariable->GetValue (minTimestamp, maxTimestamp);
     double stopTime = startTime + rvariable->GetValue (minDuration, maxDuration);
 
-    Simulator::Schedule (Seconds (startTime), ndn::LinkControlHelper::FailLink, channelNodes.Get (0), channelNodes.Get (1));
-    Simulator::Schedule (Seconds (stopTime), ndn::LinkControlHelper::UpLink,   channelNodes.Get (0), channelNodes.Get (1));
+    Simulator::Schedule (Seconds (startTime), ns3::ndn::LinkControlHelper::FailLink, channelNodes.Get (0), channelNodes.Get (1));
+    Simulator::Schedule (Seconds (stopTime), ns3::ndn::LinkControlHelper::UpLink,   channelNodes.Get (0), channelNodes.Get (1));
 
     //fprintf(stderr, "Start LinkFail between %s and %s: %f\n",Names::FindName (channelNodes.Get (0)).c_str (),Names::FindName (channelNodes.Get (1)).c_str (), startTime);
     //fprintf(stderr, "Stop LinkFail between %s and %s: %f\n\n",Names::FindName (channelNodes.Get (0)).c_str (),Names::FindName (channelNodes.Get (1)).c_str (),stopTime);

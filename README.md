@@ -19,12 +19,8 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		* hg clone http://code.nsnam.org/BRITE
 		* cd BRITE
 		* make
-		* sudo cp *.h /usr/local/include/ns3-dev/ns3
 		* sudo cp libbrite.so /usr/lib/
-		* sudo mkdir /usr/local/include/ns3-dev/ns3/Models
-		* cd Models/
-		* sudo cp *.h /usr/local/include/ns3-dev/ns3/Models
-		* cd ../..
+		
 
     # fetch NS-3 + ndnSIM
     * sudo apt-get install python-dev python-pygraphviz python-kiwi
@@ -49,9 +45,17 @@ Install Guide (testet on Ubuntu 14.04 64bit)
     * sudo ./waf install
     * cd ./build
     * sudo cp ./libns3-dev-brite-optimized.so /usr/local/lib/
-    * cd ..
+    * cd ../..
 
-    # Build itec-scenarios
+		# Copy BRITE includes manually
+		* cd BRITE
+		* sudo cp *.h /usr/local/include/ns3-dev/ns3
+		* sudo mkdir /usr/local/include/ns3-dev/ns3/Models
+		* cd Models/
+		* sudo cp *.h /usr/local/include/ns3-dev/ns3/Models
+		* cd ../..
+
+    # Build itec-ndn
     * git clone https://github.com/danposch/itec-ndn.git
     * cd itec-ndn
     * ./libdash.sh
@@ -60,6 +64,4 @@ Install Guide (testet on Ubuntu 14.04 64bit)
     * ./waf 
     * ./waf --run example --vis
 
-		
-    
 ==============

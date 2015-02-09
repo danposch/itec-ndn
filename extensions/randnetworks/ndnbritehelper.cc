@@ -15,6 +15,7 @@
 
 NS_LOG_COMPONENT_DEFINE ("NDNBriteHelper");
 
+using namespace ns3;
 using namespace ns3::ndn;
 
 NDNBriteHelper::NDNBriteHelper (std::string confFile,

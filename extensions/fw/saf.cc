@@ -1,9 +1,7 @@
 #include "saf.h"
 
-//NFD_LOG_INIT("SAF");
-
 using namespace nfd;
-using namespace nfd::itec;
+using namespace nfd::fw;
 
 const Name SAF::STRATEGY_NAME("ndn:/localhost/nfd/strategy/saf");
 
@@ -28,4 +26,15 @@ void SAF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFa
 void SAF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 {
 }
+
+
+/*void SAF::sendInterest(shared_ptr<pit::Entry> pitEntry, shared_ptr<Face> outFace, bool wantNewNonce = false)
+{
+
+}
+
+void SAF::rejectPendingInterest(shared_ptr<pit::Entry> pitEntry)
+{
+
+}*/
 
