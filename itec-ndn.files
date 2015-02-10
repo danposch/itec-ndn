@@ -9,3 +9,11 @@ topologies/small.top
 scenarios/example.cc
 extensions/fw/saf.h
 extensions/fw/saf.cc
+extensions/fw/safengine.h
+extensions/fw/safengine.cc
+extensions/fw/safentry.h
+extensions/fw/safentry.cc
+extensions/fw/safstatisticmeasure.h
+extensions/fw/safstatisticmeasure.cc
+extensions/fw/safforwardingtable.h
+extensions/fw/safforwardingtable.cc

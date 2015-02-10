@@ -21,10 +21,8 @@
 
 #define P_RELIABILITY_THRESHOLD 0.8 // before 0.7
 
-namespace ns3
-{
-namespace ndn
-{
+#define DROP_FACE_ID -1
+#define FACE_NOT_FOUND -1
 
 class ParameterConfiguration
 {
@@ -47,8 +45,5 @@ protected:
 
   ParameterMap pmap;
 };
-
-}
-}
 
 #endif // PARAMETERCONFIGURATION_H

@@ -4,9 +4,11 @@
 #include "face/face.hpp"
 #include "fw/strategy.hpp"
 
+#include "boost/shared_ptr.hpp"
+#include "safengine.h"
+
 namespace nfd
 {
-
 namespace fw
 {
 
@@ -23,8 +25,14 @@ public:
   /*virtual void sendInterest(shared_ptr<pit::Entry> pitEntry, shared_ptr<Face> outFace, bool wantNewNonce = false);
   virtual void rejectPendingInterest(shared_ptr<pit::Entry> pitEntry);*/
 
-
   static const Name STRATEGY_NAME;
+
+protected:
+
+  std::vector<int> getAllInFaces(shared_ptr<pit::Entry> pitEntry);
+  std::vector<int> getAllOutFaces(shared_ptr<pit::Entry> pitEntry);
+
+  boost::shared_ptr<SAFEngine> engine;
 };
 
 }

@@ -1,7 +1,5 @@
 #include "parameterconfiguration.h"
 
-using namespace ns3::ndn;
-
 ParameterConfiguration* ParameterConfiguration::instance = NULL;
 
 ParameterConfiguration::ParameterConfiguration()
