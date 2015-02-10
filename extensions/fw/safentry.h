@@ -4,6 +4,7 @@
 #include "safstatisticmeasure.h"
 #include "safforwardingtable.h"
 #include "fw/strategy.hpp"
+#include "mratio.h"
 
 namespace nfd
 {
@@ -16,6 +17,11 @@ public:
   SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry);
 
   int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces);
+
+  void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
+  void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
+
+  void update();
 
 protected:
 

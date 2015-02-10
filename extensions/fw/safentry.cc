@@ -9,6 +9,7 @@ SAFEntry::SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry)
   this->faces = faces;
   initFaces();
 
+  smeasure = boost::shared_ptr<Mratio>(new Mratio(this->faces));
   ftable = boost::shared_ptr<SAFForwardingTable>(new SAFForwardingTable(this->faces, this->preferedFaces));
 }
 
@@ -26,4 +27,22 @@ void SAFEntry::initFaces ()
 int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
 {
   return ftable->determineNextHop (interest,originInFaces,alreadyTriedFaces);
+}
+
+void SAFEntry::update()
+{
+  //todo fix fucntion call
+  smeasure->update(ftable->getCurrentReliability ());
+  ftable->update (smeasure);
+
+}
+
+void SAFEntry::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
+{
+  smeasure->logSatisfiedInterest (pitEntry,inFace,data);
+}
+
+void SAFEntry::logExpiredInterest(shared_ptr< pit::Entry > pitEntry)
+{
+  smeasure->logExpiredInterest (pitEntry);
 }

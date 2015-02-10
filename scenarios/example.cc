@@ -93,8 +93,8 @@ int main (int argc, char *argv[])
   }
 
    // Calculate and install FIBs
-  ns3::ndn::GlobalRoutingHelper::CalculateRoutes ();
-  //ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
+  //ns3::ndn::GlobalRoutingHelper::CalculateRoutes ();
+  ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   // Run the simulator
   Simulator::Stop (Seconds (simTime+0.5)); // 10 min

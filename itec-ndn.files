@@ -17,3 +17,5 @@ extensions/fw/safstatisticmeasure.h
 extensions/fw/safstatisticmeasure.cc
 extensions/fw/safforwardingtable.h
 extensions/fw/safforwardingtable.cc
+extensions/fw/mratio.h
+extensions/fw/mratio.cc

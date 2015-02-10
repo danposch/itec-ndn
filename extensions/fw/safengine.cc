@@ -7,6 +7,9 @@ SAFEngine::SAFEngine(const FaceTable& table, unsigned int prefixComponentNumber)
 {
   initFaces(table);
   this->prefixComponentNumber = prefixComponentNumber;
+
+  updateEventFWT = ns3::Simulator::Schedule(
+        ns3::Seconds(ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL")), &SAFEngine::update, this);
 }
 
 void SAFEngine::initFaces(const nfd::FaceTable& table)
@@ -35,6 +38,38 @@ int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> origi
 
   boost::shared_ptr<SAFEntry> entry = entryMap.find(prefix)->second;
   return entry->determineNextHop(interest, originInFaces, alreadyTriedFaces);
+}
+
+void SAFEngine::update ()
+{
+  //NS_LOG_DEBUG("FWT UPDATE at SimTime " << Simulator::Now ().GetSeconds () << " for node: '" <<   Names::FindName(node) << "'\n");
+  for(SAFEntryMap::iterator it = entryMap.begin (); it != entryMap.end (); ++it)
+  {
+    it->second->update();
+  }
+
+  updateEventFWT = ns3::Simulator::Schedule(
+        ns3::Seconds(ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL")), &SAFEngine::update, this);
+}
+
+void SAFEngine::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
+{
+  std::string prefix = extractContentPrefix(pitEntry->getName());
+  SAFEntryMap::iterator it = entryMap.find (prefix);
+  if(it == entryMap.end ())
+    fprintf(stderr,"Error in SAFEntryLookUp");
+  else
+    it->second->logSatisfiedInterest(pitEntry,inFace,data);
+}
+
+void SAFEngine::logExpiredInterest(shared_ptr< pit::Entry > pitEntry)
+{
+  std::string prefix = extractContentPrefix(pitEntry->getName());
+  SAFEntryMap::iterator it = entryMap.find (prefix);
+  if(it == entryMap.end ())
+    fprintf(stderr,"Error in SAFEntryLookUp");
+  else
+    it->second->logExpiredInterest(pitEntry);
 }
 
 std::string SAFEngine::extractContentPrefix(nfd::Name name)

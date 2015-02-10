@@ -19,7 +19,7 @@ SAF::~SAF()
 
 void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry)
 {
-  fprintf(stderr, "received: %s\n", interest.getName ().toUri ().c_str ());
+  //fprintf(stderr, "received: %s\n", interest.getName ().toUri ().c_str ());
 
   //find + exclue inface(s) and already tried outface(s)
   std::vector<int> originInFaces = getAllInFaces(pitEntry); //includes already inFace!
@@ -38,13 +38,13 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest,shar
 
 void SAF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
 {
-  //Todo
+  engine->logSatisfiedInterest (pitEntry, inFace, data);
   Strategy::beforeSatisfyInterest (pitEntry,inFace, data);
 }
 
 void SAF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 {
-  //Todo
+  engine->logExpiredInterest(pitEntry);
   Strategy::beforeExpirePendingInterest (pitEntry);
 }
 
