@@ -30,7 +30,7 @@ public:
   double getLinkReliability(int face_id, int layer);
   int getTotalForwardedInterests(int layer){return stats[layer].total_forwarded_requests;}
   double getActualForwardingProbability(int face_id, int layer){return stats[layer].last_actual_forwarding_probs[face_id];}
-  double getUnstatisfiedTrafficFractionOfUnreliableFaces(int ilayer){return stats[ilayer].unstatisfied_traffic_fraction_unreliable_faces;}
+  double getUnsatisfiedTrafficFractionOfUnreliableFaces(int ilayer){return stats[ilayer].unsatisfied_traffic_fraction_unreliable_faces;}
   double getForwardedInterests(int face_id, int layer){return getActualForwardingProbability (face_id,layer) * getTotalForwardedInterests (layer);}
   double getSumOfReliabilities(std::vector<int> set_of_faces, int layer);
   double getSumOfUnreliabilities(std::vector<int> set_of_faces, int layer);
@@ -40,7 +40,7 @@ protected:
 
   void calculateTotalForwardedRequests(int layer);
   void calculateLinkReliabilities(int layer);
-  void calculateUnstatisfiedTrafficFractionOfUnreliableFaces (int layer, double reliability_t);
+  void calculateUnsatisfiedTrafficFractionOfUnreliableFaces (int layer, double reliability_t);
   void calculateActualForwardingProbabilities (int layer);
 
   std::vector<int> faces;
@@ -57,15 +57,15 @@ protected:
 
   struct SAFMesureStats
   {
-    //double unstatisfied_traffic_fraction;
+    //double unsatisfied_traffic_fraction;
     //double satisfied_traffic_fraction;
-    //double unstatisfied_traffic_fraction_reliable_faces;
+    //double unsatisfied_traffic_fraction_reliable_faces;
 
-    double unstatisfied_traffic_fraction_unreliable_faces;
+    double unsatisfied_traffic_fraction_unreliable_faces;
     int total_forwarded_requests;
 
-    MeasureIntMap statisfied_requests;
-    MeasureIntMap unstatisfied_requests;
+    MeasureIntMap satisfied_requests;
+    MeasureIntMap unsatisfied_requests;
 
     MeasureDoubleMap last_reliability;
     MeasureDoubleMap last_actual_forwarding_probs;
@@ -73,20 +73,20 @@ protected:
     SAFMesureStats()
     {
       total_forwarded_requests = 0;
-      unstatisfied_traffic_fraction_unreliable_faces = 0;
+      unsatisfied_traffic_fraction_unreliable_faces = 0;
     }
 
     SAFMesureStats(const SAFMesureStats& other)
     {
-      //unstatisfied_traffic_fraction = other.unstatisfied_traffic_fraction;
-      //unstatisfied_traffic_fraction_reliable_faces = other.unstatisfied_traffic_fraction_reliable_faces;
+      //unsatisfied_traffic_fraction = other.unsatisfied_traffic_fraction;
+      //unsatisfied_traffic_fraction_reliable_faces = other.unsatisfied_traffic_fraction_reliable_faces;
       //satisfied_traffic_fraction = other.satisfied_traffic_fraction;
 
-      unstatisfied_traffic_fraction_unreliable_faces = other.unstatisfied_traffic_fraction_unreliable_faces;
+      unsatisfied_traffic_fraction_unreliable_faces = other.unsatisfied_traffic_fraction_unreliable_faces;
       total_forwarded_requests = other.total_forwarded_requests;
 
-      statisfied_requests = other.statisfied_requests;
-      unstatisfied_requests = other.unstatisfied_requests;
+      satisfied_requests = other.satisfied_requests;
+      unsatisfied_requests = other.unsatisfied_requests;
 
       last_reliability = other.last_reliability;
       last_actual_forwarding_probs = other.last_actual_forwarding_probs;      
