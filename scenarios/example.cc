@@ -48,10 +48,10 @@ int main (int argc, char *argv[])
   p2p->SetChannelAttribute ("Delay", StringValue ("2ms"));
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  gen.randomlyPlaceNodes (3, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
+  gen.randomlyPlaceNodes (1, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("3Mbps"));
-  gen.randomlyPlaceNodes (9, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
+  gen.randomlyPlaceNodes (1, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
 
   //3. install strategies for network nodes
   ndnHelper.Install(gen.getAllASNodes ());// install all on network nodes...
@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 
   //StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
   //StrategyChoiceHelper::Install(gen.getAllASNodes (),"/", "/localhost/nfd/strategy/brodcast");
-  ns3::ndn::StrategyChoiceHelper::InstallAll<nfd::fw::SAF>(prefix);
+  ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(gen.getAllASNodes (),prefix);
 
   ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
@@ -93,8 +93,8 @@ int main (int argc, char *argv[])
   }
 
    // Calculate and install FIBs
-  //GlobalRoutingHelper::CalculateRoutes ();
-  ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
+  ns3::ndn::GlobalRoutingHelper::CalculateRoutes ();
+  //ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   // Run the simulator
   Simulator::Stop (Seconds (simTime+0.5)); // 10 min

@@ -17,7 +17,7 @@ class SAFEngine
 public:
   SAFEngine(const nfd::FaceTable& table, unsigned int prefixComponentNumber);
 
-  int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces);
+  int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry);
 
 protected:
   void initFaces(const nfd::FaceTable& table);

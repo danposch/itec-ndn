@@ -25,15 +25,27 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest,shar
   std::vector<int> originInFaces = getAllInFaces(pitEntry); //includes already inFace!
   std::vector<int> alreadyTriedFaces = getAllOutFaces(pitEntry);
 
-  engine->determineNextHop(interest, originInFaces, alreadyTriedFaces);
+  int nextHop = engine->determineNextHop(interest, originInFaces, alreadyTriedFaces, fibEntry);
+
+  if(nextHop == DROP_FACE_ID)
+    rejectPendingInterest(pitEntry);
+  else
+  {
+    //todo logging + bucket..
+    sendInterest(pitEntry, getFaceTable ().get (nextHop));
+  }
 }
 
 void SAF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
 {
+  //Todo
+  Strategy::beforeSatisfyInterest (pitEntry,inFace, data);
 }
 
 void SAF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 {
+  //Todo
+  Strategy::beforeExpirePendingInterest (pitEntry);
 }
 
 std::vector<int> SAF::getAllInFaces(shared_ptr<pit::Entry> pitEntry)
@@ -42,8 +54,10 @@ std::vector<int> SAF::getAllInFaces(shared_ptr<pit::Entry> pitEntry)
   const nfd::pit::InRecordCollection records = pitEntry->getInRecords();
 
   for(nfd::pit::InRecordCollection::const_iterator it = records.begin (); it!=records.end (); ++it)
-    faces.push_back((*it).getFace()->getId());
-
+  {
+    if(! (*it).getFace()->isLocal())
+      faces.push_back((*it).getFace()->getId());
+  }
   return faces;
 }
 

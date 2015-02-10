@@ -22,14 +22,14 @@ void SAFEngine::initFaces(const nfd::FaceTable& table)
   std::sort(faces.begin(), faces.end());
 }
 
-int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
+int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry)
 {
   //check if content prefix has been seen
   std::string prefix = extractContentPrefix(interest.getName());
 
   if(entryMap.find(prefix) == entryMap.end ())
   {
-    entryMap[prefix] = boost::shared_ptr<SAFEntry>(new SAFEntry(faces));
+    entryMap[prefix] = boost::shared_ptr<SAFEntry>(new SAFEntry(faces, fibEntry));
     /* maybe add token bucket here later*/
   }
 
