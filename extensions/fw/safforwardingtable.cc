@@ -126,7 +126,7 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
     double utf = stats->getUnstatisfiedTrafficFractionOfUnreliableFaces (layer);
     utf *= ParameterConfiguration::getInstance ()->getParameter ("ALPHA");
 
-    //check if we need to shift traffic
+    //Split Cases 3.3.1 and 3.3.2
     if(utf > 0)
     {
       //determine the relialbe faces act forwarding Prob > 0
@@ -136,8 +136,8 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
         r_faces_actual_fowarding_prob += stats->getActualForwardingProbability (*it,layer);
       }
 
-      //if we have no relible faces, or no interests can be forwarded to reliable faces
-      if(r_faces.size () == 0 || r_faces_actual_fowarding_prob == 0.0) // we drop everything in this case
+      //Case 3.3.1.2 Increase the dropping probability P(F_D).
+      if(r_faces.size () == 0 || r_faces_actual_fowarding_prob == 0.0) //
       {
         table(determineRowOfFace(DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats)+ utf;
         updateColumn (ur_faces, layer, stats, utf, false);
@@ -227,7 +227,7 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
 }
 
 void SAFForwardingTable::updateColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> stats, double utf,
-                                                  bool shift_traffic/*true -> traffic will be shifted towards faces, false traffic will be shifted away*/)
+                                                  bool shift_traffic/*true -> traffic will be shifted towards faces, false -> traffic will be taken away*/)
 {
   if(faces.size () == 0)
     return;
