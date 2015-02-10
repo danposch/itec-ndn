@@ -12,8 +12,8 @@ SAFStatisticMeasure::SAFStatisticMeasure(std::vector<int> faces)
   {
     for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
     {
-      stats[layer].unstatisfied_requests[*it] = 0;
-      stats[layer].statisfied_requests[*it] = 0;
+      stats[layer].unsatisfied_requests[*it] = 0;
+      stats[layer].satisfied_requests[*it] = 0;
 
       stats[layer].last_reliability[*it] = 0;
       stats[layer].last_actual_forwarding_probs[*it] = 0;
@@ -30,25 +30,25 @@ void SAFStatisticMeasure::update (double reliability_t)
   for(int layer=0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); layer ++) // for each layer
   {
     // clear old computed values
-    stats[layer].unstatisfied_traffic_fraction_unreliable_faces = 0;
+    stats[layer].unsatisfied_traffic_fraction_unreliable_faces = 0;
     stats[layer].last_reliability.clear();
     stats[layer].last_actual_forwarding_probs.clear();
 
     //calculate new values
     calculateTotalForwardedRequests(layer);
     calculateLinkReliabilities (layer);
-    calculateUnstatisfiedTrafficFractionOfUnreliableFaces (layer, reliability_t);
+    calculateUnsatisfiedTrafficFractionOfUnreliableFaces (layer, reliability_t);
     calculateActualForwardingProbabilities (layer);
 
     //clear collected information
-    stats[layer].unstatisfied_requests.clear ();
-    stats[layer].statisfied_requests.clear ();
+    stats[layer].unsatisfied_requests.clear ();
+    stats[layer].satisfied_requests.clear ();
 
     //initialize for next period
     for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
     {
-      stats[layer].unstatisfied_requests[*it] = 0;
-      stats[layer].statisfied_requests[*it] = 0;
+      stats[layer].unsatisfied_requests[*it] = 0;
+      stats[layer].satisfied_requests[*it] = 0;
     }
   }
 }
@@ -58,7 +58,7 @@ void SAFStatisticMeasure::calculateTotalForwardedRequests(int layer)
   stats[layer].total_forwarded_requests = 0;
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
   {
-    stats[layer].total_forwarded_requests += stats[layer].unstatisfied_requests[*it] + stats[layer].statisfied_requests[*it];
+    stats[layer].total_forwarded_requests += stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it];
   }
 }
 
@@ -67,22 +67,22 @@ void SAFStatisticMeasure::calculateLinkReliabilities(int layer)
   //NS_LOG_DEBUG("Calculating link reliability for layer " << layer);
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
   {
-    if(stats[layer].unstatisfied_requests[*it] == 0)
+    if(stats[layer].unsatisfied_requests[*it] == 0)
       stats[layer].last_reliability[*it] = 1.0;
     else
       stats[layer].last_reliability[*it] =
-          (double)stats[layer].statisfied_requests[*it] / ((double)(stats[layer].unstatisfied_requests[*it] + stats[layer].statisfied_requests[*it]));
+          (double)stats[layer].satisfied_requests[*it] / ((double)(stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it]));
 
     /*NS_LOG_DEBUG("Reliabilty for Face(" << *it << ")=" << stats[layer].last_reliability[*it] << "      in total "
-        << stats[layer].unstatisfied_requests[*it] + stats[layer].statisfied_requests[*it] << " interest forwarded");*/
+        << stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it] << " interest forwarded");*/
   }
 }
 
-void SAFStatisticMeasure::calculateUnstatisfiedTrafficFractionOfUnreliableFaces(int layer, double reliability_t)
+void SAFStatisticMeasure::calculateUnsatisfiedTrafficFractionOfUnreliableFaces(int layer, double reliability_t)
 {
   if(stats[layer].total_forwarded_requests == 0)
   {
-    stats[layer].unstatisfied_traffic_fraction_unreliable_faces = 0;
+    stats[layer].unsatisfied_traffic_fraction_unreliable_faces = 0;
     return;
   }
 
@@ -91,9 +91,9 @@ void SAFStatisticMeasure::calculateUnstatisfiedTrafficFractionOfUnreliableFaces(
   double utf = 0.0;
   for(std::vector<int>::iterator it = u_faces.begin(); it != u_faces.end(); ++it)
   {
-    utf += ( (double) (stats[layer].unstatisfied_requests[*it])) / getTotalForwardedInterests(layer);
+    utf += ( (double) (stats[layer].unsatisfied_requests[*it])) / getTotalForwardedInterests(layer);
   }
-  stats[layer].unstatisfied_traffic_fraction_unreliable_faces = utf;
+  stats[layer].unsatisfied_traffic_fraction_unreliable_faces = utf;
 }
 
 void SAFStatisticMeasure::calculateActualForwardingProbabilities (int layer)
@@ -106,7 +106,7 @@ void SAFStatisticMeasure::calculateActualForwardingProbabilities (int layer)
       stats[layer].last_actual_forwarding_probs[*it] = 0;
     else
       stats[layer].last_actual_forwarding_probs[*it] =
-        (stats[layer].unstatisfied_requests[*it] + stats[layer].statisfied_requests[*it]) / sum;
+        (stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it]) / sum;
   }
 }
 

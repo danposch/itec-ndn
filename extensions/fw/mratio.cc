@@ -10,7 +10,7 @@ Mratio::Mratio(std::vector<int> faces) : SAFStatisticMeasure(faces)
 void Mratio::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
 {
   int ilayer = SAFStatisticMeasure::determineContentLayer(pitEntry->getInterest());
-  stats[ilayer].statisfied_requests[inFace.getId ()] += 1;
+  stats[ilayer].satisfied_requests[inFace.getId ()] += 1;
 }
 
 void Mratio::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
@@ -20,6 +20,6 @@ void Mratio::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
   const nfd::pit::OutRecordCollection records = pitEntry->getOutRecords();
   for(nfd::pit::OutRecordCollection::const_iterator it = records.begin (); it!=records.end (); ++it)
   {
-    stats[ilayer].unstatisfied_requests[(*it).getFace()->getId()] += 1;
+    stats[ilayer].unsatisfied_requests[(*it).getFace()->getId()] += 1;
   }
 }

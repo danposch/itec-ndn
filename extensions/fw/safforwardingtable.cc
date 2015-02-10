@@ -123,7 +123,7 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
     r_faces = stats->getReliableFaces (layer, curReliability);
     ur_faces = stats->getUnreliableFaces (layer, curReliability);
 
-    double utf = stats->getUnstatisfiedTrafficFractionOfUnreliableFaces (layer);
+    double utf = stats->getUnsatisfiedTrafficFractionOfUnreliableFaces (layer);
     utf *= ParameterConfiguration::getInstance ()->getParameter ("ALPHA");
 
     //Split Cases 3.3.1 and 3.3.2
