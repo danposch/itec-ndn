@@ -24,6 +24,9 @@
 #define DROP_FACE_ID -1
 #define FACE_NOT_FOUND -1
 
+// MEASURE PARAMETERS
+#define MAX_DELAY_MS 100
+
 class ParameterConfiguration
 {
 public:

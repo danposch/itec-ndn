@@ -17,7 +17,6 @@ public:
 
 protected:
   time::steady_clock::Duration curMaxDelay;
-  std::vector<time::steady_clock::Duration> delaySamples;
 };
 
 }
