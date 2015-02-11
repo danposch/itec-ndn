@@ -4,7 +4,7 @@ using namespace nfd;
 using namespace nfd::fw;
 using namespace boost::numeric::ublas;
 
-SAFForwardingTable::SAFForwardingTable(std::vector<int> faceIds, std::vector<int> preferedFacesIds)
+SAFForwardingTable::SAFForwardingTable(std::vector<int> faceIds, std::map<int, int> preferedFacesIds)
 {
   this->curReliability = ParameterConfiguration::getInstance ()->getParameter("RELIABILITY_THRESHOLD_MIN");
   this->faces = faceIds;
@@ -18,6 +18,16 @@ void SAFForwardingTable::initTable ()
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
+  /*int minCost = INT_MAX; int faceId=-1;
+  for(std::map<int,int>::iterator it = preferedFaces.begin (); it != preferedFaces.end (); it++)
+  {
+    if(minCost > it->second)
+    {
+      minCost = it->second;
+      faceId = it->first;
+    }
+  }*/
+
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
   {
@@ -25,15 +35,17 @@ void SAFForwardingTable::initTable ()
     {
       if(faces.at (i) == DROP_FACE_ID)
         table(i,j) = 0.0;
-      else if(preferedFaces.size () == 0)
+      else if(preferedFaces.size ()== 0)
       {
         table(i,j) = (1.0 / ((double)faces.size () - 1.0)); /*set default value to 1 / (d - 1) */
       }
       else
       {
-        if(std::find(preferedFaces.begin (), preferedFaces.end (), faces.at (i)) != preferedFaces.end ())
+        std::map<int,int>::iterator it = preferedFaces.find(faces.at (i));
+        if( it != preferedFaces.end ()) //&& it->first == faceId)
         {
           table(i,j) = (1.0 / ((double)preferedFaces.size ())); // preferedFaces dont include the dropping face.
+          //table(i,j) = 1.0;
         }
         else
         {
@@ -126,8 +138,7 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
     double utf = stats->getUnsatisfiedTrafficFractionOfUnreliableFaces (layer);
     utf *= ParameterConfiguration::getInstance ()->getParameter ("ALPHA");
 
-    //Split Cases 3.3.1 and 3.3.2
-    if(utf > 0)
+    if(utf > 0)//Section 3.3.1
     {
       //determine the relialbe faces act forwarding Prob > 0
       double r_faces_actual_fowarding_prob = 0.0;
@@ -141,88 +152,58 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
       {
         table(determineRowOfFace(DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats)+ utf;
         updateColumn (ur_faces, layer, stats, utf, false);
-        probeColumn(r_faces, layer, stats, true);
+        probeColumn(r_faces, layer, stats);
 
-        //lower reliability
         if(table(determineRowOfFace (DROP_FACE_ID),layer) > (1.0-curReliability) )
           decreaseReliabilityThreshold();
       }
       else
       {
-        //fprintf(stderr, "CASE 2\n");
-        //add traffic to relialbe faces
-        updateColumn (r_faces, layer, stats, utf, true);
-        //remove traffic from unreliable faces
-        updateColumn (ur_faces, layer, stats, utf, false);
+        //Case 3.3.1.1 Shift forwarding probabilities
+        updateColumn (r_faces, layer, stats, utf, true); //add traffic
+        updateColumn (ur_faces, layer, stats, utf, false); // remove traffic
         //set dropping face
         table(determineRowOfFace(DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats);
        }
     }
-    else/*(delta == 0* &&)*/ // utf == 0 and layer has not been jammed last time
+    else/*(utf == 0)*/ //Section 3.3.2
     {
-
+      //Case 3.3.2.1 I=0, no requests for content
       if(stats->getTotalForwardedInterests (layer) == 0)
       {
-        double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
-         table(determineRowOfFace (DROP_FACE_ID), layer) -= probe;
-
-        //distribute the traffic
-        for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it) // for each ur_face
-          table(determineRowOfFace (*it), layer) += (probe / ((double)r_faces.size ()));
+        probeColumn (r_faces, layer, stats);
       }
+      //Case 3.3.2.2 p(F_D)=0
       else if(table(determineRowOfFace(DROP_FACE_ID),layer) == 0.0) // dropping prob == 0 or there are no reliable faces
       {
         if(stats->getTotalForwardedInterests (layer) != 0)
           for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
             table(determineRowOfFace(*it), layer) = calcWeightedUtilization(*it,layer,stats);
 
-        //increase Reliability Threshold
          increaseReliabilityThreshold();
       }
+      //Case 3.3.2.3 p(F_D)>0
       else
       {
-        //NS_LOG_DEBUG("WE SHOULD DECREASE DROPPING TRAFFIC\n");
-
-        //check if we should do probing or shifting and probing
         std::vector<int> shift_faces;
         std::vector<int> probe_faces;
         for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it)
         {
-          //if(calcWeightedUtilization (*it,layer,stats) > SHIFT_THRESHOLD) start here
-          if(stats->getActualForwardingProbability (*it,layer) > ParameterConfiguration::getInstance()->getParameter ("SHIFT_THRESHOLD"))
+          if(calcWeightedUtilization (*it,layer,stats) > ParameterConfiguration::getInstance()->getParameter ("SHIFT_THRESHOLD"))
             shift_faces.push_back (*it);
           else
             probe_faces.push_back (*it);
         }
 
-        if(shift_faces.size () == 0)
-        {
-          //needs normalization if, no interests have been transmitted at all.
-          // however this might be good, as it lowers, dropping probability, and distributes forwarding prob at all other faces...
-          //fprintf(stderr, "CASE 5\n");
-          probeColumn(probe_faces, layer, stats, false); // do only probing
-        }
-        else
-        {
-          //fprintf(stderr, "CASE 6\n");
-          shiftDroppingTraffic(shift_faces, layer, stats); //shift traffic
-          probeColumn(probe_faces, layer, stats, true); // and probe then
+        shiftDroppingTraffic(shift_faces, layer, stats); //shift traffic
+        probeColumn(probe_faces, layer, stats); // and probe then
 
-          //increase Reliability Threshold
-          if(table(determineRowOfFace (DROP_FACE_ID),layer) < (1.0-curReliability) )
-            increaseReliabilityThreshold();
-        }
+        if(table(determineRowOfFace (DROP_FACE_ID),layer) < (1.0-curReliability) )
+          increaseReliabilityThreshold();
       }
     }
   }
-
-  //NS_LOG_DEBUG("Forwarding Matrix after update:\n" << table);
-
-  /*std::stringstream ss1;
-  ss1 << table;
-  std::string s1 = ss1.str();*/
-
-  //finally just normalize to remove the error introduced by threashold RELIABILITY_THRESHOLD
+  //finally just normalize to remove the rounding errors
   table = normalizeColumns(table);
 }
 
@@ -230,125 +211,90 @@ void SAFForwardingTable::updateColumn(std::vector<int> faces, int layer, boost::
                                                   bool shift_traffic/*true -> traffic will be shifted towards faces, false -> traffic will be taken away*/)
 {
   if(faces.size () == 0)
-    return;
+      return;
 
-  double sum_reliabilities = 0.0;
+    double sum_reliabilities = 0.0;
 
-  if(shift_traffic)
-    sum_reliabilities = stats->getSumOfReliabilities (faces, layer);
-  else
-    sum_reliabilities = stats->getSumOfUnreliabilities (faces, layer);
-
-  double sum_fwProbs = getSumOfWeightedForwardingProbabilities (faces, layer,stats);
-
-  double normalization_value = 0.0;
-  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each r_face
-  {
-    if(shift_traffic && sum_fwProbs > 0)
-    {
-      normalization_value +=
-        (calcWeightedUtilization(*it,layer,stats) / sum_fwProbs) * (stats->getLinkReliability (*it,layer) / sum_reliabilities);
-    }
-    else if(shift_traffic && sum_fwProbs == 0)  // special case when forwarding probabilities are all 0 for all non relialbe faces. e.g. (0, 0, 1) where f3() = 1 is the incoming face of the interests
-    {
-      normalization_value +=
-        (1.0 /((double)faces.size ())) * (stats->getLinkReliability (*it,layer) / sum_reliabilities);
-    }
-    else if(!shift_traffic && sum_fwProbs == 0)
-    {
-      normalization_value +=
-        (1.0 /((double)faces.size ())) * ((1 - stats->getLinkReliability (*it,layer)) / sum_reliabilities);
-    }
+    if(shift_traffic)
+      sum_reliabilities = stats->getSumOfReliabilities (faces, layer);
     else
-    {
-      normalization_value +=
-        (calcWeightedUtilization(*it,layer,stats) / sum_fwProbs) * ((1 - stats->getLinkReliability (*it,layer)) / sum_reliabilities);
-    }
-  }
+      sum_reliabilities = stats->getSumOfUnreliabilities (faces, layer);
 
-  if(normalization_value == 0)
-  {
-    fprintf(stderr,"Error normalization_value == 0.\n");
-  }
+    double divisor = 0.0;
+    for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each r_face
+    {
+      if(shift_traffic)
+      {
+        divisor += calcWeightedUtilization(*it,layer,stats) * stats->getLinkReliability (*it,layer);
+      }
+      else
+      {
+        divisor += calcWeightedUtilization(*it,layer,stats) * (1 - stats->getLinkReliability (*it,layer));
+      }
+    }
 
-  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each r_face
-  {
+    if(divisor == 0)
+    {
+      fprintf(stderr,"Error divisor == 0.\n");
+      return;
+    }
 
-    double weightedUtil = calcWeightedUtilization(*it,layer,stats);
+    for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each r_face
+    {
+      double weightedUtil = calcWeightedUtilization(*it,layer,stats);
 
-    if(shift_traffic && sum_fwProbs > 0)
-    {
-      table(determineRowOfFace(*it), layer) = weightedUtil +
-        utf * (weightedUtil / sum_fwProbs) * (stats->getLinkReliability (*it,layer) / sum_reliabilities) / normalization_value;
+      if(shift_traffic)
+      {
+        table(determineRowOfFace(*it), layer) = weightedUtil +
+          utf * ((weightedUtil * stats->getLinkReliability (*it,layer)) / divisor);
+      }
+      else
+      {
+        table(determineRowOfFace(*it), layer) = weightedUtil -
+            utf * ((weightedUtil * (1 - stats->getLinkReliability (*it,layer))) / divisor);
+      }
     }
-    else if (shift_traffic && sum_fwProbs == 0) // special case
-    {
-      table(determineRowOfFace(*it), layer) = weightedUtil +
-          utf * (1.0 /((double)faces.size ())) * ( stats->getLinkReliability (*it,layer) / sum_reliabilities / normalization_value);
-    }
-    else if (!shift_traffic && sum_fwProbs == 0) // special case
-    {
-      table(determineRowOfFace(*it), layer) = weightedUtil -
-          utf * (1.0 /((double)faces.size ())) * ( (1 - stats->getLinkReliability (*it,layer)) / sum_reliabilities / normalization_value);
-    }
-    else
-    {
-      table(determineRowOfFace(*it), layer) = weightedUtil -
-          utf * (weightedUtil / sum_fwProbs) * ( (1 - stats->getLinkReliability (*it,layer)) / sum_reliabilities / normalization_value);
-    }
-  }
 }
 
-void SAFForwardingTable::probeColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> stats, bool useDroppingProbabilityFromFWT)
+void SAFForwardingTable::probeColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> stats)
 {
   if(faces.size () == 0)
     return;
 
-   double probe = 0.0;
-
-  if(useDroppingProbabilityFromFWT)
-    probe = table(determineRowOfFace (DROP_FACE_ID), layer) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
-  else
-    probe = calcWeightedUtilization(DROP_FACE_ID,layer,stats) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
+   double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
 
   if(probe < 0.001) // if probe is zero return
     return;
 
-  if(useDroppingProbabilityFromFWT)
-    table(determineRowOfFace (DROP_FACE_ID), layer) -= probe;
-  else
-    table(determineRowOfFace (DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats) - probe;
+  table(determineRowOfFace (DROP_FACE_ID), layer) -= probe;
+
+  double normFactor = 0.0; // optimization for layers > 0
+  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+  {
+    normFactor += table(determineRowOfFace (*it), 0);
+  }
 
   //split the probe (forwarding percents)....
-  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each ur_face
+  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
   {
-     double normFactor = 0.0;
-    for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each ur_face
+    if(layer == 0 || normFactor == 0)
+      table(determineRowOfFace (*it), layer) = calcWeightedUtilization(*it,layer,stats) + (probe / ((double)faces.size ()));
+    else
     {
-      normFactor += table(determineRowOfFace (*it), 0);
-    }
-
-    for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each ur_face
-    {
-      //table(determineRowOfFace (*it), layer) = calcWeightedUtilization(*it,layer,stats) + (probe / ((double)faces.size ()));
-      if(layer == 0 || normFactor == 0)
-        table(determineRowOfFace (*it), layer) = calcWeightedUtilization(*it,layer,stats) + (probe / ((double)faces.size ()));
-      else
-      {
-        //fprintf(stderr, "probefraction =%f\n", (table(determineRowOfFace (*it), 0) / normFactor));
-        //fprintf(stderr, "value =%f\n", probe * (table(determineRowOfFace (*it), 0) / normFactor));
-        table(determineRowOfFace (*it), layer) =
-            calcWeightedUtilization(*it,layer,stats) + (probe * (table(determineRowOfFace (*it), 0) / normFactor));
-      }
+      table(determineRowOfFace (*it), layer) =
+          calcWeightedUtilization(*it,layer,stats) + (probe * (table(determineRowOfFace (*it), 0) / normFactor));
     }
   }
 }
 
 void SAFForwardingTable::shiftDroppingTraffic(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure>  stats)
 {
+  if(faces.size () == 0)
+    return;
+
   //calcualte how much traffic we can take
   double interests_to_shift = 0;
-  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each r_face
+  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
   {
     interests_to_shift += stats->getForwardedInterests (*it, layer);
   }
@@ -356,7 +302,6 @@ void SAFForwardingTable::shiftDroppingTraffic(std::vector<int> faces, int layer,
   interests_to_shift /= (double)stats->getTotalForwardedInterests (layer);
   interests_to_shift *= ParameterConfiguration::getInstance ()->getParameter ("SHIFT_TRAFFIC");
 
-  //double dropped_interests = stats->getForwardedInterests(DROP_FACE_ID, layer);
   double dropped_interests = calcWeightedUtilization(DROP_FACE_ID,layer,stats);
 
   if(dropped_interests <= interests_to_shift)
@@ -366,7 +311,6 @@ void SAFForwardingTable::shiftDroppingTraffic(std::vector<int> faces, int layer,
 
   table(determineRowOfFace(DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats) - interests_to_shift;
   updateColumn (faces, layer,stats,interests_to_shift,true);
-
 }
 
 double SAFForwardingTable::getSumOfWeightedForwardingProbabilities(std::vector<int> set_of_faces, int layer, boost::shared_ptr<SAFStatisticMeasure> stats)
@@ -456,7 +400,7 @@ matrix<double> SAFForwardingTable::normalizeColumns(matrix<double> m)
     }
     if(colSum == 0) // means we have removed the only face that was able to transmitt the traffic
     {
-      //split robabilities amoung all other faces
+      //split probabilities
       for (unsigned i = 0; i < m.size1 (); ++i) /* rows */
         m(i,j) = 1.0 /((double)m.size1 ());
     }

@@ -89,7 +89,7 @@ protected:
       unsatisfied_requests = other.unsatisfied_requests;
 
       last_reliability = other.last_reliability;
-      last_actual_forwarding_probs = other.last_actual_forwarding_probs;      
+      last_actual_forwarding_probs = other.last_actual_forwarding_probs;
     }
   };
 

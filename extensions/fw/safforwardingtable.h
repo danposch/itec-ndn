@@ -10,6 +10,7 @@
 
 #include "fw/face-table.hpp"
 #include "iostream"
+#include "climits"
 
 namespace nfd
 {
@@ -19,7 +20,7 @@ namespace fw
 class SAFForwardingTable
 {
 public:
-  SAFForwardingTable(std::vector<int> faceIds, std::vector<int> preferedFacesIds = std::vector<int>());
+  SAFForwardingTable(std::vector<int> faceIds, std::map<int,int> preferedFacesIds = std::map<int,int>());
   int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces);
 
   void update(boost::shared_ptr<SAFStatisticMeasure> smeasure);
@@ -39,7 +40,7 @@ public:
   double getSumOfWeightedForwardingProbabilities(std::vector<int> set_of_faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure);
 
   void updateColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure, double utf, bool shift_traffic);
-  void probeColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure, bool useDroppingProbabilityFromFWT);
+  void probeColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure);
   void shiftDroppingTraffic(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure);
 
   void decreaseReliabilityThreshold();
@@ -48,7 +49,7 @@ public:
 
   boost::numeric::ublas::matrix<double> table;
   std::vector<int> faces;
-  std::vector<int> preferedFaces;
+  std::map<int,int> preferedFaces;
   double curReliability;
   ns3::UniformVariable randomVariable;
 };

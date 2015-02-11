@@ -31,7 +31,11 @@ protected:
   boost::shared_ptr<SAFForwardingTable> ftable;
 
   std::vector<int> faces;
-  std::vector<int> preferedFaces;
+  typedef std::map<
+  int/*faceId*/,
+  int /*costs*/> PreferedFaceMap;
+  PreferedFaceMap preferedFaces;
+
   shared_ptr<fib::Entry> fibEntry;
 };
 
