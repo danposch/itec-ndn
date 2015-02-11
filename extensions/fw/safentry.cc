@@ -20,8 +20,12 @@ void SAFEntry::initFaces ()
   {
     std::vector<int>::iterator face = std::find(faces.begin (),faces.end (), (*it).getFace()->getId());
     if(face != faces.end ())
-      preferedFaces.push_back (*face);
+    {
+      //fprintf(stderr, "costs=%d\n",it->getCost());
+      preferedFaces[*face]=it->getCost ();
+    }
   }
+  //fprintf(stderr, "\n");
 }
 
 int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
