@@ -83,9 +83,11 @@ void NetworkGenerator::randomlyAddConnectionsBetweenAllAS(int numberOfConnection
         p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
         p2p.SetChannelAttribute ("Delay", StringValue (delay));
 
-        int rand_node_i = rvariable->GetInteger (0,getAllASNodesFromAS (i).size ()-1);
-        int rand_node_j = rvariable->GetInteger (0,getAllASNodesFromAS (j).size ()-1);
-        p2p.Install (getAllASNodesFromAS (i).Get (rand_node_i), getAllASNodesFromAS (j).Get (rand_node_j));
+        NodeContainer container = getPairOfUnconnectedNodes(i, j);
+        if(container.size () == 2)
+          p2p.Install (container.Get (0), container.Get (1));
+        else
+          NS_LOG_UNCOND("Unable to add new Connections");
       }
       j++;
     }
@@ -119,10 +121,11 @@ void NetworkGenerator::randomlyAddConnectionsBetweenTwoAS(int numberOfConnection
     while(number_as2 == number_as1)
       number_as2 = rvariable->GetInteger (0,getNumberOfAS()-1);
 
-    int rand_node_1 = rvariable->GetInteger (0,getAllASNodesFromAS (number_as1).size ()-1);
-    int rand_node_2 = rvariable->GetInteger (0,getAllASNodesFromAS (number_as2).size ()-1);
-
-    p2p.Install (getAllASNodesFromAS (number_as1).Get (rand_node_1), getAllASNodesFromAS (number_as2).Get (rand_node_2));
+    NodeContainer container = getPairOfUnconnectedNodes(number_as1, number_as2);
+    if(container.size () == 2)
+      p2p.Install (container.Get (0), container.Get (1));
+    else
+      NS_LOG_UNCOND("Unable to add new Connections");
   }
 }
 
@@ -143,13 +146,11 @@ void NetworkGenerator::randomlyAddConnectionsBetweenTwoNodesPerAS(int numberOfCo
       p2p.SetDeviceAttribute ("DataRate", StringValue (bw));
       p2p.SetChannelAttribute ("Delay", StringValue (delay));
 
-      int rand_node_1 = rvariable->GetInteger (0,getAllASNodesFromAS (as).size ()-1);
-      int rand_node_2 = rand_node_1;
-
-      while(rand_node_1 == rand_node_2)
-        rand_node_2 = rvariable->GetInteger (0,getAllASNodesFromAS (as).size ()-1);
-
-      p2p.Install (getAllASNodesFromAS (as).Get (rand_node_1), getAllASNodesFromAS (as).Get (rand_node_2));
+      NodeContainer container = getPairOfUnconnectedNodes(as, as);
+      if(container.size () == 2)
+        p2p.Install (container.Get (0), container.Get (1));
+      else
+        NS_LOG_UNCOND("Unable to add new Connections");
     }
   }
 }
@@ -258,6 +259,68 @@ void NetworkGenerator::creatRandomLinkFailure(double minTimestamp, double maxTim
     //fprintf(stderr, "Start LinkFail between %s and %s: %f\n",Names::FindName (channelNodes.Get (0)).c_str (),Names::FindName (channelNodes.Get (1)).c_str (), startTime);
     //fprintf(stderr, "Stop LinkFail between %s and %s: %f\n\n",Names::FindName (channelNodes.Get (0)).c_str (),Names::FindName (channelNodes.Get (1)).c_str (),stopTime);
   }
+}
+
+bool NetworkGenerator::nodesConnected(Ptr<Node> n1, Ptr<Node> n2)
+{
+  int n1_nr_dev = n1->GetNDevices ();
+
+  for(int i = 0; i < n1_nr_dev; i++)
+  {
+    Ptr<NetDevice> dev = n1->GetDevice (i);
+    Ptr<Channel> channel = dev->GetChannel ();
+    int channel_nr_dev = channel->GetNDevices ();
+
+    for(int j = 0; j < channel_nr_dev; j++)
+    {
+      Ptr<Node> con_node = channel->GetDevice (j)->GetNode ();
+      if(n2->GetId () == con_node->GetId ())
+        return true;
+    }
+  }
+  return false;
+}
+
+NodeContainer NetworkGenerator::getPairOfUnconnectedNodes(int as1, int as2)
+{
+  NodeContainer as1_nodes = getAllASNodesFromAS (as1);
+  NodeContainer as2_nodes = getAllASNodesFromAS (as2);
+
+  while(as1_nodes.size () > 0)
+  {
+    int rand_node_1 = rvariable->GetInteger (0,as1_nodes.size ()-1);
+    Ptr<Node> as1_node = as1_nodes.Get (rand_node_1);
+    removeNode (as1_nodes, as1_node);
+
+    NodeContainer as2_nodes_cp = as2_nodes;
+    while(as2_nodes_cp.size () > 0)
+    {
+      int rand_node_2 = rvariable->GetInteger (0,as2_nodes_cp.size ()-1);
+      Ptr<Node> as2_node = as2_nodes_cp.Get (rand_node_2);
+      removeNode (as2_nodes, as2_node);
+
+      if(as1_node->GetId () != as2_node->GetId () &&
+         !nodesConnected(as1_node, as2_node))
+      {
+        NodeContainer c;
+        c.Add (as1_node);
+        c.Add (as2_node);
+        return c;
+      }
+    }
+  }
+  return NodeContainer();
+}
+
+NodeContainer NetworkGenerator::removeNode(NodeContainer container, Ptr<Node> node)
+{
+  NodeContainer result;
+  for(NodeContainer::iterator it = container.begin (); it!=container.end (); ++it)
+  {
+    if( (*it)->GetId() != node->GetId ())
+      result.Add (*it);
+  }
+  return result;
 }
 
 double NetworkGenerator::calculateConnectivity ()

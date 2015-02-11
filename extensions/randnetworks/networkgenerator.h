@@ -142,8 +142,12 @@ public:
   void creatRandomLinkFailure(double minTimestamp, double maxTimestamp, double minDuration, double maxDuration);
 
 
-private:
+protected:
   NDNBriteHelper *briteHelper;
+
+  bool nodesConnected(Ptr<Node> n1, Ptr<Node> n2);
+  NodeContainer getPairOfUnconnectedNodes(int as1, int as2);
+  NodeContainer removeNode(NodeContainer container, Ptr<Node> node);
 
   typedef
   std::map<
