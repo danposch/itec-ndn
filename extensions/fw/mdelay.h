@@ -2,6 +2,7 @@
 #define SAFDELAYSTATISTIC_H
 
 #include "safstatisticmeasure.h"
+#include <vector>
 
 namespace nfd {
 namespace fw {
@@ -9,16 +10,16 @@ namespace fw {
 class MDelay : public SAFStatisticMeasure
 {
 public:
-    MDelay(std::vector<int> faces);
+  MDelay(std::vector<int> faces);
 
-    virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
-    virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry);
+  virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
+  virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry);
 
 protected:
-   time::steady_clock::Duration curMaxDelay;
-
+  time::steady_clock::Duration curMaxDelay;
+  std::vector<time::steady_clock::Duration> delaySamples;
 };
 
 }
-
+}
 #endif // SAFDELAYSTATISTIC_H

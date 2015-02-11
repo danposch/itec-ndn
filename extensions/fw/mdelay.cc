@@ -1,9 +1,13 @@
 #include "mdelay.h"
+#include "climits"
+#include <iostream>
 
-using namespace nfd::fw;
+namespace nfd {
+namespace fw {
 
 MDelay::MDelay(std::vector<int> faces) : SAFStatisticMeasure(faces)
 {
+    curMaxDelay = boost::chrono::duration<long int, boost::ratio<1l, 1000000000l> >(LONG_MAX);
 }
 
 void MDelay::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
@@ -12,7 +16,21 @@ void MDelay::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& in
   time::steady_clock::TimePoint now = time::steady_clock::now();
   std::list<nfd::pit::OutRecord>::const_iterator outRecord = pitEntry->getOutRecord(inFace);
 
-  time::steady_clock::Duration rtt = now - outRecord->getLastRenewed();
+  time::steady_clock::Duration rtt = boost::chrono::duration<long int, boost::ratio<1l, 1000000000l> >(now - outRecord->getLastRenewed());
+
+  delaySamples.push_back(rtt);
+  if (delaySamples.size() == 30) {
+    boost::chrono::duration<long int, boost::ratio<1l, 1000000000l> >avg(0);
+    for (int i = 0; i < 30; i++) {
+      avg += delaySamples.at(i);
+    }
+    avg = avg/30;
+    long diff = abs(curMaxDelay.count() - avg.count()) / 2;
+    boost::chrono::duration<long int, boost::ratio<1l, 1000000000l> > diffDur(diff);
+    curMaxDelay = avg + diffDur;
+    std::cout << "new max Delay " << rtt << "\n";
+    delaySamples.clear();
+  }
 
   if (rtt > curMaxDelay) {
     logExpiredInterest(pitEntry);
@@ -33,3 +51,8 @@ void MDelay::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
     stats[ilayer].unsatisfied_requests[(*it).getFace()->getId()] += 1;
   }
 }
+
+}
+}
+
+
