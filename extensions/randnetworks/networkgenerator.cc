@@ -290,14 +290,14 @@ NodeContainer NetworkGenerator::getPairOfUnconnectedNodes(int as1, int as2)
   {
     int rand_node_1 = rvariable->GetInteger (0,as1_nodes.size ()-1);
     Ptr<Node> as1_node = as1_nodes.Get (rand_node_1);
-    removeNode (as1_nodes, as1_node);
+    as1_nodes = removeNode (as1_nodes, as1_node);
 
     NodeContainer as2_nodes_cp = as2_nodes;
     while(as2_nodes_cp.size () > 0)
     {
       int rand_node_2 = rvariable->GetInteger (0,as2_nodes_cp.size ()-1);
       Ptr<Node> as2_node = as2_nodes_cp.Get (rand_node_2);
-      removeNode (as2_nodes, as2_node);
+      as2_nodes_cp = removeNode (as2_nodes_cp, as2_node);
 
       if(as1_node->GetId () != as2_node->GetId () &&
          !nodesConnected(as1_node, as2_node))
