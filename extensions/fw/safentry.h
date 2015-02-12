@@ -5,6 +5,7 @@
 #include "safforwardingtable.h"
 #include "fw/strategy.hpp"
 #include "mratio.h"
+#include "mdelay.h"
 
 namespace nfd
 {

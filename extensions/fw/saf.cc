@@ -19,8 +19,6 @@ SAF::~SAF()
 
 void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry)
 {
-  //fprintf(stderr, "received: %s\n", interest.getName ().toUri ().c_str ());
-
   //find + exclue inface(s) and already tried outface(s)
   std::vector<int> originInFaces = getAllInFaces(pitEntry); //includes already inFace!
   std::vector<int> alreadyTriedFaces = getAllOutFaces(pitEntry);
@@ -28,7 +26,9 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest,shar
   int nextHop = engine->determineNextHop(interest, originInFaces, alreadyTriedFaces, fibEntry);
 
   if(nextHop == DROP_FACE_ID)
+  {
     rejectPendingInterest(pitEntry);
+  }
   else
   {
     //todo logging + bucket..

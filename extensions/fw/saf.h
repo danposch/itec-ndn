@@ -28,7 +28,6 @@ public:
   static const Name STRATEGY_NAME;
 
 protected:
-
   std::vector<int> getAllInFaces(shared_ptr<pit::Entry> pitEntry);
   std::vector<int> getAllOutFaces(shared_ptr<pit::Entry> pitEntry);
 

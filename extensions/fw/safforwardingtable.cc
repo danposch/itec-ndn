@@ -18,7 +18,7 @@ void SAFForwardingTable::initTable ()
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
-  /*int minCost = INT_MAX; int faceId=-1;
+  int minCost = INT_MAX; int faceId=-1;
   for(std::map<int,int>::iterator it = preferedFaces.begin (); it != preferedFaces.end (); it++)
   {
     if(minCost > it->second)
@@ -26,7 +26,7 @@ void SAFForwardingTable::initTable ()
       minCost = it->second;
       faceId = it->first;
     }
-  }*/
+  }
 
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
@@ -42,10 +42,10 @@ void SAFForwardingTable::initTable ()
       else
       {
         std::map<int,int>::iterator it = preferedFaces.find(faces.at (i));
-        if( it != preferedFaces.end ()) //&& it->first == faceId)
+        if( it != preferedFaces.end () && it->first == faceId)
         {
-          table(i,j) = (1.0 / ((double)preferedFaces.size ())); // preferedFaces dont include the dropping face.
-          //table(i,j) = 1.0;
+          //table(i,j) = (1.0 / ((double)preferedFaces.size ())); // preferedFaces dont include the dropping face.
+          table(i,j) = 1.0;
         }
         else
         {
@@ -60,6 +60,17 @@ void SAFForwardingTable::initTable ()
 
 int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
 {
+
+  for(std::vector<int>::iterator it = originInFaces.begin (); it != originInFaces.end ();)
+  {
+    if(std::find(alreadyTriedFaces.begin (), alreadyTriedFaces.end (), *it) != alreadyTriedFaces.end ())
+    {
+      originInFaces.erase (it);
+    }
+    else
+      it++;
+  }
+
   //create a copy of the table
   matrix<double> tmp_matrix(table);
   std::vector<int> face_list(faces);
@@ -94,7 +105,7 @@ int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<i
       fw_prob += tmp_matrix(row,ilayer);
     else
     {
-      fprintf(stderr, "Could not find face[i]=%d. Returning the dropping face..\n", *i);
+      fprintf(stderr, "Could not find tried face[i]=%d. Returning the dropping face..\n", *i);
       return DROP_FACE_ID;
     }
   }
@@ -115,7 +126,7 @@ int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<i
     }
     else// if(*i != inFaces->GetId ())
     {
-     fprintf(stderr, "Could not remove face[i]=%d. Returning the dropping face..\n", *i);
+     fprintf(stderr, "Could not remove tired face[i]=%d. Returning the dropping face..\n", *i);
       return DROP_FACE_ID;
     }
   }

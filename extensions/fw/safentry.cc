@@ -10,6 +10,7 @@ SAFEntry::SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry)
   initFaces();
 
   smeasure = boost::shared_ptr<Mratio>(new Mratio(this->faces));
+  //smeasure = boost::shared_ptr<MDelay>(new MDelay(this->faces));
   ftable = boost::shared_ptr<SAFForwardingTable>(new SAFForwardingTable(this->faces, this->preferedFaces));
 }
 
