@@ -20,7 +20,7 @@ SAF::~SAF()
 void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry)
 {
   /* WARNING!!! interest != pitEntry->interest*/
-  /* interst could be /NACK/suffix, while pitEntry is /suffix*/
+  /* interst could be /NACK/suffix, while pitEntry->getInterest is /suffix */
 
   //find + exclue inface(s) and already tried outface(s)
   std::vector<int> originInFaces = getAllInFaces(pitEntry);
@@ -29,43 +29,23 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
   std::string prefix = interest.getName().get(0).toUri();
   if(prefix.compare("NACK") == 0)
   {
-    //fprintf(stderr, "SAF::NACK: %s\n", interest.getName().toUri().c_str());
     engine->logNack(inFace, pitEntry->getInterest());
-
-    /*std::string n = interest.getName().toUri();
-    n = n.substr(5,std::string::npos);
-    shared_ptr<Interest> without_nack_prefix = make_shared<Interest>(*(interest.shared_from_this()));
-    without_nack_prefix->setName(n);*/
-
-    int nextHop = engine->determineNextHop(pitEntry->getInterest(), originInFaces, alreadyTriedFaces, fibEntry);
-    if(nextHop == DROP_FACE_ID)
-    {
-      rejectPendingInterest(pitEntry);
-    }
-    else
-    {
-      if(engine->tryForwardInterest (pitEntry->getInterest(), getFaceTable ().get (nextHop)))
-        sendInterest(pitEntry, getFaceTable ().get (nextHop));
-      else
-        rejectPendingInterest(pitEntry);
-    }
-    return;
   }
 
-  int nextHop = engine->determineNextHop(interest, originInFaces, alreadyTriedFaces, fibEntry);
-  if(nextHop == DROP_FACE_ID)
+  const Interest int_to_forward = pitEntry->getInterest();
+  int nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
+  while(nextHop != DROP_FACE_ID)
   {
-    rejectPendingInterest(pitEntry);
-  }
-  else
-  {
-    if(engine->tryForwardInterest (interest, getFaceTable ().get (nextHop)))
+    if(engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop)))
+    {
       sendInterest(pitEntry, getFaceTable ().get (nextHop));
-    else
-    {
-      rejectPendingInterest(pitEntry);
+      return;
     }
+
+    alreadyTriedFaces.push_back (nextHop);
+    nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
   }
+  rejectPendingInterest(pitEntry);
 }
 
 void SAF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
