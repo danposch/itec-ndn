@@ -85,4 +85,3 @@ bool FaceLimitManager::tryForwardInterest(std::string prefix)
 {
   return bMap[prefix]->tryConsumeToken();
 }
-
