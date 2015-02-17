@@ -21,12 +21,14 @@ public:
 
   void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
+  void logNack(const Face& inFace, const Interest& interest);
 
   void update();
 
 protected:
 
   void initFaces();
+  bool evaluateFallback();
 
   boost::shared_ptr<SAFStatisticMeasure> smeasure;
   boost::shared_ptr<SAFForwardingTable> ftable;
@@ -38,6 +40,8 @@ protected:
   PreferedFaceMap preferedFaces;
 
   shared_ptr<fib::Entry> fibEntry;
+
+  int fallbackCounter;
 };
 
 }

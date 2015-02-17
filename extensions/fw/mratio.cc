@@ -23,3 +23,9 @@ void Mratio::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
     stats[ilayer].unsatisfied_requests[(*it).getFace()->getId()] += 1;
   }
 }
+
+void Mratio::logNack(const Face &inFace, const Interest &interest)
+{
+  int ilayer = SAFStatisticMeasure::determineContentLayer(interest);
+  stats[ilayer].unsatisfied_requests[inFace.getId()] += 1;
+}

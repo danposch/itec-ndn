@@ -19,3 +19,7 @@ extensions/fw/safforwardingtable.h
 extensions/fw/safforwardingtable.cc
 extensions/fw/mratio.h
 extensions/fw/mratio.cc
+extensions/fw/limits/limiter.cc
+extensions/fw/limits/limiter.h
+extensions/fw/limits/facelimitmanager.h
+extensions/fw/limits/facelimitmanager.cc

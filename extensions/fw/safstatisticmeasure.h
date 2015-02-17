@@ -21,6 +21,7 @@ public:
 
   virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data) = 0;
   virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry) = 0;
+  virtual void logNack(const Face& inFace, const Interest& interest) = 0;
 
   virtual void update(double reliability_t);
 
