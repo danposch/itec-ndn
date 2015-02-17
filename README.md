@@ -62,6 +62,11 @@ Install Guide (testet on Ubuntu 14.04 64bit)
     * sudo cp ./libdash/libdash/build/bin/libdash.so  /usr/local/lib/
     * ./waf configure
     * ./waf 
-    * ./waf --run example --vis
+		* cd../
+
+		# Ok now install custom forwarder to enable nacks in NFD
+		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
+		* cd ns-3/
+		* sudo ./waf install
 
 ==============
