@@ -27,7 +27,6 @@ void SAFEntry::initFaces ()
       preferedFaces[*face]=it->getCost ();
     }
   }
-  //fprintf(stderr, "\n");
 }
 
 int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
@@ -39,17 +38,13 @@ void SAFEntry::update()
 {
   //todo fix fucntion call
   smeasure->update(ftable->getCurrentReliability ());
-  ftable->update (smeasure);
+
+  //ftable->update (smeasure);
 
   /*if(!evaluateFallback())
-  {
     ftable->update (smeasure);
-  }
   else
-  {
-    ftable = boost::shared_ptr<SAFForwardingTable>(new SAFForwardingTable(this->faces, this->preferedFaces));
-    fprintf(stderr, "FALLBACK\n");
-  }*/
+    ftable = boost::shared_ptr<SAFForwardingTable>(new SAFForwardingTable(this->faces, this->preferedFaces));*/
 }
 
 void SAFEntry::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
@@ -93,7 +88,7 @@ bool SAFEntry::evaluateFallback()
   else if (fallbackCounter > 0)
     fallbackCounter--;
 
-  if(fallbackCounter >= 5.0 / ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL"))
+  if(fallbackCounter >= 10.0 / ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL"))
   {
     fallbackCounter = 0;
     fallback = true;

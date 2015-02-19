@@ -11,6 +11,7 @@
 #include "fw/face-table.hpp"
 #include "iostream"
 #include "climits"
+#include <math.h>
 
 namespace nfd
 {
@@ -29,6 +30,8 @@ public:
   protected:
 
   void initTable();
+  std::map<int, double> calcInitForwardingProb(std::map<int, int> preferedFacesIds, double gamma);
+
   int determineRowOfFace(int face_uid, boost::numeric::ublas::matrix<double> tab, std::vector<int> faces);
   int determineRowOfFace(int face_uid);
   boost::numeric::ublas::matrix<double> removeFaceFromTable (int faceId, boost::numeric::ublas::matrix<double> tab, std::vector<int> faces);

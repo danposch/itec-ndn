@@ -12,21 +12,42 @@ SAFForwardingTable::SAFForwardingTable(std::vector<int> faceIds, std::map<int, i
   initTable ();
 }
 
+std::map<int, double> SAFForwardingTable::calcInitForwardingProb(std::map<int, int> preferedFacesIds, double gamma)
+{
+  std::map<int, double> res;
+  double sum = 0;
+
+  //use gamma to modify the weight.
+  for(std::map<int,int>::iterator it = preferedFacesIds.begin (); it != preferedFacesIds.end (); it++)
+    res[it->first] = pow((double)it->second, gamma);
+
+  //calc the sum of the values
+  for(std::map<int,double>::iterator it = res.begin (); it != res.end (); it++)
+    sum += it->second;
+
+  //divide each value by the sum
+  for(std::map<int,double>::iterator it = res.begin (); it != res.end (); it++)
+    res[it->first] = sum / (double) it->second;
+
+  sum = 0;
+  //calc the normalize factor
+  for(std::map<int,double>::iterator it = res.begin (); it != res.end (); it++)
+    sum += it->second;
+
+  //normalize
+  for(std::map<int,double>::iterator it = res.begin (); it != res.end (); it++)
+    res[it->first] = it->second / sum;
+
+  return res;
+}
+
 void SAFForwardingTable::initTable ()
 {
   std::sort(faces.begin(), faces.end());//order
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
-  int minCost = INT_MAX; int faceId=-1;
-  for(std::map<int,int>::iterator it = preferedFaces.begin (); it != preferedFaces.end (); it++)
-  {
-    if(minCost > it->second)
-    {
-      minCost = it->second;
-      faceId = it->first;
-    }
-  }
+  std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 3.0);
 
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
@@ -35,17 +56,18 @@ void SAFForwardingTable::initTable ()
     {
       if(faces.at (i) == DROP_FACE_ID)
         table(i,j) = 0.0;
-      else if(preferedFaces.size ()== 0)
+      else if(initValues.size ()== 0)
       {
         table(i,j) = (1.0 / ((double)faces.size () - 1.0)); /*set default value to 1 / (d - 1) */
       }
       else
       {
-        std::map<int,int>::iterator it = preferedFaces.find(faces.at (i));
-        if( it != preferedFaces.end () && it->first == faceId)
+        std::map<int,double>::iterator it = initValues.find(faces.at (i));
+        if( it != initValues.end ())// && it->first == faceId)
         {
+          table(i,j) = it->second;
           //table(i,j) = (1.0 / ((double)preferedFaces.size ())); // preferedFaces dont include the dropping face.
-          table(i,j) = 1.0;
+          //table(i,j) = 1.0;
         }
         else
         {

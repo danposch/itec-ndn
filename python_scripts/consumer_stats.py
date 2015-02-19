@@ -177,6 +177,6 @@ def process_aggregate_trace(file):
 
 #main
 
-SIMULATION_DIR=os.getcwd()
-SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
-generateStatsPerSimulation(SIMULATION_OUTPUT)
+#SIMULATION_DIR=os.getcwd()
+#SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
+#generateStatsPerSimulation(SIMULATION_OUTPUT)
