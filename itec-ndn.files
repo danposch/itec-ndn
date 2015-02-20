@@ -6,6 +6,7 @@ extensions/utils/parameterconfiguration.cc
 extensions/utils/parameterconfiguration.h
 scenarios/ndn-simple.cc
 topologies/small.top
+topologies/fwt_fairness_small.top
 scenarios/example.cc
 extensions/fw/saf.h
 extensions/fw/saf.cc
@@ -23,3 +24,4 @@ extensions/fw/limits/limiter.cc
 extensions/fw/limits/limiter.h
 extensions/fw/limits/facelimitmanager.h
 extensions/fw/limits/facelimitmanager.cc
+scenarios/fwt_fairness_small.cc
