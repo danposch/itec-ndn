@@ -39,8 +39,8 @@ def configure(conf):
     #conf.env.append_value('LIBPATH', conf.env['LIBPATH_LIBDAI'])
 
     #for mcore24 build env 
-    conf.env.LIBPATH = ['/local/users/ndnsim/lib/']
-    conf.env.INCLUDES = ['/local/users/ndnsim/include/' '/local/users/ndnsim/include/ns3-dev']
+    conf.env.LIBPATH = ['/local/users/ndnsim2/lib/']
+    conf.env.INCLUDES = ['/local/users/ndnsim2/include/' '/local/users/ndnsim2/include/ns3-dev']
 
     conf.check(lib='dash', uselib="DASH", define_name='HAVE_DASH')
     conf.check(lib='brite', uselib="BRITE", define_name='HAVE_BRITE')
@@ -100,7 +100,7 @@ def build (bld):
         source = bld.path.ant_glob(['extensions/**/*.cc']),
         use = deps,
         cxxflags = [bld.env.CXX11_CMD],
-        includes = ' libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /usr/local/include/ndn-cxx/ /usr/local/include/ns3-dev/ns3/ndnSIM/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/'
+        includes = ' libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /usr/local/include/ndn-cxx/ /usr/local/include/ns3-dev/ns3/ndnSIM/ /local/users/ndnsim2/libdash/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/daemon/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim2/ndn-cxx/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/'
         )
 
     #framework = bld.objects (
@@ -119,7 +119,7 @@ def build (bld):
             features = ['cxx'],
             source = [scenario],        #added by dposch
             use = deps + " extensions DASH BRITE",
-            includes = " extensions libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /usr/local/include/ndn-cxx/ /usr/local/include/ns3-dev/ns3/ndnSIM/ /local/users/ndnsim/include/ /local/users/ndnsim/include/ns3-dev/"
+            includes = ' extensions libdash/libdash/qtsampleplayer/libdashframework/ /usr/local/include/libdash/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/daemon/ /usr/local/include/ns3-dev/ns3/ndnSIM/NFD/core/ /usr/local/include/ndn-cxx/ /usr/local/include/ns3-dev/ns3/ndnSIM/ /local/users/ndnsim2/libdash/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/daemon/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/NFD/core/ /local/users/ndnsim2/ndn-cxx/ /local/users/ndnsim2/ns3-dev/ns3/ndnSIM/'
             )
 
 def shutdown (ctx):
