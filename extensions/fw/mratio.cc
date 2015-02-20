@@ -29,3 +29,9 @@ void Mratio::logNack(const Face &inFace, const Interest &interest)
   int ilayer = SAFStatisticMeasure::determineContentLayer(interest);
   stats[ilayer].unsatisfied_requests[inFace.getId()] += 1;
 }
+
+void Mratio::logRejectedInterest (shared_ptr<pit::Entry> pitEntry)
+{
+  int ilayer = SAFStatisticMeasure::determineContentLayer(pitEntry->getInterest());
+  stats[ilayer].satisfied_requests[DROP_FACE_ID] += 1;
+}

@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 300;
+  int simTime = 900;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
@@ -109,7 +109,6 @@ int main (int argc, char *argv[])
   //4. setup and install strategy for server/clients
   NodeContainer server = gen.getCustomNodes ("Server");
   NodeContainer client = gen.getCustomNodes ("Client");
-
 
   //3. install helper on network nodes
   ns3::ndn::StackHelper ndnHelper;
@@ -166,7 +165,6 @@ int main (int argc, char *argv[])
   }
 
    // Calculate and install FIBs
-
   if(route.compare ("all") == 0)
     ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
   else if(route.compare ("single") == 0)

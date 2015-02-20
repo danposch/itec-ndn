@@ -5,7 +5,8 @@
 #include "ns3/event-id.h"
 #include <vector>
 #include "limits/facelimitmanager.h"
-
+#include "ns3/names.h"
+#include "ns3/log.h"
 #include "safentry.h"
 
 namespace nfd
@@ -24,10 +25,12 @@ public:
   void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
   void logNack(const Face& inFace, const Interest& interest);
+  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry);
 
 protected:
   void initFaces(const nfd::FaceTable& table);
   std::string extractContentPrefix(nfd::Name name);
+  void determineNodeName(const nfd::FaceTable& table);
   std::vector<int> faces;
 
   void update();
@@ -49,6 +52,7 @@ protected:
   ns3::EventId updateEventFWT;
 
   unsigned int prefixComponentNumber;
+  std::string nodeName;
 };
 
 

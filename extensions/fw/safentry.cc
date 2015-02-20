@@ -36,10 +36,8 @@ int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> origin
 
 void SAFEntry::update()
 {
-  //todo fix fucntion call
   smeasure->update(ftable->getCurrentReliability ());
-
-  //ftable->update (smeasure);
+  ftable->update (smeasure);
 
   /*if(!evaluateFallback())
     ftable->update (smeasure);
@@ -60,6 +58,11 @@ void SAFEntry::logExpiredInterest(shared_ptr< pit::Entry > pitEntry)
 void SAFEntry::logNack(const Face& inFace, const Interest& interest)
 {
   smeasure->logNack (inFace, interest);
+}
+
+void SAFEntry::logRejectedInterest(shared_ptr<pit::Entry> pitEntry)
+{
+  smeasure->logRejectedInterest(pitEntry);
 }
 
 bool SAFEntry::evaluateFallback()

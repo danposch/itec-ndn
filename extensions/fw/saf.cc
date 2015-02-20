@@ -29,6 +29,7 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
   std::string prefix = interest.getName().get(0).toUri();
   if(prefix.compare("NACK") == 0)
   {
+    //fprintf(stderr, "Received Nack %s on face[%d]\n", interest.getName().toUri().c_str(), inFace.getId ());
     engine->logNack(inFace, pitEntry->getInterest());
   }
 
@@ -36,15 +37,23 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
   int nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
   while(nextHop != DROP_FACE_ID)
   {
-    if(engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop)))
+    bool success = engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop));
+
+    /*DISABLING LIMITS FOR NOW*/
+    success = true;
+
+    if(success)
     {
+      //fprintf(stderr, "Transmitting %s on face[%d]\n", pitEntry->getInterest().getName().toUri().c_str(), nextHop);
       sendInterest(pitEntry, getFaceTable ().get (nextHop));
       return;
     }
 
+    engine->logNack((*getFaceTable ().get(nextHop)), pitEntry->getInterest());
     alreadyTriedFaces.push_back (nextHop);
     nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
   }
+  engine->logRejectedInterest(pitEntry);
   rejectPendingInterest(pitEntry);
 }
 
@@ -56,7 +65,7 @@ void SAF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFa
 
 void SAF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 {
-  //fprintf(stderr, "beforeExpirePendingInterest\n");
+  //fprintf(stderr, "Timeout %s\n", pitEntry->getInterest().getName().toUri().c_str());
   engine->logExpiredInterest(pitEntry);
   Strategy::beforeExpirePendingInterest (pitEntry);
 }
@@ -87,11 +96,9 @@ std::vector<int> SAF::getAllOutFaces(shared_ptr<pit::Entry> pitEntry)
 
 /*void SAF::sendInterest(shared_ptr<pit::Entry> pitEntry, shared_ptr<Face> outFace, bool wantNewNonce = false)
 {
-
 }
 
 void SAF::rejectPendingInterest(shared_ptr<pit::Entry> pitEntry)
 {
-
 }*/
 

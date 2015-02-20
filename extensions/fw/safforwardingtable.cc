@@ -4,9 +4,13 @@ using namespace nfd;
 using namespace nfd::fw;
 using namespace boost::numeric::ublas;
 
+NS_LOG_COMPONENT_DEFINE("SAFForwardingTable");
+
 SAFForwardingTable::SAFForwardingTable(std::vector<int> faceIds, std::map<int, int> preferedFacesIds)
 {
-  this->curReliability = ParameterConfiguration::getInstance ()->getParameter("RELIABILITY_THRESHOLD_MIN");
+  for(int i = 0; i < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); i++)
+    curReliability[i]=1.0;
+
   this->faces = faceIds;
   this->preferedFaces = preferedFacesIds;
   initTable ();
@@ -76,8 +80,6 @@ void SAFForwardingTable::initTable ()
       }
     }
   }
-
-  //std::cout << table << std::endl; /* prints matrix line by line ( (first line), (second line) )*/
 }
 
 int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
@@ -132,7 +134,7 @@ int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<i
     }
   }
 
-  if(fw_prob >= curReliability) // in this case we drop...
+  if(fw_prob >= curReliability[ilayer] && fw_prob != 0) // in this case we drop...
     return DROP_FACE_ID;
 
   //ok now remove the alreadyTriedFaces
@@ -162,11 +164,13 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
   std::vector<int> r_faces;
   std::vector<int> ur_faces;
 
+  NS_LOG_DEBUG("Before Update:\n" << table); /* prints matrix line by line ( (first line), (second line) )*/
+
   for(int layer = 0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); layer++) // for each layer
   {
     //determine the set of (un)reliable faces
-    r_faces = stats->getReliableFaces (layer, curReliability);
-    ur_faces = stats->getUnreliableFaces (layer, curReliability);
+    r_faces = stats->getReliableFaces (layer, curReliability[layer]);
+    ur_faces = stats->getUnreliableFaces (layer, curReliability[layer]);
 
     double utf = stats->getUnsatisfiedTrafficFractionOfUnreliableFaces (layer);
     utf *= ParameterConfiguration::getInstance ()->getParameter ("ALPHA");
@@ -187,12 +191,12 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
         updateColumn (ur_faces, layer, stats, utf, false);
         probeColumn(r_faces, layer, stats);
 
-        if(table(determineRowOfFace (DROP_FACE_ID),layer) > (1.0-curReliability) )
-          decreaseReliabilityThreshold();
+        if(table(determineRowOfFace (DROP_FACE_ID),layer) > (1.0-curReliability[layer]) )
+          decreaseReliabilityThreshold(layer);
       }
       else
       {
-        //Case 3.3.1.1 Shift forwarding probabilities
+        //Case 3.3.1.1 _tr forwarding probabilities
         updateColumn (r_faces, layer, stats, utf, true); //add traffic
         updateColumn (ur_faces, layer, stats, utf, false); // remove traffic
         //set dropping face
@@ -213,7 +217,7 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
           for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
             table(determineRowOfFace(*it), layer) = calcWeightedUtilization(*it,layer,stats);
 
-         increaseReliabilityThreshold();
+         increaseReliabilityThreshold(layer);
       }
       //Case 3.3.2.3 p(F_D)>0
       else
@@ -231,13 +235,16 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
         shiftDroppingTraffic(shift_faces, layer, stats); //shift traffic
         probeColumn(probe_faces, layer, stats); // and probe then
 
-        if(table(determineRowOfFace (DROP_FACE_ID),layer) < (1.0-curReliability) )
-          increaseReliabilityThreshold();
+        if(table(determineRowOfFace (DROP_FACE_ID),layer) < (1.0-curReliability[layer]) )
+          increaseReliabilityThreshold(layer);
       }
     }
   }
   //finally just normalize to remove the rounding errors
   table = normalizeColumns(table);
+
+  //fprintf(stderr, "Current reliablity: %f\n", this->getCurrentReliability ());
+  NS_LOG_DEBUG("After Update:\n" << table); /* prints matrix line by line ( (first line), (second line) )*/
 }
 
 void SAFForwardingTable::updateColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> stats, double utf,
@@ -341,6 +348,8 @@ void SAFForwardingTable::shiftDroppingTraffic(std::vector<int> faces, int layer,
   {
     interests_to_shift = dropped_interests;
   }
+
+  interests_to_shift *= interests_to_shift * ParameterConfiguration::getInstance ()->getParameter ("ALPHA");
 
   table(determineRowOfFace(DROP_FACE_ID), layer) = calcWeightedUtilization(DROP_FACE_ID,layer,stats) - interests_to_shift;
   updateColumn (faces, layer,stats,interests_to_shift,true);
@@ -480,26 +489,26 @@ double SAFForwardingTable::calcWeightedUtilization(int faceId, int layer, boost:
   return old + ( (actual - old) * ParameterConfiguration::getInstance ()->getParameter ("ALPHA") );
 }
 
-void SAFForwardingTable::increaseReliabilityThreshold()
+void SAFForwardingTable::increaseReliabilityThreshold(int layer)
 {
-  updateReliabilityThreshold (true);
+  updateReliabilityThreshold (layer, true);
 }
 
-void SAFForwardingTable::decreaseReliabilityThreshold()
+void SAFForwardingTable::decreaseReliabilityThreshold(int layer)
 {
-  updateReliabilityThreshold (false);
+  updateReliabilityThreshold (layer, false);
 }
 
-void SAFForwardingTable::updateReliabilityThreshold(bool mode)
+void SAFForwardingTable::updateReliabilityThreshold(int layer, bool mode)
 {
   ParameterConfiguration *p = ParameterConfiguration::getInstance ();
 
   double new_t = 0.0;
 
   if(mode)
-    new_t = curReliability + ((p->getParameter("RELIABILITY_THRESHOLD_MAX") - curReliability) * p->getParameter("ALPHA"));
+    new_t = curReliability[layer] + ((p->getParameter("RELIABILITY_THRESHOLD_MAX") - curReliability[layer]) * p->getParameter("ALPHA"));
   else
-    new_t = curReliability - ((curReliability - p->getParameter("RELIABILITY_THRESHOLD_MIN")) * p->getParameter("ALPHA"));
+    new_t = curReliability[layer] - ((curReliability[layer] - p->getParameter("RELIABILITY_THRESHOLD_MIN")) * p->getParameter("ALPHA"));
 
   if(new_t > p->getParameter("RELIABILITY_THRESHOLD_MAX"))
     new_t = p->getParameter("RELIABILITY_THRESHOLD_MAX");
@@ -507,5 +516,5 @@ void SAFForwardingTable::updateReliabilityThreshold(bool mode)
   if(new_t < p->getParameter("RELIABILITY_THRESHOLD_MIN"))
     new_t = p->getParameter("RELIABILITY_THRESHOLD_MIN");
 
-  curReliability = new_t;
+  curReliability[layer] = new_t;
 }

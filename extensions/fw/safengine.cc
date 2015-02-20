@@ -3,6 +3,8 @@
 using namespace nfd;
 using namespace nfd::fw;
 
+NS_LOG_COMPONENT_DEFINE ("SAFEngine");
+
 SAFEngine::SAFEngine(const FaceTable& table, unsigned int prefixComponentNumber)
 {
   initFaces(table);
@@ -21,11 +23,14 @@ void SAFEngine::initFaces(const nfd::FaceTable& table)
 
   for(nfd::FaceTable::const_iterator it = table.begin (); it != table.end (); ++it)
   {
+    if((*it)->isLocal())
+      continue;
     faces.push_back((*it)->getId());
     fbMap[(*it)->getId()] = boost::shared_ptr<FaceLimitManager>(new FaceLimitManager(*it));
   }
 
   std::sort(faces.begin(), faces.end());
+  determineNodeName(table);
 }
 
 int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry)
@@ -50,7 +55,6 @@ int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> origi
 
 bool SAFEngine::tryForwardInterest(const Interest& interest, shared_ptr<Face> outFace)
 {
-
   if( dynamic_cast<ns3::ndn::NetDeviceFace*>(&(*outFace)) == NULL) //check if its a NetDevice
   {
     return true;
@@ -71,9 +75,10 @@ bool SAFEngine::tryForwardInterest(const Interest& interest, shared_ptr<Face> ou
 
 void SAFEngine::update ()
 {
-  //NS_LOG_DEBUG("FWT UPDATE at SimTime " << Simulator::Now ().GetSeconds () << " for node: '" <<   Names::FindName(node) << "'\n");
+  NS_LOG_DEBUG("FWT UPDATE at SimTime " << ns3::Simulator::Now ().GetSeconds () << " for Node: '" << nodeName);
   for(SAFEntryMap::iterator it = entryMap.begin (); it != entryMap.end (); ++it)
   {
+    NS_LOG_DEBUG("Updating Prefix " << it->first);
     it->second->update();
   }
 
@@ -111,6 +116,16 @@ void SAFEngine::logNack(const Face& inFace, const Interest& interest)
     it->second->logNack(inFace, interest);
 }
 
+void SAFEngine::logRejectedInterest(shared_ptr<pit::Entry> pitEntry)
+{
+  std::string prefix = extractContentPrefix(pitEntry->getName());
+  SAFEntryMap::iterator it = entryMap.find (prefix);
+  if(it == entryMap.end ())
+    fprintf(stderr,"Error in SAFEntryLookUp\n");
+  else
+    it->second->logRejectedInterest(pitEntry);
+}
+
 std::string SAFEngine::extractContentPrefix(nfd::Name name)
 {
   //fprintf(stderr, "extracting from %s\n", name.toUri ().c_str ());
@@ -122,4 +137,17 @@ std::string SAFEngine::extractContentPrefix(nfd::Name name)
     prefix.append (name.get (i).toUri ());
   }
   return prefix;
+}
+
+void SAFEngine::determineNodeName(const nfd::FaceTable& table)
+{
+  for(nfd::FaceTable::const_iterator it = table.begin (); it != table.end (); ++it)
+  {
+    if(ns3::ndn::NetDeviceFace* netf = dynamic_cast<ns3::ndn::NetDeviceFace*>(&(*(*it))))
+    {
+      nodeName = ns3::Names::FindName(netf->GetNetDevice()->GetNode());
+      return;
+    }
+  }
+  nodeName = "UnknownNode";
 }

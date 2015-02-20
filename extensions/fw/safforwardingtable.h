@@ -12,6 +12,7 @@
 #include "iostream"
 #include "climits"
 #include <math.h>
+#include "ns3/log.h"
 
 namespace nfd
 {
@@ -25,7 +26,7 @@ public:
   int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces);
 
   void update(boost::shared_ptr<SAFStatisticMeasure> smeasure);
-  double getCurrentReliability(){return this->curReliability;}
+  std::map<int /*faceId*/,double/*reliabilty*/> getCurrentReliability(){return this->curReliability;}
 
   protected:
 
@@ -46,14 +47,14 @@ public:
   void probeColumn(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure);
   void shiftDroppingTraffic(std::vector<int> faces, int layer, boost::shared_ptr<SAFStatisticMeasure> smeasure);
 
-  void decreaseReliabilityThreshold();
-  void increaseReliabilityThreshold();
-  void updateReliabilityThreshold(bool mode);
+  void decreaseReliabilityThreshold(int layer);
+  void increaseReliabilityThreshold(int layer);
+  void updateReliabilityThreshold(int layer, bool mode);
 
   boost::numeric::ublas::matrix<double> table;
   std::vector<int> faces;
-  std::map<int,int> preferedFaces;
-  double curReliability;
+  std::map<int /*faceId*/,int/*costs/metric*/> preferedFaces;
+  std::map<int /*faceId*/,double/*reliabilty*/> curReliability;
   ns3::UniformVariable randomVariable;
 };
 

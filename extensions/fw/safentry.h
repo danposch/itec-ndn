@@ -22,6 +22,7 @@ public:
   void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
   void logNack(const Face& inFace, const Interest& interest);
+  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry);
 
   void update();
 

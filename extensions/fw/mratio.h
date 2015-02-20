@@ -3,7 +3,6 @@
 
 #include "safstatisticmeasure.h"
 #include <iostream>
-
 namespace nfd
 {
 namespace fw
@@ -16,6 +15,7 @@ public:
   virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry);
   virtual void logNack(const Face& inFace, const Interest& interest);
+  virtual void logRejectedInterest (shared_ptr<pit::Entry> pitEntry);
 
 protected:
 

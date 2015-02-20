@@ -3,6 +3,8 @@
 using namespace nfd;
 using namespace nfd::fw;
 
+NS_LOG_COMPONENT_DEFINE("SAFStatisticMeasure");
+
 SAFStatisticMeasure::SAFStatisticMeasure(std::vector<int> faces)
 {
   this->faces = faces;
@@ -25,7 +27,7 @@ SAFStatisticMeasure::~SAFStatisticMeasure()
 {
 }
 
-void SAFStatisticMeasure::update (double reliability_t)
+void SAFStatisticMeasure::update (std::map<int,double> reliability_t)
 {
   for(int layer=0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); layer ++) // for each layer
   {
@@ -36,8 +38,8 @@ void SAFStatisticMeasure::update (double reliability_t)
 
     //calculate new values
     calculateTotalForwardedRequests(layer);
-    calculateLinkReliabilities (layer);
-    calculateUnsatisfiedTrafficFractionOfUnreliableFaces (layer, reliability_t);
+    calculateLinkReliabilities (layer, reliability_t[layer]);
+    calculateUnsatisfiedTrafficFractionOfUnreliableFaces (layer, reliability_t[layer]);
     calculateActualForwardingProbabilities (layer);
 
     //clear collected information
@@ -62,9 +64,9 @@ void SAFStatisticMeasure::calculateTotalForwardedRequests(int layer)
   }
 }
 
-void SAFStatisticMeasure::calculateLinkReliabilities(int layer)
+void SAFStatisticMeasure::calculateLinkReliabilities(int layer, double reliability_t)
 {
-  //NS_LOG_DEBUG("Calculating link reliability for layer " << layer);
+  NS_LOG_DEBUG("Calculating link reliability for layer " << layer <<": \t threshold:" << reliability_t);
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
   {
     if(stats[layer].unsatisfied_requests[*it] == 0)
@@ -73,8 +75,8 @@ void SAFStatisticMeasure::calculateLinkReliabilities(int layer)
       stats[layer].last_reliability[*it] =
           (double)stats[layer].satisfied_requests[*it] / ((double)(stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it]));
 
-    /*NS_LOG_DEBUG("Reliabilty for Face(" << *it << ")=" << stats[layer].last_reliability[*it] << "      in total "
-        << stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it] << " interest forwarded");*/
+    NS_LOG_DEBUG("Reliabilty Face(" << *it << ")=" << stats[layer].last_reliability[*it] << "\tin total "
+        << stats[layer].unsatisfied_requests[*it] + stats[layer].satisfied_requests[*it] << " interest forwarded");
   }
 }
 
@@ -110,7 +112,7 @@ void SAFStatisticMeasure::calculateActualForwardingProbabilities (int layer)
   }
 }
 
-std::vector<int> SAFStatisticMeasure::getReliableFaces(int layer, double threshold)
+std::vector<int> SAFStatisticMeasure::getReliableFaces(int layer, double reliability_t)
 {
   std::vector<int> reliable;
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
@@ -118,13 +120,13 @@ std::vector<int> SAFStatisticMeasure::getReliableFaces(int layer, double thresho
     if(*it == DROP_FACE_ID)
       continue;
 
-    if(getLinkReliability(*it, layer) >= threshold)
+    if(getLinkReliability(*it, layer) >= reliability_t)
       reliable.push_back (*it);
   }
   return reliable;
 }
 
-std::vector<int>  SAFStatisticMeasure::getUnreliableFaces(int layer, double threshold)
+std::vector<int>  SAFStatisticMeasure::getUnreliableFaces(int layer, double reliability_t)
 {
   std::vector<int> unreliable;
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
@@ -132,7 +134,7 @@ std::vector<int>  SAFStatisticMeasure::getUnreliableFaces(int layer, double thre
     if(*it == DROP_FACE_ID)
       continue;
 
-    if(getLinkReliability(*it, layer) < threshold)
+    if(getLinkReliability(*it, layer) < reliability_t)
       unreliable.push_back (*it);
   }
   return unreliable;

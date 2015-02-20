@@ -6,6 +6,7 @@
 #include "fw/strategy.hpp"
 #include <vector>
 #include <map>
+#include "ns3/log.h"
 
 namespace nfd
 {
@@ -22,11 +23,12 @@ public:
   virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data) = 0;
   virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry) = 0;
   virtual void logNack(const Face& inFace, const Interest& interest) = 0;
+  virtual void logRejectedInterest(shared_ptr<pit::Entry> pitEntry) = 0;
 
-  virtual void update(double reliability_t);
+  virtual void update(std::map<int, double> reliability_t);
 
-  virtual std::vector<int> getReliableFaces(int layer, double threshold);
-  virtual std::vector<int> getUnreliableFaces(int layer, double threshold);
+  virtual std::vector<int> getReliableFaces(int layer, double reliability_t);
+  virtual std::vector<int> getUnreliableFaces(int layer, double reliability_t);
 
   double getLinkReliability(int face_id, int layer);
   int getTotalForwardedInterests(int layer){return stats[layer].total_forwarded_requests;}
@@ -40,7 +42,7 @@ protected:
   SAFStatisticMeasure(std::vector<int> faces);
 
   void calculateTotalForwardedRequests(int layer);
-  void calculateLinkReliabilities(int layer);
+  void calculateLinkReliabilities(int layer, double reliability_t);
   void calculateUnsatisfiedTrafficFractionOfUnreliableFaces (int layer, double reliability_t);
   void calculateActualForwardingProbabilities (int layer);
 
