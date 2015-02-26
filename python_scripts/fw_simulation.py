@@ -48,25 +48,29 @@ class Thread(threading.Thread):
 
 		# callback
 		print "threadFinished(job_" + str(self.jobNumber) + ")"
-		self.callback(self.jobNumber,self.src,self.dst)
+		self.callback(self.jobNumber,self.src,self.dst, proc.returncode)
 
-def threadFinished(job_number,src,dst):
+def threadFinished(job_number,src,dst,returncode):
 	#compute statistics
 
 	global curActiveThreads, invalid_runs
 
-	print "computeStats(job_" + str(job_number) + ")"
-	try:
-		print src
-		#calculate_average.computeStats(src+"/traces/");
-		consumer_stats.generateStatsPerSimulation(src);
-	except Exception:
+	if(returncode != 0):
 		invalid_runs += 1
-		pass
+		print "Error in job_" + str(job_number) +". Simulation incomplete!"
+	else:
+		print "computeStats(job_" + str(job_number) + ")"
+		try:
+			print src
+			#calculate_average.computeStats(src+"/traces/")
+			consumer_stats.generateStatsPerSimulation(src)
+		except Exception:
+			invalid_runs += 1
+			pass
 
 	#copy results
-	#files = glob.glob(src + "/traces/*STATS*.txt");
-	files = glob.glob(src + "/traces/*.txt");
+	#files = glob.glob(src + "/traces/*STATS*.txt")
+	files = glob.glob(src + "/traces/*.txt")
 
 	if not os.path.exists(dst):
 		os.makedirs(dst)
@@ -92,7 +96,7 @@ def	order_results(path):
 
 			#print root+subdir
 
-			files = glob.glob(root+subdir + "/*/*STATS*.txt" );
+			files = glob.glob(root+subdir + "/*/*STATS*.txt" )
 		
 			avg_ratio = 0.0
 			file_count = 0		
@@ -105,7 +109,7 @@ def	order_results(path):
 					if(line.startswith("Ratio:")):
 						avg_ratio += float(line[len("Ratio:"):])
 						file_count +=1
-						break;
+						break
 
 			if(file_count > 0):
 	 			avg_ratio /= file_count
@@ -175,14 +179,14 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 1
+THREADS = 2
 SIMULATION_RUNS = 4
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
 
 #brite config file
 scenario="example"
 
-#britePath="/local/users/ndnsim/ndnSIM/itec-scenarios/"
+#britePath="/local/users/ndnsim2/ndnSIM/itec-ndn/"
 britePath="/home/dposch/ndnSIM/itec-ndn/"
 
 briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
@@ -207,8 +211,8 @@ ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
 
-forwardingStrategies = [bestRoute, ncc, broadcast, saf]
-#forwardingStrategies = [saf]
+#forwardingStrategies = [bestRoute, ncc, broadcast, saf]
+forwardingStrategies = [saf]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
