@@ -29,9 +29,9 @@ void SAFEntry::initFaces ()
   }
 }
 
-int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces)
+int SAFEntry::determineNextHop(const Interest& interes, std::vector<int> alreadyTriedFaces)
 {
-  return ftable->determineNextHop (interest,originInFaces,alreadyTriedFaces);
+  return ftable->determineNextHop (interes,alreadyTriedFaces);
 }
 
 void SAFEntry::update()
@@ -60,9 +60,9 @@ void SAFEntry::logNack(const Face& inFace, const Interest& interest)
   smeasure->logNack (inFace, interest);
 }
 
-void SAFEntry::logRejectedInterest(shared_ptr<pit::Entry> pitEntry)
+void SAFEntry::logRejectedInterest(shared_ptr<pit::Entry> pitEntry, int face_id)
 {
-  smeasure->logRejectedInterest(pitEntry);
+  smeasure->logRejectedInterest(pitEntry, face_id);
 }
 
 bool SAFEntry::evaluateFallback()
@@ -79,7 +79,7 @@ bool SAFEntry::evaluateFallback()
       continue;
 
     //NS_LOG_UNCOND("forwarded=" << smeasure->getForwardedInterests(*it, 0) << ", linkReliability=" << smeasure50->getLinkReliability (*it, 0));
-    if( smeasure->getForwardedInterests (*it, 0) > 0 && smeasure->getLinkReliability (*it, 0) > 0)
+    if( smeasure->getForwardedInterests (*it, 0) > 0 && smeasure->getFaceReliability (*it, 0) > 0)
     {
       increaseFallback = false;
       break;

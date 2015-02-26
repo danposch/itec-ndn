@@ -20,6 +20,7 @@ void Mratio::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
   const nfd::pit::OutRecordCollection records = pitEntry->getOutRecords();
   for(nfd::pit::OutRecordCollection::const_iterator it = records.begin (); it!=records.end (); ++it)
   {
+    //fprintf(stderr, "Timeout loged on face %d\n",(*it).getFace()->getId());
     stats[ilayer].unsatisfied_requests[(*it).getFace()->getId()] += 1;
   }
 }
@@ -30,8 +31,14 @@ void Mratio::logNack(const Face &inFace, const Interest &interest)
   stats[ilayer].unsatisfied_requests[inFace.getId()] += 1;
 }
 
-void Mratio::logRejectedInterest (shared_ptr<pit::Entry> pitEntry)
+void Mratio::logRejectedInterest (shared_ptr<pit::Entry> pitEntry, int face_id)
 {
+  //fprintf(stderr, "Rejected Interest logged on face %d\n",DROP_FACE_ID);
+
   int ilayer = SAFStatisticMeasure::determineContentLayer(pitEntry->getInterest());
-  stats[ilayer].satisfied_requests[DROP_FACE_ID] += 1;
+
+  if(face_id == DROP_FACE_ID)
+    stats[ilayer].satisfied_requests[face_id] += 1;
+  else
+    stats[ilayer].unsatisfied_requests[face_id] += 1;
 }

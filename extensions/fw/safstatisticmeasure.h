@@ -7,6 +7,10 @@
 #include <vector>
 #include <map>
 #include "ns3/log.h"
+#include <math.h>
+#include <list>
+
+#define HISTORY_SIZE 5
 
 namespace nfd
 {
@@ -23,20 +27,31 @@ public:
   virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data) = 0;
   virtual void logExpiredInterest(shared_ptr<pit::Entry> pitEntry) = 0;
   virtual void logNack(const Face& inFace, const Interest& interest) = 0;
-  virtual void logRejectedInterest(shared_ptr<pit::Entry> pitEntry) = 0;
+  virtual void logRejectedInterest(shared_ptr<pit::Entry> pitEntry, int face_id) = 0;
 
   virtual void update(std::map<int, double> reliability_t);
 
   virtual std::vector<int> getReliableFaces(int layer, double reliability_t);
   virtual std::vector<int> getUnreliableFaces(int layer, double reliability_t);
 
-  double getLinkReliability(int face_id, int layer);
+  double getFaceReliability(int face_id, int layer);
   int getTotalForwardedInterests(int layer){return stats[layer].total_forwarded_requests;}
   double getActualForwardingProbability(int face_id, int layer){return stats[layer].last_actual_forwarding_probs[face_id];}
-  double getUnsatisfiedTrafficFractionOfUnreliableFaces(int ilayer){return stats[ilayer].unsatisfied_traffic_fraction_unreliable_faces;}
-  double getForwardedInterests(int face_id, int layer){return getActualForwardingProbability (face_id,layer) * getTotalForwardedInterests (layer);}
+  int getForwardedInterests(int face_id, int layer){return getS(face_id, layer) + getU(face_id, layer);}
   double getSumOfReliabilities(std::vector<int> set_of_faces, int layer);
   double getSumOfUnreliabilities(std::vector<int> set_of_faces, int layer);
+
+  double getSatisfactionVariance(int face_id, int layer){return stats[layer].satisfaction_variance[face_id];}
+  double getAlpha(int face_id, int layer);
+
+  int getS(int face_id, int layer){return stats[layer].last_satisfied_requests[face_id];}
+  int getU(int face_id, int layer){return stats[layer].last_unsatisfied_requests[face_id];}
+
+  double getUT(int face_id, int layer){return ((double) getU(face_id, layer)) / ((double)getTotalForwardedInterests(layer));}
+  double getST(int face_id, int layer){return ((double) getS(face_id, layer)) / ((double)getTotalForwardedInterests(layer));}
+
+  double getRho(int layer);
+
 
 protected:
   SAFStatisticMeasure(std::vector<int> faces);
@@ -45,6 +60,7 @@ protected:
   void calculateLinkReliabilities(int layer, double reliability_t);
   void calculateUnsatisfiedTrafficFractionOfUnreliableFaces (int layer, double reliability_t);
   void calculateActualForwardingProbabilities (int layer);
+  void updateVariance(int layer);
 
   std::vector<int> faces;
 
@@ -58,41 +74,50 @@ protected:
      double /*value to store*/
     > MeasureDoubleMap;
 
+  typedef std::map
+  <int, /*face id*/
+  std::list<int> /*int queue*/
+  > MeasureIntList;
+
   struct SAFMesureStats
   {
-    //double unsatisfied_traffic_fraction;
-    //double satisfied_traffic_fraction;
-    //double unsatisfied_traffic_fraction_reliable_faces;
-
-    double unsatisfied_traffic_fraction_unreliable_faces;
-    int total_forwarded_requests;
-
+    /* variables used for logging*/
     MeasureIntMap satisfied_requests;
     MeasureIntMap unsatisfied_requests;
+
+
+    /*variables holding information*/
+    int total_forwarded_requests;
 
     MeasureDoubleMap last_reliability;
     MeasureDoubleMap last_actual_forwarding_probs;
 
+    MeasureIntMap last_satisfied_requests;
+    MeasureIntMap last_unsatisfied_requests;
+
+    MeasureDoubleMap satisfaction_variance;
+    MeasureIntList satisfied_requests_history;
+
     SAFMesureStats()
     {
       total_forwarded_requests = 0;
-      unsatisfied_traffic_fraction_unreliable_faces = 0;
     }
 
     SAFMesureStats(const SAFMesureStats& other)
     {
-      //unsatisfied_traffic_fraction = other.unsatisfied_traffic_fraction;
-      //unsatisfied_traffic_fraction_reliable_faces = other.unsatisfied_traffic_fraction_reliable_faces;
-      //satisfied_traffic_fraction = other.satisfied_traffic_fraction;
-
-      unsatisfied_traffic_fraction_unreliable_faces = other.unsatisfied_traffic_fraction_unreliable_faces;
-      total_forwarded_requests = other.total_forwarded_requests;
-
       satisfied_requests = other.satisfied_requests;
       unsatisfied_requests = other.unsatisfied_requests;
 
+      total_forwarded_requests = other.total_forwarded_requests;
+
       last_reliability = other.last_reliability;
       last_actual_forwarding_probs = other.last_actual_forwarding_probs;
+
+      last_satisfied_requests = other.last_satisfied_requests;
+      last_unsatisfied_requests = other.last_unsatisfied_requests;
+
+      satisfaction_variance = other.satisfaction_variance;
+      satisfied_requests_history = other.satisfied_requests_history;
     }
   };
 

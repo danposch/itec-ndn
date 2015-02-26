@@ -20,6 +20,8 @@ void parseParameters(int argc, char* argv[])
   bool v0 = false, v1 = false, v2 = false;
   bool vN = false;
 
+  ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
+
   std::string top_path = "fwt_fairness_small.top";
 
   CommandLine cmd;
@@ -110,7 +112,7 @@ int main(int argc, char* argv[])
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "25000");
   ndnHelper.Install (routers1);
   ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(routers1,"/");
-  //ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(routers2,"/");
+  ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(routers2,"/");
 
   // Install NDN applications
   std::string prefix = "/data";
@@ -150,7 +152,7 @@ int main(int argc, char* argv[])
 
   NS_LOG_UNCOND("Simulation will be started!");
 
-  Simulator::Stop (Seconds(120)); //runs for 5 min.
+  Simulator::Stop (Seconds(60)); //runs for 5 min.
   Simulator::Run ();
   Simulator::Destroy ();
 

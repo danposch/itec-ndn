@@ -32,6 +32,7 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc,argv);
 
+  ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
   ns3::ndn::NetworkGenerator gen(confFile);
 
   int min_bw_as = -1;
@@ -91,7 +92,7 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 900;
+  int simTime = 1200;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
@@ -112,7 +113,7 @@ int main (int argc, char *argv[])
 
   //3. install helper on network nodes
   ns3::ndn::StackHelper ndnHelper;
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "12500"); // all entities can store up to 1k chunks in cache (about 50MB)
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "6250"); // all entities can store up to 1k chunks in cache (about 25MB)
   ndnHelper.Install(gen.getAllASNodes ());// install all on network nodes...
 
   if(strategy.compare ("saf") == 0)
@@ -129,7 +130,7 @@ int main (int argc, char *argv[])
     exit(-1);
   }
 
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "2500"); // all entities can store up to 1k chunks in cache (about 10MB)
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1250"); // all entities can store up to 1k chunks in cache (about 5MB)
   ndnHelper.Install (client);
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1");
   ndnHelper.Install (server);

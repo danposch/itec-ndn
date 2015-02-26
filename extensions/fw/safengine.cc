@@ -33,7 +33,7 @@ void SAFEngine::initFaces(const nfd::FaceTable& table)
   determineNodeName(table);
 }
 
-int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry)
+int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry)
 {
   //check if content prefix has been seen
   std::string prefix = extractContentPrefix(interest.getName());
@@ -50,7 +50,7 @@ int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> origi
   }
 
   boost::shared_ptr<SAFEntry> entry = entryMap.find(prefix)->second;
-  return entry->determineNextHop(interest, originInFaces, alreadyTriedFaces);
+  return entry->determineNextHop(interest, alreadyTriedFaces);
 }
 
 bool SAFEngine::tryForwardInterest(const Interest& interest, shared_ptr<Face> outFace)
@@ -75,7 +75,7 @@ bool SAFEngine::tryForwardInterest(const Interest& interest, shared_ptr<Face> ou
 
 void SAFEngine::update ()
 {
-  NS_LOG_DEBUG("FWT UPDATE at SimTime " << ns3::Simulator::Now ().GetSeconds () << " for Node: '" << nodeName);
+  NS_LOG_DEBUG("\nFWT UPDATE at SimTime " << ns3::Simulator::Now ().GetSeconds () << " for Node: '" << nodeName);
   for(SAFEntryMap::iterator it = entryMap.begin (); it != entryMap.end (); ++it)
   {
     NS_LOG_DEBUG("Updating Prefix " << it->first);
@@ -108,22 +108,30 @@ void SAFEngine::logExpiredInterest(shared_ptr< pit::Entry > pitEntry)
 
 void SAFEngine::logNack(const Face& inFace, const Interest& interest)
 {
+  //log the nack
   std::string prefix = extractContentPrefix(interest.getName());
   SAFEntryMap::iterator it = entryMap.find (prefix);
   if(it == entryMap.end ())
     fprintf(stderr,"Error in SAFEntryLookUp\n");
   else
     it->second->logNack(inFace, interest);
+
+  //return the token?
+  SAFEntryMap::iterator i = entryMap.find (prefix);
+  if(i == entryMap.end ())
+    fprintf(stderr,"Error in SAFEntryLookUp\n");
+  else
+    return fbMap[inFace.getId ()]->receivedNack(prefix);
 }
 
-void SAFEngine::logRejectedInterest(shared_ptr<pit::Entry> pitEntry)
+void SAFEngine::logRejectedInterest(shared_ptr<pit::Entry> pitEntry, int face_id)
 {
   std::string prefix = extractContentPrefix(pitEntry->getName());
   SAFEntryMap::iterator it = entryMap.find (prefix);
   if(it == entryMap.end ())
     fprintf(stderr,"Error in SAFEntryLookUp\n");
   else
-    it->second->logRejectedInterest(pitEntry);
+    it->second->logRejectedInterest(pitEntry, face_id);
 }
 
 std::string SAFEngine::extractContentPrefix(nfd::Name name)

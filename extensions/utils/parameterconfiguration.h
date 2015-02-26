@@ -19,7 +19,7 @@
 #define P_MAX_LAYERS 1
 #define P_DROP_FACE_ID -1
 
-#define P_RELIABILITY_THRESHOLD 0.8 // before 0.7
+#define P_RELIABILITY_THRESHOLD 0.7 // before 0.7
 
 #define DROP_FACE_ID -1
 #define FACE_NOT_FOUND -1

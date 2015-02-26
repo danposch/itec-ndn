@@ -19,13 +19,13 @@ class SAFEngine
 public:
   SAFEngine(const nfd::FaceTable& table, unsigned int prefixComponentNumber);
 
-  int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry);
+  int determineNextHop(const Interest& interest, std::vector<int> alreadyTriedFaces, shared_ptr<fib::Entry> fibEntry);
   bool tryForwardInterest(const Interest& interest, shared_ptr<Face>);
 
   void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
   void logNack(const Face& inFace, const Interest& interest);
-  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry);
+  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry, int face_id);
 
 protected:
   void initFaces(const nfd::FaceTable& table);

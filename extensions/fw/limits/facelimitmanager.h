@@ -5,6 +5,7 @@
 #define INTEREST_PACKET_SIZE 50
 #define TOKEN_FILL_INTERVALL 10 //ms
 #define BUCKET_SIZE 25.0
+#define NACK_RETURN_TOKEN 0.5
 
 #include "fw/face-table.hpp"
 #include "boost/shared_ptr.hpp"
@@ -28,6 +29,7 @@ public:
 
   bool addNewPrefix(std::string content_prefix);
   bool tryForwardInterest(std::string prefix);
+  void receivedNack(std::string prefix);
 
 protected:
 

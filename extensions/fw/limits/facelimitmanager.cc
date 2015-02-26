@@ -85,3 +85,8 @@ bool FaceLimitManager::tryForwardInterest(std::string prefix)
 {
   return bMap[prefix]->tryConsumeToken();
 }
+
+void FaceLimitManager::receivedNack(std::string prefix)
+{
+  bMap[prefix]->addTokens(1.0 * NACK_RETURN_TOKEN);
+}

@@ -17,12 +17,12 @@ class SAFEntry
 public:
   SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry);
 
-  int determineNextHop(const Interest& interest, std::vector<int> originInFaces, std::vector<int> alreadyTriedFaces);
+  int determineNextHop(const Interest& interes, std::vector<int> alreadyTriedFaces);
 
   void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
   void logExpiredInterest(shared_ptr< pit::Entry > pitEntry);
   void logNack(const Face& inFace, const Interest& interest);
-  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry);
+  void logRejectedInterest(shared_ptr<pit::Entry> pitEntry, int face_id);
 
   void update();
 

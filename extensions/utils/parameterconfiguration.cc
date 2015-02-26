@@ -17,7 +17,7 @@ ParameterConfiguration::ParameterConfiguration()
   //setParameter ("RELIABILITY_THRESHOLD", P_RELIABILITY_THRESHOLD);
 
   setParameter ("RELIABILITY_THRESHOLD_MIN", P_RELIABILITY_THRESHOLD);
-  setParameter ("RELIABILITY_THRESHOLD_MAX", 1.0);
+  setParameter ("RELIABILITY_THRESHOLD_MAX", 0.999);
 }
 
 

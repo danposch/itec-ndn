@@ -24,23 +24,27 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
 
   //find + exclue inface(s) and already tried outface(s)
   std::vector<int> originInFaces = getAllInFaces(pitEntry);
-  std::vector<int> alreadyTriedFaces = getAllOutFaces(pitEntry);
+  std::vector<int> alreadyTriedFaces; // keep them empty for now and check if nack or retransmission?
 
   std::string prefix = interest.getName().get(0).toUri();
   if(prefix.compare("NACK") == 0)
   {
     //fprintf(stderr, "Received Nack %s on face[%d]\n", interest.getName().toUri().c_str(), inFace.getId ());
     engine->logNack(inFace, pitEntry->getInterest());
+    alreadyTriedFaces = getAllOutFaces(pitEntry);
   }
 
+  /*if(alreadyTriedFaces.size () != getAllOutFaces(pitEntry).size())
+    fprintf(stderr, "We got a Rtx: %s\n", pitEntry->getInterest().getName().toUri().c_str());*/
+
   const Interest int_to_forward = pitEntry->getInterest();
-  int nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
-  while(nextHop != DROP_FACE_ID)
+  int nextHop = engine->determineNextHop(int_to_forward, alreadyTriedFaces, fibEntry);
+  while(nextHop != DROP_FACE_ID && (std::find(originInFaces.begin (),originInFaces.end (), nextHop) == originInFaces.end ()))
   {
     bool success = engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop));
 
     /*DISABLING LIMITS FOR NOW*/
-    success = true;
+    //success = true;
 
     if(success)
     {
@@ -51,9 +55,10 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
 
     engine->logNack((*getFaceTable ().get(nextHop)), pitEntry->getInterest());
     alreadyTriedFaces.push_back (nextHop);
-    nextHop = engine->determineNextHop(int_to_forward, originInFaces, alreadyTriedFaces, fibEntry);
+    nextHop = engine->determineNextHop(int_to_forward, alreadyTriedFaces, fibEntry);
   }
-  engine->logRejectedInterest(pitEntry);
+  //fprintf(stderr, "Rejecting Interest %s\n", int_to_forward.getName ().toUri ().c_str ());
+  engine->logRejectedInterest(pitEntry, nextHop);
   rejectPendingInterest(pitEntry);
 }
 
