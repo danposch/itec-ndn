@@ -22,6 +22,11 @@ int main (int argc, char *argv[])
   std::string connectivity = "medium";
   int totalLinkFailures = 0;
 
+  LogComponentEnableAll (LOG_ALL);
+  LogComponentDisableAll (LOG_LOGIC);
+  LogComponentDisableAll (LOG_FUNCTION);
+  LogComponentDisableAll (LOG_INFO);
+
   CommandLine cmd;
   cmd.AddValue ("briteConfFile", "BRITE conf file", confFile);
   cmd.AddValue ("connectivity", "low, medium, high", connectivity);
@@ -92,7 +97,7 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 900;
+  int simTime = 1200;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
@@ -102,10 +107,10 @@ int main (int argc, char *argv[])
   p2p->SetChannelAttribute ("Delay", StringValue ("2ms"));
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  gen.randomlyPlaceNodes (1, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
+  gen.randomlyPlaceNodes (10, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
 
   p2p->SetDeviceAttribute ("DataRate", StringValue ("3Mbps"));
-  gen.randomlyPlaceNodes (1, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
+  gen.randomlyPlaceNodes (100, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
 
   //4. setup and install strategy for server/clients
   NodeContainer server = gen.getCustomNodes ("Server");
