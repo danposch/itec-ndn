@@ -214,5 +214,5 @@ double SAFStatisticMeasure::getRho(int layer)
     sum_satisfied += stats[layer].last_satisfied_requests[*it];
   }
   //fprintf(stderr, "sum_satisfied = %f; total_forwarded=%d\n", sum_satisfied, stats[layer].total_forwarded_requests);
-  return sum_satisfied / stats[layer].total_forwarded_requests;
+  return 1.0 - (sum_satisfied / stats[layer].total_forwarded_requests);
 }
