@@ -231,7 +231,8 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
   const pit::InRecordCollection& inRecords = pitEntry->getInRecords();
   pit::InRecordCollection::const_iterator pickedInRecord = std::max_element(
     inRecords.begin(), inRecords.end(), bind(&compare_pickInterest, _1, _2, &outFace));
-  BOOST_ASSERT(pickedInRecord != inRecords.end());
+  
+  //BOOST_ASSERT(pickedInRecord != inRecords.end());
 
   shared_ptr<Interest> interest;
   if(pickedInRecord != inRecords.end())
@@ -240,11 +241,14 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
     interest = const_pointer_cast<Interest>(
       pickedInRecord->getInterest().shared_from_this());
   }
-  else
+  else // in this case no onRecod exists for the interest. we still could send but for now drop it
   {
+    return;
     interest = const_pointer_cast<Interest>(
       pitEntry->getInterest().shared_from_this());
     //fprintf(stderr, "pickedInRecord not exists\n");
+    //fprintf(stderr, "interest = %s\n", interest->getName().toUri().c_str());
+    //fprintf(stderr, "inRecords.size()=%d\n", inRecords.size());
   }
 
   if (wantNewNonce) {
