@@ -48,7 +48,7 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
 
     if(success)
     {
-      //fprintf(stderr, "Transmitting %s on face[%d]\n", pitEntry->getInterest().getName().toUri().c_str(), nextHop);
+      //fprintf(stderr, "Transmitting %s on face[%d]\n", int_to_forward.getName().toUri().c_str(), nextHop);
       sendInterest(pitEntry, getFaceTable ().get (nextHop));
       return;
     }

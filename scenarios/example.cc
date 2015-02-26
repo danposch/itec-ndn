@@ -22,10 +22,10 @@ int main (int argc, char *argv[])
   std::string connectivity = "medium";
   int totalLinkFailures = 0;
 
-  LogComponentEnableAll (LOG_ALL);
+  /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
   LogComponentDisableAll (LOG_FUNCTION);
-  LogComponentDisableAll (LOG_INFO);
+  LogComponentDisableAll (LOG_INFO);*/
 
   CommandLine cmd;
   cmd.AddValue ("briteConfFile", "BRITE conf file", confFile);
