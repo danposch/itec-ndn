@@ -19,7 +19,7 @@ SAFStatisticMeasure::SAFStatisticMeasure(std::vector<int> faces)
 
       stats[layer].last_reliability[*it] = 0;
       stats[layer].last_actual_forwarding_probs[*it] = 0;
-      stats[layer].satisfaction_variance[*it] = DBL_MAX;// a high value
+      stats[layer].satisfaction_variance[*it] = INIT_VARIANCE;// a high value
       stats[layer].last_unsatisfied_requests[*it] = 0;
       stats[layer].last_satisfied_requests[*it] = 0;
     }
@@ -171,7 +171,7 @@ void SAFStatisticMeasure::updateVariance (int layer)
 
     if(stats[layer].satisfied_requests_history[*it].size() <= 1)
     {
-      stats[layer].satisfaction_variance[*it] = DBL_MAX;
+      stats[layer].satisfaction_variance[*it] = INIT_VARIANCE;
     }
     else
     {
@@ -205,6 +205,9 @@ double SAFStatisticMeasure::getAlpha(int face_id, int layer)
 
 double SAFStatisticMeasure::getRho(int layer)
 {
+  if(stats[layer].total_forwarded_requests == 0)
+    return 0.0;
+
   double sum_satisfied = 0.0;
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
   {

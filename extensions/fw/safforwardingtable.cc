@@ -51,7 +51,7 @@ void SAFForwardingTable::initTable ()
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
-  std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 2.0);
+  std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 4.0);
 
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
@@ -204,55 +204,59 @@ void SAFForwardingTable::update(boost::shared_ptr<SAFStatisticMeasure> stats)
 
     if(utf > 0)
     {
-      // try to split the utf on r_faces
-      std::map<int/*faceId*/, double /*traffic that can be shifted to face*/> ts;
-      double ts_sum = 0.0;
-      for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it) // for each r_face
+      if(r_faces.size () > 0)
       {
-        NS_LOG_DEBUG("Face[" << *it <<"]: getS() / curReliability[*it] = "
-                     << ((double)stats->getS (*it, layer)) << "/" << curReliability[layer]);
-        ts[*it] = ((double)stats->getS (*it, layer)) / curReliability[layer];
-        ts[*it] -= stats->getForwardedInterests (*it, layer);
-        ts_sum += ts[*it];
-        NS_LOG_DEBUG("Face[" << *it <<"]: still can take " <<  ts[*it] << " more Interests");
+        // try to split the utf on r_faces
+        std::map<int/*faceId*/, double /*traffic that can be shifted to face*/> ts;
+        double ts_sum = 0.0;
+        for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it) // for each r_face
+        {
+          NS_LOG_DEBUG("Face[" << *it <<"]: getS() / curReliability[*it] = "
+                       << ((double)stats->getS (*it, layer)) << "/" << curReliability[layer]);
+          ts[*it] = ((double)stats->getS (*it, layer)) / curReliability[layer];
+          ts[*it] -= stats->getForwardedInterests (*it, layer);
+          ts_sum += ts[*it];
+          NS_LOG_DEBUG("Face[" << *it <<"]: still can take " <<  ts[*it] << " more Interests");
+        }
+        NS_LOG_DEBUG("Total Interests that can be taken by F_R = " << ts_sum);
+
+        // find the minium fraction that can be AND should be shifted
+        double min_fraction = (ts_sum / (double) stats->getTotalForwardedInterests (layer));
+        if(min_fraction > utf)
+          min_fraction = utf;
+
+        NS_LOG_DEBUG("Total fraction that will be shifted to F_R= " << min_fraction);
+
+        //now shift traffic to r_faces
+        for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it) // for each r_face
+        {
+          NS_LOG_DEBUG("Face[" << *it <<"]: Adding (min_fraction*ts[" << *it << "] / I) / (ts_sum / I)="
+                     << "(" << min_fraction << "*" << ts[*it] << "/" << stats->getTotalForwardedInterests (layer) << ") / (" <<
+                     ts_sum << "/" << stats->getTotalForwardedInterests (layer) << ")=" <<
+                     (min_fraction * ts[*it] / (double) stats->getTotalForwardedInterests (layer))
+                     / (ts_sum / (double) stats->getTotalForwardedInterests (layer)));
+
+          table(determineRowOfFace (*it),layer) += (min_fraction * ts[*it] / (double) stats->getTotalForwardedInterests (layer))
+              / (ts_sum / (double) stats->getTotalForwardedInterests (layer));
+        }
+
+        utf -= min_fraction; //remove the shifted fraction from the utf
       }
-      NS_LOG_DEBUG("Total Interests that can be taken by F_R = " << ts_sum);
 
-      // find the minium fraction that can be AND should be shifted
-      double min_fraction = (ts_sum / (double) stats->getTotalForwardedInterests (layer));
-      if(min_fraction > utf)
-        min_fraction = utf;
-
-      NS_LOG_DEBUG("Total fraction that will be shifted to F_R= " << min_fraction);
-
-      //now shift traffic to r_faces
-      for(std::vector<int>::iterator it = r_faces.begin(); it != r_faces.end(); ++it) // for each r_face
-      {
-        NS_LOG_DEBUG("Face[" << *it <<"]: Adding (min_fraction*ts[" << *it << "] / I) / (ts_sum / I)="
-                   << "(" << min_fraction << "*" << ts[*it] << "/" << stats->getTotalForwardedInterests (layer) << ") / (" <<
-                   ts_sum << "/" << stats->getTotalForwardedInterests (layer) << ")=" <<
-                   (min_fraction * ts[*it] / (double) stats->getTotalForwardedInterests (layer))
-                   / (ts_sum / (double) stats->getTotalForwardedInterests (layer)));
-
-        table(determineRowOfFace (*it),layer) += (min_fraction * ts[*it] / (double) stats->getTotalForwardedInterests (layer))
-            / (ts_sum / (double) stats->getTotalForwardedInterests (layer));
-      }
-
-      //lets check if something has to be shifted to the dropping face
-      utf -= min_fraction;
+      //set the remaining utf to the dropping face
       NS_LOG_DEBUG("UTF remaining for the Dropping Face = "<< utf);
       table(determineRowOfFace (DROP_FACE_ID), layer) = utf;
-    }
 
-    // if we still have utf we do some probing
-    if(utf > 0)
-    {
-      probeColumn (p_faces, layer, stats);
+      //check if probing could be done
+      if(table(determineRowOfFace (DROP_FACE_ID), layer) > 0)
+      {
+        probeColumn (p_faces, layer, stats);
 
-      if(table(determineRowOfFace (DROP_FACE_ID), layer) > (1-curReliability[layer]))
-        decreaseReliabilityThreshold (layer);
+        if(table(determineRowOfFace (DROP_FACE_ID), layer) > (1-curReliability[layer]))
+          decreaseReliabilityThreshold (layer);
+      }
     }
-    else
+    else if(stats->getTotalForwardedInterests (layer) > 0)
       increaseReliabilityThreshold (layer);
 
   }

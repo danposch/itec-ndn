@@ -11,6 +11,7 @@
 #include <list>
 
 #define HISTORY_SIZE 5
+#define INIT_VARIANCE 1000
 
 namespace nfd
 {
