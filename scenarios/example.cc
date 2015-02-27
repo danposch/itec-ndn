@@ -158,10 +158,15 @@ int main (int argc, char *argv[])
   consumerHelper.SetAttribute ("Frequency", StringValue ("30")); // X interests a second roughly 1 MBIT
   consumerHelper.SetAttribute ("Randomize", StringValue ("uniform"));
   consumerHelper.SetAttribute ("LifeTime", StringValue("1s"));
+
+  Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
   for(int i=0; i<client.size (); i++)
   {
     consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
-    consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
+    ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
+
+    consumer.Start (Seconds(r->GetInteger (0,30)));
+    consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
                                      std::string(outputFolder + "/aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
