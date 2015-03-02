@@ -112,8 +112,10 @@ def	order_results(path):
 						avg_ratio += float(line[len("Ratio:"):])
 						
 					if(line.startswith("Cache_Hit_Ratio:")):
-											cache_hit_ratio += float(line[len("Cache_Hit_Ratio:"):])
-					file_count +=1
+						cache_hit_ratio += float(line[len("Cache_Hit_Ratio:"):])
+					
+				file_count +=1
+			
 
 			if(file_count > 0):
 	 			avg_ratio /= file_count
@@ -196,18 +198,18 @@ scenario="example"
 britePath="/home/dposch/ndnSIM/itec-ndn/"
 
 briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
-#briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/dash_medium_bw.conf"
-#briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/dash_high_bw.conf"
+briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/brite_medium_bw.conf"
+briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/brite_high_bw.conf"
 
-#briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
-briteConfigs = [briteConfigLowBw]
+briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
+#briteConfigs = [briteConfigLowBw]
 
 lowConnectivity="--connectivity=low"
 mediumConnectivity="--connectivity=medium"
 highConnectivity="--connectivity=high"
 
-#connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
-connectivities = [mediumConnectivity]
+connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
+#connectivities = [mediumConnectivity]
 
 singleRoute="--route=single"
 allRoute="--route=all"
