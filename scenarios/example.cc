@@ -5,6 +5,7 @@
 #include "ns3/ndn-all.hpp"
 #include "ns3-dev/ns3/ndnSIM/utils/tracers/ndn-l3-tracer.hpp"
 #include "ns3-dev/ns3/ndnSIM/utils/tracers/ndn-app-delay-tracer.hpp"
+#include "ns3-dev/ns3/ndnSIM/utils/tracers/ndn-cs-tracer.hpp"
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
@@ -97,7 +98,7 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 1200;
+  int simTime = 1800;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
@@ -139,6 +140,10 @@ int main (int argc, char *argv[])
   ndnHelper.Install (client);
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1");
   ndnHelper.Install (server);
+
+  //install cstore tracers
+  NodeContainer routers = gen.getAllASNodes ();
+  ns3::ndn::CsTracer::Install(routers, std::string(outputFolder + "/cs-trace.txt"),Seconds (simTime));
 
   ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();

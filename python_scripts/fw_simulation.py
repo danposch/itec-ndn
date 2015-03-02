@@ -12,6 +12,7 @@ from subprocess import call
 import threading
 import time
 import operator
+import random
 
 import consumer_stats as consumer_stats
 
@@ -99,7 +100,8 @@ def	order_results(path):
 			files = glob.glob(root+subdir + "/*/*STATS*.txt" )
 		
 			avg_ratio = 0.0
-			file_count = 0		
+			file_count = 0
+			cache_hit_ratio = 0.0
 
 			for file in files:
 
@@ -108,14 +110,18 @@ def	order_results(path):
 				for line in f:
 					if(line.startswith("Ratio:")):
 						avg_ratio += float(line[len("Ratio:"):])
-						file_count +=1
-						break
+						
+					if(line.startswith("Cache_Hit_Ratio:")):
+											cache_hit_ratio += float(line[len("Cache_Hit_Ratio:"):])
+					file_count +=1
 
 			if(file_count > 0):
 	 			avg_ratio /= file_count
+				cache_hit_ratio /= file_count
 	
 			#print avg_ratio
 			results.update({"AVG_RATIO:"+ subdir : avg_ratio})
+			results.update({"CACHE_HIT_RATIO:"+ subdir : cache_hit_ratio})
 
 	sorted_results = reversed(sorted(results.items(), key=operator.itemgetter(1)))
 	f = open(path + "/result.txt", "w")
@@ -179,8 +185,8 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 2
-SIMULATION_RUNS = 4
+THREADS = 1
+SIMULATION_RUNS = 2
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
 
 #brite config file
@@ -211,8 +217,8 @@ ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
 
-#forwardingStrategies = [bestRoute, ncc, broadcast, saf]
-forwardingStrategies = [saf]
+forwardingStrategies = [bestRoute, ncc, broadcast, saf]
+#forwardingStrategies = [saf]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]

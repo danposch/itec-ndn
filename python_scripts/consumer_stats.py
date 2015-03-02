@@ -16,6 +16,7 @@ def generateStatsPerSimulation(rootdir):
 	sim_avg_number_of_hops = 0.0
 	sim_avg_number_of_rtx = 0.0
 	sim_avg_delay_of_request = 0.0
+	sim_avg_cache_hit_ratio = 0.0
 
 	dir_count = 0
 
@@ -34,6 +35,9 @@ def generateStatsPerSimulation(rootdir):
 			run_avg_number_of_hops = 0.0
 			run_avg_number_of_rtx = 0.0
 			run_avg_delay_of_request = 0.0
+			run_cache_hits = 0.0
+			run_cache_misses = 0.0
+			run_cache_hit_ratio = 0.0
 		
 			for file in files:
 			
@@ -52,6 +56,14 @@ def generateStatsPerSimulation(rootdir):
 						run_avg_number_of_hops += app_stats[key]['HopCount']
 						run_avg_number_of_rtx += app_stats[key]['RtxCount']
 
+				if "cs-trace" in file:
+					cs_stats = process_cs_trace(file)
+				
+					for key in cs_stats:
+						run_cache_hits += cs_stats[key]['CacheHits']
+						run_cache_misses += cs_stats[key]['CacheMisses']
+				
+			run_cache_hit_ratio = run_cache_hits / (run_cache_hits + run_cache_misses)
 			run_avg_number_of_hops /= run_total_number_of_statisfied_requests
 			run_avg_number_of_rtx /= run_total_number_of_statisfied_requests
 			run_avg_delay_of_request /= run_total_number_of_statisfied_requests
@@ -64,6 +76,7 @@ def generateStatsPerSimulation(rootdir):
 			output_file.write( "Avg Delay[s]:" + str(run_avg_delay_of_request) + "[sec]"+"\n")
 			output_file.write( "Avg Hops:" + str(run_avg_number_of_hops)+"\n")
 			output_file.write( "Avg Rtx:" + str(run_avg_number_of_rtx - 1)+"\n")
+			output_file.write( "Cache_Hit_Ratio:" + str(run_cache_hit_ratio)+"\n")
 
 			sim_total_number_of_requests += run_total_number_of_requests
 			sim_total_number_of_statisfied_requests += run_total_number_of_statisfied_requests
@@ -71,10 +84,12 @@ def generateStatsPerSimulation(rootdir):
 			sim_avg_number_of_hops += run_avg_number_of_hops
 			sim_avg_number_of_rtx += run_avg_number_of_rtx
 			sim_avg_delay_of_request += run_avg_delay_of_request
+			sim_avg_cache_hit_ratio += run_cache_hit_ratio;
 
 	sim_avg_number_of_hops /= dir_count
 	sim_avg_number_of_rtx	/= dir_count
 	sim_avg_delay_of_request /= dir_count
+	sim_avg_cache_hit_ratio /= dir_count
 
 	output_file = open(rootdir+"/STATS.txt", "w")
 
@@ -84,6 +99,40 @@ def generateStatsPerSimulation(rootdir):
 	output_file.write( "Avg Delay[s]:" + str(sim_avg_delay_of_request) + "[sec]"+"\n")
 	output_file.write( "Avg Hops:" + str(sim_avg_number_of_hops)+"\n")
 	output_file.write( "Avg Rtx:" + str(sim_avg_number_of_rtx - 1)+"\n")
+	output_file.write( "Cache_Hit_Ratio:" + str(sim_avg_cache_hit_ratio)+"\n")
+
+def process_cs_trace(file):
+	#print("process_cs_trace(str(file))
+
+	f = open(file,"r");
+
+	stats = {}
+
+	TIME_INDEX = 0
+	NODE_INDEX = 1
+	TYPE_INDEX = 2
+	PACKETS_COUNT_INDEX = 3
+
+	#create first lvl of dictionary and init second level with 0
+	for line in f:
+		l = line.split('\t')
+		if(len(l) < PACKETS_COUNT_INDEX+1):
+			continue
+
+		if("CacheHits" in l[TYPE_INDEX] or "CacheMisses" in l[TYPE_INDEX]):
+			if(l[NODE_INDEX] not in stats):
+				stats[l[NODE_INDEX]] = {}
+				stats[l[NODE_INDEX]].update({'CacheHits': 0})
+				stats[l[NODE_INDEX]].update({'CacheMisses': 0})
+			
+			if("CacheHits" in l[TYPE_INDEX]):
+				stats[l[NODE_INDEX]]['CacheHits'] += int(l[PACKETS_COUNT_INDEX])
+			
+			if("CacheMisses" in l[TYPE_INDEX]):
+				stats[l[NODE_INDEX]]['CacheMisses'] += int(l[PACKETS_COUNT_INDEX])
+		
+	#print stats
+	return stats
 
 def process_app_delay_trace(file):
 	#print("app-delays-trace(" + app_file_name + ")")
