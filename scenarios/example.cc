@@ -143,7 +143,7 @@ int main (int argc, char *argv[])
 
   //install cstore tracers
   NodeContainer routers = gen.getAllASNodes ();
-  ns3::ndn::CsTracer::Install(routers, std::string(outputFolder + "/cs-trace.txt"),Seconds (simTime));
+  ns3::ndn::CsTracer::Install(routers, std::string(outputFolder + "/cs-trace.txt"), Seconds(1.0));
 
   ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
