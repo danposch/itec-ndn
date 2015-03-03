@@ -46,7 +46,7 @@ def generateStatsPerSimulation(rootdir):
 
 					for key in ag_stats:
 						run_total_number_of_requests += ag_stats[key]['InInterests']
-						run_total_number_of_statisfied_requests += ag_stats[key]['OutData']
+						run_total_number_of_statisfied_requests += ag_stats[key]['InSatisfiedInterests']
 
 				if "app-delays-trace" in file:
 					app_stats = process_app_delay_trace(file)
@@ -193,13 +193,14 @@ def process_aggregate_trace(file):
 	FACE_DESCRIPTION_INDEX = 3
 	TYPE_INDEX = 4
 	PACKET_EWMA_INDEX = 5
-	KILOBYTES_INDEX = 6
+	KILOBYTES_EWMA_INDEX = 6
 	PACKET_NR_INDEX = 7
+	KILOBYTES_RAW_INDEX = 8
 
 	#create first lvl of dictionary and init second level with 0
 	for line in f:
 		l = line.split('\t')
-		if(len(l) < PACKET_NR_INDEX+1):
+		if(len(l) < KILOBYTES_RAW_INDEX+1):
 			continue
 
 		if("appFace" in l[FACE_DESCRIPTION_INDEX]):
