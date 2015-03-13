@@ -38,6 +38,7 @@ void SAFEntry::update()
 {
   smeasure->update(ftable->getCurrentReliability ());
   ftable->update (smeasure);
+  ftable->crossLayerAdaptation (smeasure);
 
   /*if(!evaluateFallback())
     ftable->update (smeasure);

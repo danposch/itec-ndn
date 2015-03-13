@@ -13,6 +13,8 @@
 #include "climits"
 #include "ns3/log.h"
 
+#define MAX_OBSERVATION_PERIODS 10.0
+
 namespace nfd
 {
 namespace fw
@@ -25,6 +27,7 @@ public:
   int determineNextHop(const Interest& interest, std::vector<int> alreadyTriedFaces);
 
   void update(boost::shared_ptr<SAFStatisticMeasure> smeasure);
+  void crossLayerAdaptation(boost::shared_ptr<SAFStatisticMeasure> smeasure);
   std::map<int /*faceId*/,double/*reliabilty*/> getCurrentReliability(){return this->curReliability;}
 
   protected:
@@ -45,11 +48,15 @@ public:
   void increaseReliabilityThreshold(int layer);
   void updateReliabilityThreshold(int layer, bool increase);
 
+  int getDroppingLayer();
+
   boost::numeric::ublas::matrix<double> table;
   std::vector<int> faces;
   std::map<int /*faceId*/,int/*costs/metric*/> preferedFaces;
   std::map<int /*layer*/,double/*reliabilty*/> curReliability;
   ns3::UniformVariable randomVariable;
+
+  std::map<int /*layer*/,int/*steps_left*/> observed_layers;
 };
 
 }

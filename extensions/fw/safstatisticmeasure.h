@@ -44,6 +44,7 @@ public:
 
   double getSatisfactionVariance(int face_id, int layer){return stats[layer].satisfaction_variance[face_id];}
   double getAlpha(int face_id, int layer);
+  double getEMAAlpha(int face_id, int layer);
 
   int getS(int face_id, int layer){return stats[layer].last_satisfied_requests[face_id];}
   int getU(int face_id, int layer){return stats[layer].last_unsatisfied_requests[face_id];}
@@ -62,6 +63,7 @@ protected:
   void calculateUnsatisfiedTrafficFractionOfUnreliableFaces (int layer, double reliability_t);
   void calculateActualForwardingProbabilities (int layer);
   void updateVariance(int layer);
+  void calculateEMAAlpha(int layer);
 
   std::vector<int> faces;
 
@@ -99,6 +101,8 @@ protected:
     MeasureDoubleMap satisfaction_variance;
     MeasureIntList satisfied_requests_history;
 
+    MeasureDoubleMap ema_alpha;
+
     SAFMesureStats()
     {
       total_forwarded_requests = 0;
@@ -119,6 +123,8 @@ protected:
 
       satisfaction_variance = other.satisfaction_variance;
       satisfied_requests_history = other.satisfied_requests_history;
+
+      ema_alpha = other.ema_alpha;
     }
   };
 

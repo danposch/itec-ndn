@@ -271,7 +271,10 @@ void SAFForwardingTable::probeColumn(std::vector<int> faces, int layer, boost::s
     return;
 
    //double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
-  double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * stats->getRho (layer);
+
+  double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * stats->getRho (layer) * (1.0/(1.0+(double)layer));
+  NS_LOG_DEBUG("Probing! Probe Size = p(F_D) * rho *(1/(1+layer))= " << table(determineRowOfFace (DROP_FACE_ID), layer)
+                 << "*" << stats->getRho (layer) << " * (1.0/(1.0+"<<(double)layer<< ")))=" << probe);
 
   if(probe < 0.001) // if probe is zero return
     return;
@@ -302,6 +305,176 @@ void SAFForwardingTable::probeColumn(std::vector<int> faces, int layer, boost::s
       table(determineRowOfFace (*it), layer) += (probe * (table(determineRowOfFace (*it), 0) / normFactor));
     }
   }
+}
+
+void SAFForwardingTable::crossLayerAdaptation(boost::shared_ptr<SAFStatisticMeasure> smeasure)
+{
+  //investigate all layers for dropping traffic
+  std::vector<int> adp_layers;
+  for(int layer = 0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") - 1; layer++) // -1 as last layer can not be adapted anyway
+  {
+    //if under layer is under observation
+    if(observed_layers.find (layer) != observed_layers.end ())
+    {
+      //check if steps are left
+      if(observed_layers[layer] > 0)
+        observed_layers[layer] -= 1; // reduce steps by 1
+      else
+      {
+        adp_layers.push_back (layer);
+        observed_layers.erase (observed_layers.find (layer));
+      }
+    }
+    // check if we currently drop traffic for non observed layer
+    else if(table(determineRowOfFace(DROP_FACE_ID),layer) > 0)
+    {
+      //if under investigation skip this layer
+      if(observed_layers.find (layer) != observed_layers.end ())
+        continue;
+
+      //get the set of unreliable faces:
+      double n = 0;
+      double n_max = 0;
+      double rel_t = curReliability[layer];
+      double total_interests = smeasure->getTotalForwardedInterests (layer);
+      double satisfied_interests = 0;
+      double p0 = 0.0;
+      double ema_alpha = 0.0;
+
+      //ensure that I > 0
+      if(total_interests == 0)
+      {
+        //observed_layers[layer] = MAX_OBSERVATION_PERIODS;
+        //skip it for this perios and wait for next as we cant really say what do
+        continue;
+      }
+
+      NS_LOG_DEBUG("Calculating number of periods to wait for layer " << layer << " to stabilize");
+      std::vector<int> ur_faces = smeasure->getUnreliableFaces (layer, rel_t);
+      for(std::vector<int>::iterator it = ur_faces.begin (); it != ur_faces.end (); ++it)
+      {
+        // ok calculate expected steps when F_i € F_U will be reliable
+        p0 = table(determineRowOfFace (*it),layer);
+        ema_alpha = smeasure->getEMAAlpha (*it,layer);
+        satisfied_interests = smeasure->getS(*it,layer);
+
+        //check if d(F_i) > 0
+        if(satisfied_interests < 1)
+        {
+          //actually we are very likly that *it is a probing face, so just skip it
+          NS_LOG_DEBUG( "n["<< *it << "] = skipped, \t We think it is a probing face");
+          continue;
+        }
+
+        if( p0 * total_interests < satisfied_interests)//means the update procedure made the face already reliable
+        {
+          NS_LOG_DEBUG( "n["<< *it << "] = skipped, \t We think the previous update procedure made the face already reliable");
+          continue;
+        }
+
+        n = log((satisfied_interests/rel_t) - satisfied_interests);
+        n -= log((p0 * total_interests) - satisfied_interests);
+        n /= log(1-ema_alpha);
+
+        NS_LOG_DEBUG( "n["<< *it << "] = [ ln(S(i)/t[i] - S(i)) - ln(p(i)*I - S(i))] / ln(1 - ema_alpha(i)) = "
+                      << " [ ln(" << satisfied_interests << "/" << rel_t << "-"  << satisfied_interests << ") - "
+                      << "ln(" << p0 << "*" << total_interests << " - " << satisfied_interests << ")] / "
+                      << "ln(1-" << ema_alpha << ") = " << n);
+
+        n_max = std::max(n_max, n);
+      }
+      NS_LOG_DEBUG("Layer " << layer << " is under observation for std::min(" << n_max << "," << MAX_OBSERVATION_PERIODS << ") steps") ;
+      observed_layers[layer] = ceil(std::min(n_max, MAX_OBSERVATION_PERIODS));
+    }
+  }
+
+  std::sort(adp_layers.begin (),adp_layers.end ()); // just for the case they are not sorted in ascending order...
+  for(std::vector<int>::iterator it = adp_layers.begin (); it != adp_layers.end (); ++it)
+  {
+    NS_LOG_DEBUG("Observation Phase for layer " << *it << " is over. Dropping traffic will be shifted\n");
+    int curLayer = *it;
+    int droppingLayer = getDroppingLayer ();
+
+    while(curLayer < droppingLayer)
+    {
+      // interest forwared to the dropping face of curLayer
+      double theta = table(determineRowOfFace (DROP_FACE_ID), curLayer) * smeasure->getTotalForwardedInterests (curLayer);
+
+      //max traffic that can be shifted towards face(s) of last
+      double chi = (1.0 - table(determineRowOfFace (DROP_FACE_ID), droppingLayer)) * smeasure->getTotalForwardedInterests (droppingLayer);
+
+      if (theta == 0)
+      {
+        for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+        {
+          if(*it == DROP_FACE_ID)
+            table(determineRowOfFace (*it), curLayer) = 0;
+          else
+            table(determineRowOfFace (*it), curLayer) = 1.0 / (faces.size ()-1);
+        }
+      }
+      else if(chi == 0) // nothing has been forwarded via the last face, set drop prob to 100%
+      {
+        for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+        {
+          if(*it == DROP_FACE_ID)
+            table(determineRowOfFace (*it), droppingLayer) = 1;
+          else
+            table(determineRowOfFace (*it), droppingLayer) = 0;
+        }
+      }
+      else
+      {
+        if(chi > theta) //if we can shift more than we need to, we just shift how much we need
+          chi = theta;
+
+        //reduce dropping prob for lower layer
+        table(determineRowOfFace (DROP_FACE_ID), curLayer) -= (chi / smeasure->getTotalForwardedInterests (curLayer));
+
+        //increase dropping prob for higher layer
+        table(determineRowOfFace (DROP_FACE_ID), droppingLayer)  += (chi / smeasure->getTotalForwardedInterests (droppingLayer));
+
+        //calc n_frist , n_last normalization value without dropping face;
+        double n_first = 0;
+        double n_last = 0;
+
+        for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+        {
+          if(*it == DROP_FACE_ID)
+            continue;
+
+          n_first += table(determineRowOfFace (*it), curLayer);
+          n_last +=  table(determineRowOfFace (*it), droppingLayer);
+        }
+
+        //increase & decrease other faces accordingly
+        for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+        {
+          if(*it == DROP_FACE_ID)
+            continue;
+
+          table(determineRowOfFace (*it), curLayer) += (chi/smeasure->getTotalForwardedInterests (curLayer)) * (table(determineRowOfFace (*it), curLayer)/n_first);
+          table(determineRowOfFace (*it), droppingLayer) -= (chi/smeasure->getTotalForwardedInterests (droppingLayer)) * (table(determineRowOfFace (*it), droppingLayer)/n_last);
+        }
+      }
+
+      //check if we can break the while loop already
+      if(droppingLayer == getDroppingLayer ())
+        break;
+      else
+        droppingLayer = getDroppingLayer ();
+    }
+  }
+}
+
+int SAFForwardingTable::getDroppingLayer()
+{
+  for(int i = (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") - 1; i >= 0; i--) // for each layer
+  {
+    if(table(determineRowOfFace (DROP_FACE_ID), i) < 1.0)
+      return i;
+  }
+  return 0;
 }
 
 int SAFForwardingTable::determineRowOfFace(int face_uid)

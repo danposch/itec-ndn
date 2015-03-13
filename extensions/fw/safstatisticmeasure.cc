@@ -22,6 +22,7 @@ SAFStatisticMeasure::SAFStatisticMeasure(std::vector<int> faces)
       stats[layer].satisfaction_variance[*it] = INIT_VARIANCE;// a high value
       stats[layer].last_unsatisfied_requests[*it] = 0;
       stats[layer].last_satisfied_requests[*it] = 0;
+      stats[layer].ema_alpha[*it] = 0.0;
     }
   }
 }
@@ -43,6 +44,7 @@ void SAFStatisticMeasure::update (std::map<int,double> reliability_t)
     calculateLinkReliabilities (layer, reliability_t[layer]);
     calculateActualForwardingProbabilities (layer);
     updateVariance (layer);
+    calculateEMAAlpha(layer);
 
     //copy some old values before clearing
     stats[layer].last_unsatisfied_requests = stats[layer].unsatisfied_requests;
@@ -157,7 +159,18 @@ double SAFStatisticMeasure::getSumOfUnreliabilities(std::vector<int> set_of_face
 
 int SAFStatisticMeasure::determineContentLayer(const Interest& interest)
 {
-  //TODO implement.
+  std::string layer = interest.getName ().get (1).toUri ();
+  //fprintf(stderr, "layer = %s\n",interest.getName ().get (1).toUri ().c_str ());
+
+  if(layer.compare ("layer0") == 0)
+    return 0;
+
+  if(layer.compare ("layer1") == 0)
+    return 1;
+
+  if(layer.compare ("layer2") == 0)
+    return 2;
+
   return 0;
 }
 
@@ -197,10 +210,24 @@ void SAFStatisticMeasure::updateVariance (int layer)
   //fprintf(stderr, "\n");
 }
 
+void SAFStatisticMeasure::calculateEMAAlpha(int layer)
+{
+  double w = 0.2;
+  for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
+  {
+    stats[layer].ema_alpha[*it] = w * getAlpha(*it,layer) + (1-w)*stats[layer].ema_alpha[*it];
+  }
+}
+
 double SAFStatisticMeasure::getAlpha(int face_id, int layer)
 {
   //return 1.0/(1.0 + stats[layer].satisfaction_variance[face_id]);
   return 1.0/(1.0 + std::sqrt(stats[layer].satisfaction_variance[face_id]));
+}
+
+double SAFStatisticMeasure::getEMAAlpha(int face_id, int layer)
+{
+  return stats[layer].ema_alpha[face_id];
 }
 
 double SAFStatisticMeasure::getRho(int layer)

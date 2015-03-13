@@ -16,10 +16,10 @@
 #define P_SHIFT_TRAFFIC 0.15    //test 0.40
 
 #define P_UPDATE_INTERVALL 0.5
-#define P_MAX_LAYERS 1
+#define P_MAX_LAYERS 3
 #define P_DROP_FACE_ID -1
 
-#define P_RELIABILITY_THRESHOLD 0.5 // before 0.7
+#define P_RELIABILITY_THRESHOLD 0.9 // before 0.7
 
 #define DROP_FACE_ID -1
 #define FACE_NOT_FOUND -1
