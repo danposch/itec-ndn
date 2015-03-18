@@ -70,8 +70,9 @@ def threadFinished(job_number,src,dst,returncode):
 			pass
 
 	#copy results
-	#files = glob.glob(src + "/traces/*STATS*.txt")
-	files = glob.glob(src + "/traces/*.txt")
+	files = glob.glob(src + "/traces/*STATS*.txt")
+	files.extend(glob.glob(src + "/traces/*cs-trace*.txt"))
+	#files = glob.glob(src + "/traces/*.txt")
 
 	if not os.path.exists(dst):
 		os.makedirs(dst)
@@ -187,7 +188,7 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 1
+THREADS = 4
 SIMULATION_RUNS = 2
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
 
@@ -201,15 +202,15 @@ briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
 briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/brite_medium_bw.conf"
 briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/brite_high_bw.conf"
 
-briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
-#briteConfigs = [briteConfigLowBw]
+#briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
+briteConfigs = [briteConfigLowBw]
 
 lowConnectivity="--connectivity=low"
 mediumConnectivity="--connectivity=medium"
 highConnectivity="--connectivity=high"
 
-connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
-#connectivities = [mediumConnectivity]
+#connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
+connectivities = [mediumConnectivity]
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -219,12 +220,12 @@ ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
 
-forwardingStrategies = [bestRoute, ncc, broadcast, saf]
-#forwardingStrategies = [saf]
+#forwardingStrategies = [bestRoute, ncc, broadcast, saf]
+forwardingStrategies = [bestRoute]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
-linkFailures = ["--linkFailures=15"]
+linkFailures = ["--linkFailures=0"]
 
 SCENARIOS = {}
 

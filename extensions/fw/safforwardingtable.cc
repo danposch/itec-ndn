@@ -45,13 +45,33 @@ std::map<int, double> SAFForwardingTable::calcInitForwardingProb(std::map<int, i
   return res;
 }
 
+std::map<int, double> SAFForwardingTable::minHop(std::map<int, int> preferedFacesIds)
+{
+  std::map<int, double> res;
+
+  int min_hop_face = 0;
+  int min_hops = INT_MAX;
+
+  for(std::map<int,int>::iterator it = preferedFacesIds.begin (); it != preferedFacesIds.end (); it++)
+  {
+    if(it->second < min_hops)
+    {
+      min_hop_face = it ->first;
+      min_hops = it->second;
+    }
+  }
+  res[min_hop_face] = 1.0;
+  return res;
+}
+
 void SAFForwardingTable::initTable ()
 {
   std::sort(faces.begin(), faces.end());//order
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
-  std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 4.0);
+  //std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 10.0);
+  std::map<int, double> initValues = minHop(preferedFaces);
 
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
@@ -272,9 +292,10 @@ void SAFForwardingTable::probeColumn(std::vector<int> faces, int layer, boost::s
 
    //double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * ParameterConfiguration::getInstance ()->getParameter ("PROBING_TRAFFIC");
 
-  double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * stats->getRho (layer) * (1.0/(1.0+(double)layer));
-  NS_LOG_DEBUG("Probing! Probe Size = p(F_D) * rho *(1/(1+layer))= " << table(determineRowOfFace (DROP_FACE_ID), layer)
-                 << "*" << stats->getRho (layer) << " * (1.0/(1.0+"<<(double)layer<< ")))=" << probe);
+  double lweight = (1.0/((double) (pow(1.0+(double)layer,2.0) - layer)));
+  double probe = table(determineRowOfFace (DROP_FACE_ID), layer) * stats->getRho (layer) * lweight;
+  NS_LOG_DEBUG("Probing! Probe Size = p(F_D) * rho * lweight= " << table(determineRowOfFace (DROP_FACE_ID), layer)
+                 << "*" << stats->getRho (layer) << " * "<< lweight << "=" << probe);
 
   if(probe < 0.001) // if probe is zero return
     return;

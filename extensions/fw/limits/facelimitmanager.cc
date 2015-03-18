@@ -13,7 +13,7 @@ FaceLimitManager::FaceLimitManager(shared_ptr< Face > face)
   tokenGenRate *= TOKEN_FILL_INTERVALL; // tokens per intervall
 
   //fprintf(stderr, "packets_per_sec %f\n", packets_per_sec );
-  fprintf(stderr, "tokenGenRate %f\n", tokenGenRate );
+  //fprintf(stderr, "tokenGenRate %f\n", tokenGenRate );
 
   this->newTokenEvent = ns3::Simulator::Schedule(ns3::Seconds(0), &FaceLimitManager::newToken, this);
 }

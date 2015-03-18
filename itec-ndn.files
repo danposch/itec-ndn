@@ -25,3 +25,7 @@ extensions/fw/limits/limiter.h
 extensions/fw/limits/facelimitmanager.h
 extensions/fw/limits/facelimitmanager.cc
 scenarios/fwt_fairness_small.cc
+scenarios/fwt_delay.cc
+topologies/fwt_delay.top
+scenarios/amus.cc
+scenarios/dash.cc

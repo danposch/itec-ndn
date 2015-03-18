@@ -34,6 +34,7 @@ public:
 
   void initTable();
   std::map<int, double> calcInitForwardingProb(std::map<int, int> preferedFacesIds, double gamma);
+  std::map<int, double> minHop(std::map<int, int> preferedFacesIds);
 
   int determineRowOfFace(int face_uid, boost::numeric::ublas::matrix<double> tab, std::vector<int> faces);
   int determineRowOfFace(int face_uid);
