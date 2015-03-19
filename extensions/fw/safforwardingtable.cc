@@ -70,8 +70,8 @@ void SAFForwardingTable::initTable ()
 
   table = matrix<double> (faces.size () /*rows*/, (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS") /*columns*/);
 
-  //std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 10.0);
-  std::map<int, double> initValues = minHop(preferedFaces);
+  std::map<int, double> initValues = calcInitForwardingProb (preferedFaces, 5.0);
+  //std::map<int, double> initValues = minHop(preferedFaces);
 
   // fill matrix column-wise /* table(i,j) = i-th row, j-th column*/
   for (unsigned j = 0; j < table.size2 (); ++j) /* columns */
@@ -89,6 +89,7 @@ void SAFForwardingTable::initTable ()
         std::map<int,double>::iterator it = initValues.find(faces.at (i));
         if( it != initValues.end ())// && it->first == faceId)
         {
+          //fprintf(stderr, "Giving table(%d,%d)=%f\n", i,j,it->second);
           table(i,j) = it->second;
           //table(i,j) = (1.0 / ((double)preferedFaces.size ())); // preferedFaces dont include the dropping face.
           //table(i,j) = 1.0;
