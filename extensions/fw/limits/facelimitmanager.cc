@@ -21,7 +21,7 @@ FaceLimitManager::FaceLimitManager(shared_ptr< Face > face)
 bool FaceLimitManager::addNewPrefix(std::string content_prefix)
 {
   //use the basic limiter for now
-  bMap[content_prefix] = boost::shared_ptr<Limiter>(new Limiter(std::max(tokenGenRate*3.0, 2.0))); // for now we give all tokenbuckets a const size we should adapt this later
+  bMap[content_prefix] = boost::shared_ptr<Limiter>(new Limiter(std::max(tokenGenRate*5.0, 2.0))); // for now we give all tokenbuckets a const size we should adapt this later
   //bMap[content_prefix] = boost::shared_ptr<Limiter>(new Limiter(BUCKET_SIZE)); // for now we give all tokenbuckets a const size we should adapt this later
 }
 

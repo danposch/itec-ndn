@@ -1,7 +1,9 @@
 #ifndef LIMITER_H
 #define LIMITER_H
 
-#define INITIAL_TOKENS 0.25
+#include <algorithm>
+
+#define INITIAL_TOKENS 0.5
 
 namespace nfd
 {
@@ -10,7 +12,7 @@ namespace fw
 class Limiter
 {
 public:
-  Limiter(double maxTokens = INITIAL_TOKENS);
+  Limiter(double maxTokens);
   ~Limiter();
 
   virtual double addTokens(double tokens);

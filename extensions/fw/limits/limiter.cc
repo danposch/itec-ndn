@@ -7,7 +7,7 @@ Limiter::Limiter(double maxTokens)
 {
   this->maxTokens = maxTokens;
   tokens = 0.0;
-  addTokens(maxTokens * INITIAL_TOKENS);
+  addTokens(std::max(1.0,maxTokens * INITIAL_TOKENS));
 }
 
 Limiter::~Limiter ()
