@@ -18,7 +18,7 @@ using namespace ns3;
 int main (int argc, char *argv[])
 {
   // BRITE needs a configuration file to build its graph.
-  std::string confFile = "brite_configs/brite_medium_bw.conf";
+  std::string confFile = "brite_configs/dash_medium_bw.conf";
   std::string strategy = "saf";
   std::string route = "all";
   std::string outputFolder = "output/";
@@ -52,18 +52,18 @@ int main (int argc, char *argv[])
 
   if(confFile.find ("low_bw") != std::string::npos)
   {
-    min_bw_as = 2000;
+    min_bw_as = 3000;
     max_bw_as = 4000;
 
-    min_bw_leaf = 1000;
-    max_bw_leaf = 2000;
+    min_bw_leaf = 2000;
+    max_bw_leaf = 3000;
   }
   else if(confFile.find ("medium_bw") != std::string::npos)
   {
-    min_bw_as = 3000;
+    min_bw_as = 4000;
     max_bw_as = 5000;
 
-    min_bw_leaf = 2000;
+    min_bw_leaf = 3000;
     max_bw_leaf = 4000;
   }
   else if (confFile.find ("high_bw") != std::string::npos)
@@ -100,7 +100,8 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 60;
+  //2876sec duration of concatenated dataset
+  int simTime = 3000;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
@@ -109,11 +110,12 @@ int main (int argc, char *argv[])
   PointToPointHelper *p2p = new PointToPointHelper;
   p2p->SetChannelAttribute ("Delay", StringValue ("2ms"));
 
-  p2p->SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  gen.randomlyPlaceNodes (1, "Server",ns3::ndn::NetworkGenerator::ASNode, p2p);
+  p2p->SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  gen.randomlyPlaceNodes (3, "Server", ns3::ndn::NetworkGenerator::ASNode, p2p);
 
-  p2p->SetDeviceAttribute ("DataRate", StringValue ("3Mbps"));
-  gen.randomlyPlaceNodes (1, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
+  p2p->SetDeviceAttribute ("DataRate", StringValue ("2Mbps"));
+  gen.randomlyPlaceNodes (15, "Client", ns3::ndn::NetworkGenerator::ASNode, p2p);
+  //gen.randomlyPlaceNodes (12, "Client",ns3::ndn::NetworkGenerator::LeafNode, p2p);
 
   //4. setup and install strategy for server/clients
   NodeContainer server = gen.getCustomNodes ("Server");
@@ -121,7 +123,7 @@ int main (int argc, char *argv[])
 
   //3. install helper on network nodes
   ns3::ndn::StackHelper ndnHelper;
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "6250"); // all entities can store up to 1k chunks in cache (about 25MB)
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "12500"); // all entities can store up to 1k chunks in cache (about 50MB)
   ndnHelper.Install(gen.getAllASNodes ());// install all on network nodes...
 
   if(strategy.compare ("saf") == 0)
@@ -151,16 +153,18 @@ int main (int argc, char *argv[])
   ndnGlobalRoutingHelper.InstallAll ();
 
   ns3::ndn::AppHelper producerHelper ("ns3::ndn::FileServer");
-  producerHelper.SetAttribute("ContentDirectory", StringValue("/home/dposch/data/"));
+  producerHelper.SetAttribute("ContentDirectory", StringValue("/home/dposch/data/concatenated/"));
   producerHelper.SetAttribute ("MaxPayloadSize", StringValue("4096"));
 
   for(int i=0; i<server.size (); i++)
   {
-    producerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i)));
+    std::string p = std::string("/Server_" + boost::lexical_cast<std::string>(i));
+    //fprintf(stderr, "Server_%d offers prefix %s\n", i, p.c_str());
+
+    producerHelper.SetPrefix (p);
     producerHelper.Install (Names::Find<Node>(std::string("Server_" + boost::lexical_cast<std::string>(i))));
 
-    ndnGlobalRoutingHelper.AddOrigin(std::string("/Server_" + boost::lexical_cast<std::string>(i)),
-                                      Names::Find<Node>(std::string("Server_" + boost::lexical_cast<std::string>(i))));
+    ndnGlobalRoutingHelper.AddOrigin(p, Names::Find<Node>(std::string("Server_" + boost::lexical_cast<std::string>(i))));
   }
 
   ns3::ndn::AppHelper consumerHelper("ns3::ndn::FileConsumerCbr::MultimediaConsumer");
@@ -176,12 +180,14 @@ int main (int argc, char *argv[])
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
   for(int i=0; i<client.size (); i++)
   {
-    consumerHelper.SetAttribute("MpdFileToRequest", StringValue(std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ())
-                                                               +"/concatenated-3layers-server" + boost::lexical_cast<std::string>(i%server.size ()) + ".mpd" )));
+    std::string mpd("/Server_" + boost::lexical_cast<std::string>(i%server.size ())
+                                  +"/concatenated-3layers-server" + boost::lexical_cast<std::string>(i%server.size ()) + ".mpd.gz");
+
+    consumerHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
     //consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
     ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
 
-    //consumer.Start (Seconds(r->GetInteger (0,30)));
+    consumer.Start (Seconds(r->GetInteger (0,20)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::DASHPlayerTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
