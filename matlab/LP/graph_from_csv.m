@@ -7,7 +7,7 @@ k = textscan(fid, '(%d,%d,%d)');
 fclose(fid);
 
 for i=1:length(k{1})
-
+    
     g.addEdgeWithCapacity(k{1}(i) + 1, k{2}(i) + 1, k{3}(i));
     
 end
@@ -38,6 +38,7 @@ for i=1:length(cl)
     % calculate those set of paths which only include disjoint paths
     cl{i}.calcDisjointPahts();
     num_total_path_strats = num_total_path_strats * cl{i}.num_disjoint_path_sets;
+    cl{i}.createSingleDimDisjointPathArray();
 end
 
 %%
@@ -49,15 +50,38 @@ for n=1:num_total_paths
     paths(n) = n;
 end
 %%
-power_set_paths = cell(1);
-for i=1:length(paths)
-    power_set_paths{i} = combnk(paths, i); 
+% now we have to get every possible permutation of strategies for each
+% client
+
+for i=1:length(cl)
+    cl{i}.createSingleDimDisjointPathArray();
 end
 
 
-% algo
+%%
+% Now we solve the optimization problem
+
+% first we get get those paths among the selected strategies which are
+% (edge) disjoint
+
+
+% DEBUG: for design issues we just use 1:1:1:1:1:1, TODO: iterate all
+% possible permutations
+k = 1;
+strat = cell(1);
+for i=1:length(cl)
+    strat{i} = cell(1,size(cl{i}.disjointPaths_array{k},2));
+    for j=1:size(cl{i}.disjointPaths_array{k},2)
+        strat{i}{1,j} = cl{i}.disjointPaths_array{k}{1,j};
+    end
+end
+
+
+
+
+%% algo
 
 A = zeros(nodes, nodes);
 for i=1:length(cl)
-    A = A + cl{i}.edgeMatrix; 
+    A = A + cl{i}.edgeMatrix;
 end

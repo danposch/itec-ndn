@@ -11,6 +11,7 @@ classdef client < handle
         edgeMatrix = 0;
         disjointPaths = 0;
         num_disjoint_path_sets = 0;
+        disjointPaths_array = 0;
     end
     
     methods
@@ -59,21 +60,21 @@ classdef client < handle
             
         end
         
-        function ret = checkDisjoint(cl, first_path, second_path)
-            
-            %edgeM1 = cl.createSpecialEdgeMatrix(first_path);
-            %edgeM2 = cl.createSpecialEdgeMatrix(second_path);
-            
-            edgeM1 = first_path.edgeMatrix;
-            edgeM2 = second_path.edgeMatrix;
-            sedgeM1 = sum(edgeM1(:));
-            sedgeM2 = sum(edgeM2(:));
-            edgeM = xor(edgeM1, edgeM2); % matrix xor, a_{i,j} XOR b_{i,j}
-            ret = 0;
-            if sum(edgeM(:)) == (sedgeM1 + sedgeM2)
-                ret = 1;
-            end
-        end
+        % for checking whether two paths are (edge) disjoint use
+        % checkDisjoint
+        % CARE: this function has been moved to checkDisjoint.m
+        
+        %function ret = checkDisjoint(cl, first_path, second_path)
+        %    edgeM1 = first_path.edgeMatrix;
+        %    edgeM2 = second_path.edgeMatrix;
+        %    sedgeM1 = sum(edgeM1(:));
+        %    sedgeM2 = sum(edgeM2(:));
+        %    edgeM = xor(edgeM1, edgeM2); % matrix xor, a_{i,j} XOR b_{i,j}
+        %    ret = 0;
+        %    if sum(edgeM(:)) == (sedgeM1 + sedgeM2)
+        %        ret = 1;
+        %    end
+        %end
         
         function ret = calcDisjointPahts(cl)
             % by definition, every single paths is a disjoint path
@@ -81,9 +82,9 @@ classdef client < handle
             
             cl.disjointPaths = cell(length(cl.paths));
             cl.disjointPaths{1} = cell(1);
-           
-            for i=1:length(cl.paths)
             
+            for i=1:length(cl.paths)
+                
                 cl.disjointPaths{1}{i,1} = cl.paths{i};
                 
             end
@@ -106,7 +107,7 @@ classdef client < handle
                                 break
                             end
                             for k=(n+1):size(cl.disjointPaths{i},2)
-                                if cl.checkDisjoint(cl.disjointPaths{i}{j,n}, cl.disjointPaths{i}{j, k}) == 0
+                                if checkDisjoint(cl.disjointPaths{i}{j,n}, cl.disjointPaths{i}{j, k}) == 0
                                     disjoint = 0;
                                 end
                             end
@@ -126,6 +127,21 @@ classdef client < handle
                     end
                     
                     cl.num_disjoint_path_sets = cl.num_disjoint_path_sets + (size(cl.disjointPaths{i},1));
+                end
+            end
+        end
+        
+        function ret = createSingleDimDisjointPathArray(cl)
+            
+            cl.disjointPaths_array = cell(1);
+            
+            for i=1:size(cl.disjointPaths,1)
+                for j=1:size(cl.disjointPaths{i},1)
+                    
+                    cl.disjointPaths_array{size(cl.disjointPaths,1)*(i-1) + j} = cell(1,size(cl.disjointPaths{i},2));
+                    for k=1:size(cl.disjointPaths{i},2)
+                    cl.disjointPaths_array{size(cl.disjointPaths,1)*(i-1) + j}{1,k} = cl.disjointPaths{i}{j,k};
+                    end
                 end
             end
         end
