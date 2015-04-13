@@ -69,13 +69,39 @@ end
 % possible permutations
 k = 1;
 strat = cell(1);
+stratsUnion = cell(1);
+stratsUnion_cnt = 1;
 for i=1:length(cl)
     strat{i} = cell(1,size(cl{i}.disjointPaths_array{k},2));
     for j=1:size(cl{i}.disjointPaths_array{k},2)
         strat{i}{1,j} = cl{i}.disjointPaths_array{k}{1,j};
+        stratsUnion{stratsUnion_cnt} = cl{i}.disjointPaths_array{k}{1,j};
+        stratsUnion_cnt = stratsUnion_cnt + 1;
     end
 end
 
+
+disjointPathsAll = cell(1);
+disjointPathsAll_cnt = 1;
+for i=1:length(stratsUnion)
+    disjoint = 1;
+    for j=1:length(stratsUnion)
+        if i==j
+            continue;
+        end
+        
+        if checkDisjoint(stratsUnion{i}, stratsUnion{j}) == 0
+            disjoint = 0;
+            break;
+        end
+        
+    end
+    if disjoint == 1
+        disjointPathsAll{disjointPathsAll_cnt} = stratsUnion{i};
+        disjointPathsAll_cnt = disjointPathsAll_cnt + 1;
+        % TODO determine client that owns this path ...
+    end
+end
 
 
 
