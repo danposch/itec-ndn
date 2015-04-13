@@ -31,6 +31,8 @@ classdef client < handle
             % prepare matrices for calculating bandwidth shares on graph
             % edges
             for i=1:length(cl.paths)
+                cl.paths{i}.edgeMatrix = cl.createSpecialEdgeMatrix(cl.paths{i});
+                
                 for k=1:length(cl.paths{i}.myPath)-1
                     cl.edgeMatrix(cl.paths{i}.myPath(k), cl.paths{i}.myPath(k+1)) = 1;
                 end
@@ -59,8 +61,11 @@ classdef client < handle
         
         function ret = checkDisjoint(cl, first_path, second_path)
             
-            edgeM1 = cl.createSpecialEdgeMatrix(first_path);
-            edgeM2 = cl.createSpecialEdgeMatrix(second_path);
+            %edgeM1 = cl.createSpecialEdgeMatrix(first_path);
+            %edgeM2 = cl.createSpecialEdgeMatrix(second_path);
+            
+            edgeM1 = first_path.edgeMatrix;
+            edgeM2 = second_path.edgeMatrix;
             sedgeM1 = sum(edgeM1(:));
             sedgeM2 = sum(edgeM2(:));
             edgeM = xor(edgeM1, edgeM2); % matrix xor, a_{i,j} XOR b_{i,j}

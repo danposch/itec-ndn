@@ -8,6 +8,7 @@ classdef path < handle
         end_vertex = 0;
         vertices = 0;
         myPath = -1;
+        edgeMatrix = 0;
     end
     
     methods
