@@ -3,6 +3,7 @@ classdef client < handle
     %   Detailed explanation goes here
     
     properties
+        id = -1;
         paths = cell(1);
         myGraph = 0;
         start_vertex = 0;
@@ -16,7 +17,7 @@ classdef client < handle
     
     methods
         function obj = client( this_start_vertex, this_end_vertex, this_graph)
-            
+            obj.id = this_start_vertex;
             obj.myGraph = this_graph;
             obj.start_vertex = this_start_vertex;
             obj.end_vertex = this_end_vertex;
@@ -89,7 +90,7 @@ classdef client < handle
                 
             end
             
-            cl.num_disjoint_path_sets = cl.num_disjoint_path_sets + (size(cl.disjointPaths{1},1));
+            cl.num_disjoint_path_sets = (size(cl.disjointPaths{1},1));
             
             if length(cl.paths) > 1
                 % create all combinations and test if the selected paths
@@ -104,7 +105,7 @@ classdef client < handle
                         disjoint = 1;
                         for n=1:size(cl.disjointPaths{i},2)-1
                             if disjoint == 0
-                                break
+                                break;
                             end
                             for k=(n+1):size(cl.disjointPaths{i},2)
                                 if checkDisjoint(cl.disjointPaths{i}{j,n}, cl.disjointPaths{i}{j, k}) == 0
@@ -129,6 +130,9 @@ classdef client < handle
                     cl.num_disjoint_path_sets = cl.num_disjoint_path_sets + (size(cl.disjointPaths{i},1));
                 end
             end
+            
+            ret = cl.num_disjoint_path_sets;
+            
         end
         
         function ret = createSingleDimDisjointPathArray(cl)
