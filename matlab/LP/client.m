@@ -144,7 +144,7 @@ classdef client < handle
                     
                     cl.disjointPaths_array{size(cl.disjointPaths,1)*(i-1) + j} = cell(1,size(cl.disjointPaths{i},2));
                     for k=1:size(cl.disjointPaths{i},2)
-                    cl.disjointPaths_array{size(cl.disjointPaths,1)*(i-1) + j}{1,k} = cl.disjointPaths{i}{j,k};
+                        cl.disjointPaths_array{size(cl.disjointPaths,1)*(i-1) + j}{1,k} = cl.disjointPaths{i}{j,k};
                     end
                 end
             end

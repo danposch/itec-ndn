@@ -25,7 +25,7 @@ classdef graph < handle
             for i=1:vertices
                 for j=1:vertices
                     if(i==j)
-                        obj.residuals(i,j) = 0;
+                        obj.residuals(i,j) = Inf;
                     else
                         obj.residuals(i,j) = Inf;
                     end

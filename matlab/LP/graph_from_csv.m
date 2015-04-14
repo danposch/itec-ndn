@@ -36,7 +36,8 @@ fprintf('We have %d permutations of strategies to evaluate!\n',num_total_path_st
 for i=1:length(cl)
     cl{i}.createSingleDimDisjointPathArray();
 end
-
+%%
+tic;
 
 
 % Now we solve the optimization problem
@@ -47,6 +48,9 @@ end
 
 % DEBUG: for design issues we just use 1:1:1:1:1:1, TODO: iterate all
 % possible permutations
+
+g_tmp = g;
+
 k = 1;
 strat_for_client = ones(length(cl),1); %sample strategie
 strat = cell(1);
@@ -145,6 +149,21 @@ end
 if rem_cnt > 0
     independent_clients(toRemove) = [];
 end
+
+
+toConsume = maxBitrate;
+
+for i=1:length(independent_clients)
+   
+    for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
+    
+        min(xor(cl{i}.myGraph.residuals,  cl{i}.disjointPaths_array{strat_for_client(i)}{1,j}.edgeMatrix), toConsume);
+            
+    end
+end
+
+
+toc
 
 %% algo
 
