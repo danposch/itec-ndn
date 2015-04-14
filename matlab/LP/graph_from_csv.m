@@ -1,33 +1,18 @@
 clear all;
-nodes = 33;
-g = graph(nodes);
+csv_file = 'top-1.csv';
+%parse number of nodes
 
-fid = fopen('edges.csv');
-k = textscan(fid, '(%d,%d,%d)');
-fclose(fid);
+parser = top_parser(csv_file);
 
-for i=1:length(k{1})
-    
-    g.addEdgeWithCapacity(k{1}(i) + 1, k{2}(i) + 1, k{3}(i));
-    
-end
+nodes = parser.nodes;
+g = parser.graph;
+cl = parser.clients;
 
-fid = fopen('clients_servers.csv');
-cs = textscan(fid, '(%d,%d)');
-fclose(fid);
-cl = cell(1);
-
-%
-for i=1:length(cs{1})
-    cl{i} = client(cs{1}(i) + 1, cs{2}(i) + 1, g);
-    % enumerate all paths
-    cl{i}.calcPaths();
-end
 
 
 % create the possible set of paths, we have 2^(sum length(cl{i}.paths))
 % sets
-% before we do so each client computes all sets of node disjoint paths ( in
+% before we do so each client computes all sets of edge disjoint paths ( in
 % order to reduce the computational effort ) TODO: easy just compute the
 % power set of the path fo a single client, cancel those sets where we have
 % overlapping path! - this results in a set of sets of which every set
@@ -61,13 +46,14 @@ end
 %%
 % Now we solve the optimization problem
 
-% first we get get those paths among the selected strategies which are
+% first we get those paths among the selected strategies which are
 % (edge) disjoint
 
 
 % DEBUG: for design issues we just use 1:1:1:1:1:1, TODO: iterate all
 % possible permutations
 k = 1;
+strat_for_client = [1,1,1,1,1,1];
 strat = cell(1);
 stratsUnion = cell(1);
 stratsUnion_cnt = 1;
@@ -99,10 +85,15 @@ for i=1:length(stratsUnion)
     if disjoint == 1
         disjointPathsAll{disjointPathsAll_cnt} = stratsUnion{i};
         disjointPathsAll_cnt = disjointPathsAll_cnt + 1;
-        % TODO determine client that owns this path ...
+        
     end
 end
+% Determine those clients thare only in the disjoint set and those that
+% are in both
 
+for i=1:length(cl)
+    
+end
 
 
 %% algo
