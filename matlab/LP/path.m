@@ -9,6 +9,7 @@ classdef path < handle
         vertices = 0;
         myPath = -1;
         edgeMatrix = 0;
+        fulledgeMatrix=0;
     end
     
     methods

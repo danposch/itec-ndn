@@ -27,7 +27,7 @@ for i=1:length(cl)
     fprintf('Client %2d has %3d (edge) disjoint path strategies\n',i,rc);
     num_total_path_strats = num_total_path_strats * cl{i}.num_disjoint_path_sets;
     cl{i}.createSingleDimDisjointPathArray();
-    %disjoint_path_sets_cell{i} = [1 cl{i}.num_disjoint_path_sets]; 
+    %disjoint_path_sets_cell{i} = [1 cl{i}.num_disjoint_path_sets];
 end
 %%
 fprintf('We have %d permutations of strategies to evaluate!\n',num_total_path_strats);
@@ -52,16 +52,14 @@ tic;
 % first we get those paths among the selected strategies which are
 % (edge) disjoint
 
-
-% DEBUG: for design issues we just use 1:1:1:1:1:1, TODO: iterate all
-% possible permutations
-g_tmp = g;
+g_tmp = copy(g);
 
 strat_for_client = s_combiner.getNextStrategy(); %ones(length(cl),1); %sample strategie
 strat = cell(1);
 stratsUnion = cell(1);
 stratsUnion_cnt = 1;
 for i=1:length(cl)
+    cl{i}.id = i;
     strat{i} = cell(1,size(cl{i}.disjointPaths_array{strat_for_client(i)},2));
     for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
         strat{i}{1,j} = cl{i}.disjointPaths_array{strat_for_client(i)}{1,j};
@@ -156,20 +154,91 @@ if rem_cnt > 0
 end
 toc
 %%
+% use g_tmp for any computation on the residuals/capacities
+cumulative_bitrate = 0;
 
-%toConsume = maxBitrate;
-
-%for i=1:length(independent_clients)
-   
-%    for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
+for i=1:length(independent_clients)
+    toConsume =  1400000;
     
-%        min(xor(cl{i}.myGraph.residuals,  cl{i}.disjointPaths_array{strat_for_client(i)}{1,j}.edgeMatrix), toConsume);
-            
-%    end
-%end
+    for j=1:size(independent_clients{i}.disjointPaths_array{strat_for_client(independent_clients{i}.id)},2)
+        if toConsume > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
+            mt = (g_tmp.residuals .* independent_clients{i}.disjointPaths_array{strat_for_client(independent_clients{i}.id)}{1,j}.fulledgeMatrix);
+            [r,c,v] = find(mt>0);
+            myBitrate = min(min(diag(mt(r,c))), toConsume);
+            % now consume the minimum, it is safe to consume it because
+            % this client will not intersect any other client
+            cumulative_bitrate = cumulative_bitrate + g_tmp.consume(independent_clients{i}.disjointPaths_array{strat_for_client(independent_clients{i}.id)}{1,j}, myBitrate);
+            toConsume = toConsume - myBitrate;
+        else
+            break;
+        end
+        
+    end
+end
 
 
+% now we have just handled those client that do not interfere with other
+% clients
 
+%%
+% we have to divide the set of dependent clients even more
+% we have to be sure that all clients are somehow interconnected
+stacki = cell(1);
+for i=1:length(dependent_clients)
+    stacki{i} = java.util.Stack();
+    for k=1:length(dependent_clients)
+        disjoint = 1;
+        if i ~= k
+            for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
+                for h=1:size(dependent_clients{k}.disjointPaths_array{strat_for_client(dependent_clients{k}.id)},2)
+                    if checkDisjoint(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}, dependent_clients{k}.disjointPaths_array{strat_for_client(dependent_clients{k}.id)}{1,h}) == 0
+                        stacki{i}.push(k);
+                        disjoint = 0;
+                        break;
+                    end
+                end
+                if disjoint == 0
+                    break;
+                end
+            end
+        end
+    end
+end
+
+
+%%
+% just consume the minbitrate, one constraint is that each client has to
+% consume the lowest layer without stalls
+
+for i=1:length(dependent_clients)
+    toConsume(i) =  640000;
+end
+while sum(toConsume(:)) > 0 && iterdiff > 0
+    for i=1:length(dependent_clients)
+        
+        for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
+            if toConsume(i) > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
+                mt = (g_tmp.residuals .* dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}.fulledgeMatrix);
+                [r,c,v] = find(mt>0);
+                myBitrate = min(min(diag(mt(r,c))), toConsume(i));
+                % now consume the minimum, it is safe to consume it because
+                % this client will not intersect any other client
+                cumulative_bitrate = cumulative_bitrate + g_tmp.consume(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}, myBitrate);
+                toConsume(i) = toConsume(i) - myBitrate;
+            else
+                break;
+            end
+        end
+        
+        
+        
+    end
+    % if there are residuals in toConsume, we have to redistribute the sum
+    % on those which could consume everything
+    
+end
+
+% now we look at all intersections
 
 %% algo
 

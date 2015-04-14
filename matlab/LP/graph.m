@@ -1,4 +1,4 @@
-classdef graph < handle
+classdef graph < matlab.mixin.Copyable
     
     properties
         edges = 0;
@@ -25,9 +25,9 @@ classdef graph < handle
             for i=1:vertices
                 for j=1:vertices
                     if(i==j)
-                        obj.residuals(i,j) = Inf;
+                        obj.residuals(i,j) = 0;
                     else
-                        obj.residuals(i,j) = Inf;
+                        obj.residuals(i,j) = 0;
                     end
                 end
             end        
@@ -147,6 +147,16 @@ classdef graph < handle
             r = 1;
         end
         
+        function ret = consume(gr, p, cap)
+            
+            for i=1:length(p.myPath)-1
+            
+                gr.residuals(p.myPath(i), p.myPath(i+1)) = gr.residuals(p.myPath(i), p.myPath(i+1)) - cap;
+                
+            end
+                
+            ret = cap;
+        end
         
         function ret = calcPaths(gr, s, t)
             gr.nodes_passed = java.util.Stack();

@@ -34,7 +34,7 @@ classdef client < handle
             % edges
             for i=1:length(cl.paths)
                 cl.paths{i}.edgeMatrix = cl.createSpecialEdgeMatrix(cl.paths{i});
-                
+                cl.paths{i}.fulledgeMatrix = cl.createFullEdgeMatrix(cl.paths{i});
                 for k=1:length(cl.paths{i}.myPath)-1
                     cl.edgeMatrix(cl.paths{i}.myPath(k), cl.paths{i}.myPath(k+1)) = 1;
                 end
@@ -49,6 +49,18 @@ classdef client < handle
             end
         end
         
+        function ret = createFullEdgeMatrix(cl, p)
+            % special because we do not take into account the first edge
+            % and the last edge
+            ret = zeros(length(p.vertices), length(p.vertices));
+            for k=1:length(p.myPath)-1
+                ret(p.myPath(k), p.myPath(k+1)) = 1;
+            end
+            
+            
+        end
+        
+        
         function ret = createSpecialEdgeMatrix(cl, p)
             % special because we do not take into account the first edge
             % and the last edge
@@ -57,8 +69,7 @@ classdef client < handle
                 for k=2:length(p.myPath)-2
                     ret(p.myPath(k), p.myPath(k+1)) = 1;
                 end
-            end
-            
+            end            
         end
         
         % for checking whether two paths are (edge) disjoint use
