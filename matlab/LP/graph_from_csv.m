@@ -18,6 +18,8 @@ cl = parser.clients;
 % overlapping path! - this results in a set of sets of which every set
 % represent a node disjoint "strategy"
 
+%%
+%disjoint_path_sets_cell = cell(1);
 num_total_path_strats = 1;
 for i=1:length(cl)
     % calculate those set of paths which only include disjoint paths
@@ -25,20 +27,25 @@ for i=1:length(cl)
     fprintf('Client %2d has %3d (edge) disjoint path strategies\n',i,rc);
     num_total_path_strats = num_total_path_strats * cl{i}.num_disjoint_path_sets;
     cl{i}.createSingleDimDisjointPathArray();
+    %disjoint_path_sets_cell{i} = [1 cl{i}.num_disjoint_path_sets]; 
 end
-
+%%
 fprintf('We have %d permutations of strategies to evaluate!\n',num_total_path_strats);
 
 
 % now we have to get every possible permutation of strategies for each
 % client
+%combos = allcomb(disjoint_path_sets_cell{:}); //does not work and would
+%kill memmory
 
-for i=1:length(cl)
-    cl{i}.createSingleDimDisjointPathArray();
-end
+%%
+s_combiner = strategycombiner(cl);
+%while(s_combiner.hasNext)
+%    strategy = s_combiner.getNextStrategy()
+%end
+
 %%
 tic;
-
 
 % Now we solve the optimization problem
 
@@ -48,19 +55,17 @@ tic;
 
 % DEBUG: for design issues we just use 1:1:1:1:1:1, TODO: iterate all
 % possible permutations
-
 g_tmp = g;
 
-k = 1;
-strat_for_client = ones(length(cl),1); %sample strategie
+strat_for_client = s_combiner.getNextStrategy(); %ones(length(cl),1); %sample strategie
 strat = cell(1);
 stratsUnion = cell(1);
 stratsUnion_cnt = 1;
 for i=1:length(cl)
-    strat{i} = cell(1,size(cl{i}.disjointPaths_array{k},2));
-    for j=1:size(cl{i}.disjointPaths_array{k},2)
-        strat{i}{1,j} = cl{i}.disjointPaths_array{k}{1,j};
-        stratsUnion{stratsUnion_cnt} = cl{i}.disjointPaths_array{k}{1,j};
+    strat{i} = cell(1,size(cl{i}.disjointPaths_array{strat_for_client(i)},2));
+    for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
+        strat{i}{1,j} = cl{i}.disjointPaths_array{strat_for_client(i)}{1,j};
+        stratsUnion{stratsUnion_cnt} = cl{i}.disjointPaths_array{strat_for_client(i)}{1,j};
         stratsUnion_cnt = stratsUnion_cnt + 1;
     end
 end
@@ -149,21 +154,22 @@ end
 if rem_cnt > 0
     independent_clients(toRemove) = [];
 end
-
-
-toConsume = maxBitrate;
-
-for i=1:length(independent_clients)
-   
-    for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
-    
-        min(xor(cl{i}.myGraph.residuals,  cl{i}.disjointPaths_array{strat_for_client(i)}{1,j}.edgeMatrix), toConsume);
-            
-    end
-end
-
-
 toc
+%%
+
+%toConsume = maxBitrate;
+
+%for i=1:length(independent_clients)
+   
+%    for j=1:size(cl{i}.disjointPaths_array{strat_for_client(i)},2)
+    
+%        min(xor(cl{i}.myGraph.residuals,  cl{i}.disjointPaths_array{strat_for_client(i)}{1,j}.edgeMatrix), toConsume);
+            
+%    end
+%end
+
+
+
 
 %% algo
 
