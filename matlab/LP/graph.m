@@ -10,6 +10,7 @@ classdef graph < matlab.mixin.Copyable
         current_path = 0;
         paths = 0;
         foundpaths = 0;
+        edges_array = java.util.Stack();
     end
     
     methods
@@ -62,6 +63,9 @@ classdef graph < matlab.mixin.Copyable
             if i > length(gr.vertices) || j > length(gr.vertices)
                 ret = -1;
             else
+                
+                gr.edges_array.push( [i j capacity]);
+                gr.edges_array.push( [j i capacity]);
                 gr.edges(i,j) = 1;
                 gr.edges(j,i) = 1;
                 gr.residuals(i,j) = capacity;

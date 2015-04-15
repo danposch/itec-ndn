@@ -34,6 +34,15 @@ classdef path < handle
             end
         end
         
+        function ret = containsEdge(p, u, v)
+            tmpM = zeros(size(p.fulledgeMatrix, 1), size(p.fulledgeMatrix, 2));
+            tmpM(u,v) = 1;
+            B = and(tmpM, p.fulledgeMatrix);
+            ret = 0;
+            if sum(B(:)) == 1
+                ret = 1;
+            end
+        end
         
         function ret = printMe(p)
             for i=1:length(p.myPath)-1

@@ -10,6 +10,112 @@ nodes = parser.nodes;
 g = parser.mygraph;
 cl = parser.clients;
 
+%%
+% solve the linear program that leads to an upper bound of the ILP that is
+% np-complete - Da is noch irgendwo ein Fehler.
+f = [];
+for i=0:g.edges_array.size()-1
+    t = double(g.edges_array.get(i));
+    f = [f t(3)];
+end
+
+% the matrix A has g.edges_array.size() + length(cl) columns and 1 +
+% sum_{i=1}^{length(cl)} length(cl{i}.paths) rows
+num_paths = 0;
+for i=1:length(cl)
+    num_paths = num_paths + length(cl{i}.paths);
+    f = [f 0];
+end
+
+A = zeros(1 + num_paths, g.edges_array.size() + length(cl));
+
+% set the corresponding entries in A
+
+for i=1:length(cl)
+    A(1,g.edges_array.size() + i) = -minBitrate; % this sets the min bitrate that has to be consumed
+end
+
+paths_used = 0;
+
+for k=1:length(cl)
+    for i=1:length(cl{k}.paths)
+        paths_used = paths_used + 1;
+        for j=0:g.edges_array.size()-1
+            t = g.edges_array.get(j);
+            if cl{k}.paths{i}.containsEdge(t(1), t(2)) == 1
+                A(1 + paths_used, j+1) = -1;
+            end
+        end
+        
+        A(1 + paths_used, g.edges_array.size() + k) = 1;
+        
+    end
+end
+
+b = zeros(size(A,1),1);
+b(1) = -1;
+
+lb = zeros(size(A,2),1);
+
+[x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
+
+
+%%
+% solve the linear program that leads to an upper bound of the ILP that is
+% np-complete - Just another formulation of the same problem
+f = [];
+for i=0:g.edges_array.size()-1
+    t = double(g.edges_array.get(i));
+    f = [f t(3)];
+end
+
+% the matrix A has g.edges_array.size() + length(cl) columns and 1 +
+% sum_{i=1}^{length(cl)} length(cl{i}.paths) rows
+num_paths = 0;
+for i=1:length(cl)
+    num_paths = num_paths + length(cl{i}.paths);
+    f = [f 0];
+end
+
+
+
+A = zeros(num_paths, g.edges_array.size() + length(cl));
+
+% set the corresponding entries in A
+Aeq = zeros(1,g.edges_array.size() + length(cl));
+for i=1:length(cl)
+    Aeq(g.edges_array.size() + i) = minBitrate; % this sets the min bitrate that has to be consumed
+end
+
+beq(1) = 1;
+
+paths_used = 0;
+
+for k=1:length(cl)
+    for i=1:length(cl{k}.paths)
+        paths_used = paths_used + 1;
+        for j=0:g.edges_array.size()-1
+            t = g.edges_array.get(j);
+            if cl{k}.paths{i}.containsEdge(t(1), t(2)) == 1
+                A(paths_used, j+1) = -1;
+            end
+        end
+        
+        A(paths_used, g.edges_array.size() + k) = 1;
+        
+    end
+end
+
+b = zeros(size(A,1),1);
+
+lb = zeros(size(A,2),1);
+
+[x,fval,exitflag,output,lambda] = linprog(f,A,b,Aeq,beq,lb,[]);
+
+
+
+
+
 % create the possible set of paths, we have 2^(sum length(cl{i}.paths))
 % sets
 % before we do so each client computes all sets of edge disjoint paths ( in
@@ -43,6 +149,8 @@ s_combiner = strategycombiner(cl);
 %while(s_combiner.hasNext)
 %    strategy = s_combiner.getNextStrategy()
 %end
+
+
 
 %%
 tic;
@@ -177,7 +285,7 @@ for i=1:length(independent_clients)
 end
 
 
-% now we have just handled those client that do not interfere with other
+% now we have just handled those clients that do not interfere with other
 % clients
 
 %%
@@ -189,10 +297,10 @@ for i=1:length(dependent_clients)
     
     found = 0;
     for t=1:length(stacki)
-       
+        
         [found, elem] = ismember(i,stacki{t});
         if found == 1
-                mySetIndex = t;
+            mySetIndex = t;
             break;
         end
     end
@@ -233,10 +341,10 @@ for i=1:length(stacki)
     for j=i+1:length(stacki)
         [a, b, c] = intersect(stacki{i}, stacki{j});
         if ~isempty(a)
-           stacki{i} = [stacki{i}, stacki{j}];
-           stacki{i} = unique(stacki{i});
+            stacki{i} = [stacki{i}, stacki{j}];
+            stacki{i} = unique(stacki{i});
         end
-    end    
+    end
 end
 
 
@@ -252,10 +360,10 @@ for s = 1:length(stacki)
     for i=1:length(stacki{s}{i})
         toConsume(i) =  minBitrate;
     end
-
+    
     while sum(toConsume(:)) > 0
         for i=1:length(stacki{s}) %THIS REQUIRES cl TO BE ORDED BY client_ids IN ASCENDING ORDER
-
+            
             %for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
             for j=1:size(cl{stacki{s}(i)}.disjointPaths_array{strat_for_client(stacki{s}(i))},2)
                 if toConsume(i) > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
@@ -270,17 +378,17 @@ for s = 1:length(stacki)
                     break;
                 end
             end
-
-
-
+            
+            
+            
         end
         % if there are residuals in toConsume, we have to redistribute the sum
         % on those which could consume everything
-
+        
     end
-
+    
     % now we look at all intersections
-
+    
 end
 
 %% algo
