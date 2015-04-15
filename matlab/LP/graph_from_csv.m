@@ -1,14 +1,14 @@
 clear all;
+
+%parameters
 csv_file = 'top-1.csv';
-%parse number of nodes
+minBitrate= 640000;
+maxBitrate= 1400000
 
 parser = top_parser(csv_file);
-
 nodes = parser.nodes;
 g = parser.mygraph;
 cl = parser.clients;
-
-
 
 % create the possible set of paths, we have 2^(sum length(cl{i}.paths))
 % sets
@@ -158,7 +158,7 @@ toc
 cumulative_bitrate = 0;
 
 for i=1:length(independent_clients)
-    toConsume =  1400000;
+    toConsume =  maxBitrate;
     
     for j=1:size(independent_clients{i}.disjointPaths_array{strat_for_client(independent_clients{i}.id)},2)
         if toConsume > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
@@ -184,15 +184,31 @@ end
 % we have to divide the set of dependent clients even more
 % we have to be sure that all clients are somehow interconnected
 stacki = cell(1);
+stacki{1} = [];
 for i=1:length(dependent_clients)
-    stacki{i} = java.util.Stack();
+    
+    found = 0;
+    for t=1:length(stacki)
+       
+        [found, elem] = ismember(i,stacki{t});
+        if found == 1
+                mySetIndex = t;
+            break;
+        end
+    end
+    if found == 0
+        mySetIndex = i;
+        stacki{mySetIndex} = [];
+    end
+    
+    cnt = 0;
     for k=1:length(dependent_clients)
         disjoint = 1;
         if i ~= k
             for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
                 for h=1:size(dependent_clients{k}.disjointPaths_array{strat_for_client(dependent_clients{k}.id)},2)
                     if checkDisjoint(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}, dependent_clients{k}.disjointPaths_array{strat_for_client(dependent_clients{k}.id)}{1,h}) == 0
-                        stacki{i}.push(k);
+                        stacki{mySetIndex} = [stacki{mySetIndex}, k];
                         disjoint = 0;
                         break;
                     end
@@ -208,49 +224,64 @@ end
 % create for each client the list of clients that it is able to "reach" using
 % intersecting edges
 
+
 for i=1:length(stacki)
-    for j=1:stacki{i}.size()-1
-        
-        
-        
-    end
-    
+    stacki{i} = unique(stacki{i});
 end
+
+for i=1:length(stacki)
+    for j=i+1:length(stacki)
+        [a, b, c] = intersect(stacki{i}, stacki{j});
+        if ~isempty(a)
+           stacki{i} = [stacki{i}, stacki{j}];
+           stacki{i} = unique(stacki{i});
+        end
+    end    
+end
+
+
 
 
 %%
-% just consume the minbitrate, one constraint is that each client has to
-% consume the lowest layer without stalls
-
-for i=1:length(dependent_clients)
-    toConsume(i) =  640000;
-end
-while sum(toConsume(:)) > 0 && iterdiff > 0
-    for i=1:length(dependent_clients)
-        
-        for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
-            if toConsume(i) > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
-                mt = (g_tmp.residuals .* dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}.fulledgeMatrix);
-                [r,c,v] = find(mt>0);
-                myBitrate = min(min(diag(mt(r,c))), toConsume(i));
-                % now consume the minimum, it is safe to consume it because
-                % this client will not intersect any other client
-                cumulative_bitrate = cumulative_bitrate + g_tmp.consume(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}, myBitrate);
-                toConsume(i) = toConsume(i) - myBitrate;
-            else
-                break;
-            end
-        end
-        
-        
-        
-    end
-    % if there are residuals in toConsume, we have to redistribute the sum
-    % on those which could consume everything
+% for each set in stacki
+%HALBFERTIG
+for s = 1:length(stacki)
     
-end
+    % consume the lowest layer without stalls
+    toConsume = []; %erase old values..
+    for i=1:length(stacki{s}{i})
+        toConsume(i) =  minBitrate;
+    end
 
-% now we look at all intersections
+    while sum(toConsume(:)) > 0
+        for i=1:length(stacki{s}) %THIS REQUIRES cl TO BE ORDED BY client_ids IN ASCENDING ORDER
+
+            %for j=1:size(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)},2)
+            for j=1:size(cl{stacki{s}(i)}.disjointPaths_array{strat_for_client(stacki{s}(i))},2)
+                if toConsume(i) > 0 % we do not care about other possibilities because they do not change anything for any other client (+ it would not influence the maximum)...
+                    mt = (g_tmp.residuals .* cl{stacki{s}(i).disjointPaths_array{strat_for_client(stacki{s}(i))}{1,j}.fulledgeMatrix);%error
+                    [r,c,v] = find(mt>0);
+                    myBitrate = min(min(diag(mt(r,c))), toConsume(i));
+                    % now consume the minimum, it is safe to consume it because
+                    % this client will not intersect any other client
+                    cumulative_bitrate = cumulative_bitrate + g_tmp.consume(dependent_clients{i}.disjointPaths_array{strat_for_client(dependent_clients{i}.id)}{1,j}, myBitrate);
+                    toConsume(i) = toConsume(i) - myBitrate;
+                else
+                    break;
+                end
+            end
+
+
+
+        end
+        % if there are residuals in toConsume, we have to redistribute the sum
+        % on those which could consume everything
+
+    end
+
+    % now we look at all intersections
+
+end
 
 %% algo
 
