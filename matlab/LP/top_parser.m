@@ -23,8 +23,9 @@ classdef top_parser < handle
             while(~tline.isEmpty())
                 if(tline.startsWith(java.lang.String('#number of nodes')))
                     tline = java.lang.String(fgets(fid));
-                    tline = tline.substring(0, tline.length()-2);
-                    obj.nodes = java.lang.Integer.parseInt(tline.toString());
+                    %tline = tline.substring(0, tline.length()-2);
+                    obj.nodes = str2double(char(tline));
+                    %obj.nodes = java.lang.Integer.parseInt(tline.toString());
                     break;
                 end
                 tline = java.lang.String(fgets(fid));
