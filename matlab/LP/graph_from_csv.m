@@ -5,7 +5,7 @@ csv_file = 'top-1.csv';
 parser = top_parser(csv_file);
 
 nodes = parser.nodes;
-g = parser.graph;
+g = parser.mygraph;
 cl = parser.clients;
 
 
@@ -203,6 +203,18 @@ for i=1:length(dependent_clients)
             end
         end
     end
+end
+
+% create for each client the list of clients that it is able to "reach" using
+% intersecting edges
+
+for i=1:length(stacki)
+    for j=1:stacki{i}.size()-1
+        
+        
+        
+    end
+    
 end
 
 

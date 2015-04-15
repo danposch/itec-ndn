@@ -5,7 +5,7 @@ classdef top_parser < handle
     properties
         csv_file = ''; %csv_file to parse
         nodes = 0;     %number of nodes for the graph
-        graph = 0;     %result graph after parsing
+        mygraph = 0;     %result graph after parsing
         clients = cell(1);
     end
     
@@ -39,7 +39,7 @@ classdef top_parser < handle
             end
             
             %create graph
-            obj.graph = graph(obj.nodes);
+            obj.mygraph = graph(obj.nodes);
             
             %extract edge info + bandwidth
             edge_info_str = '';
@@ -58,7 +58,7 @@ classdef top_parser < handle
             %create edges
             edge = textscan(edge_info_str, '(%d,%d,%d)');
             for i=1:length(edge{1})
-                obj.graph.addEdgeWithCapacity(edge{1}(i) + 1, edge{2}(i) + 1, edge{3}(i)); 
+                obj.mygraph.addEdgeWithCapacity(edge{1}(i) + 1, edge{2}(i) + 1, edge{3}(i)); 
             end
             
             fprintf('Parsed %d edges.\n',length(edge{1}));
@@ -81,7 +81,7 @@ classdef top_parser < handle
             cs = textscan(cs_info_str, '(%d,%d)');
             fprintf('Parsed %d client/server pairs. Calculating Paths:\n',length(cs{1}));
             for i=1:length(cs{1})
-                obj.clients{i} = client(cs{1}(i) + 1, cs{2}(i) + 1, obj.graph);
+                obj.clients{i} = client(cs{1}(i) + 1, cs{2}(i) + 1, obj.mygraph);
                 n_path = obj.clients{i}.calcPaths(); %calc all paths from client to server
                 fprintf('Client %2d has %3d paths to its Server\n',i,n_path);
             end       
