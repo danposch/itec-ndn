@@ -12,7 +12,73 @@ cl = parser.clients;
 
 %%
 % solve the linear program that leads to an upper bound of the ILP that is
-% np-complete - Da is noch irgendwo ein Fehler.
+% np-complete - This is the primal problem
+%f = [1];
+
+% the matrix A has g.edges_array.size() + length(cl) columns and 1 +
+% sum_{i=1}^{length(cl)} length(cl{i}.paths) rows
+num_paths = 0;
+for i=1:length(cl)
+    num_paths = num_paths + length(cl{i}.paths);
+end
+
+f = zeros(length(cl) + num_paths,1);
+
+f(1:length(cl)) = -1;
+
+
+A = zeros(length(cl) + g.edges_array.size(), length(cl) + num_paths);
+
+% set the corresponding entries in A
+
+%for i=1:length(cl)
+%    A(1,g.edges_array.size() + i) = -minBitrate; % this sets the min bitrate that has to be consumed
+%end
+
+paths_used = length(cl);
+
+for k=1:length(cl)
+    for i=1:length(cl{k}.paths)
+        paths_used = paths_used + 1;
+        A(k, paths_used) = -1;
+    end
+    A(k, k) = minBitrate;
+end
+
+b = zeros(size(A,1),1);
+
+for i=0:g.edges_array.size()-1
+    t = g.edges_array.get(i);
+    paths_used = 0;
+
+    for k=1:length(cl)
+        
+        for j=1:length(cl{k}.paths)
+           
+            paths_used = paths_used + 1;
+            
+            if cl{k}.paths{j}.containsEdge(t(1), t(2)) == 1         
+            
+                A(length(cl) + i + 1, length(cl) + paths_used) = 1;               
+        
+            end
+            
+        end
+        
+    end
+    
+    b(i+1 + length(cl)) = t(3);
+end
+
+
+lb = zeros(size(A,2),1);
+
+[x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
+
+
+%%
+% solve the linear program that leads to an upper bound of the ILP that is
+% np-complete - This is the dual of the primal
 f = [];
 for i=0:g.edges_array.size()-1
     t = double(g.edges_array.get(i));
@@ -59,61 +125,7 @@ lb = zeros(size(A,2),1);
 
 [x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
 
-
-%%
-% solve the linear program that leads to an upper bound of the ILP that is
-% np-complete - Just another formulation of the same problem
-f = [];
-for i=0:g.edges_array.size()-1
-    t = double(g.edges_array.get(i));
-    f = [f t(3)];
-end
-
-% the matrix A has g.edges_array.size() + length(cl) columns and 1 +
-% sum_{i=1}^{length(cl)} length(cl{i}.paths) rows
-num_paths = 0;
-for i=1:length(cl)
-    num_paths = num_paths + length(cl{i}.paths);
-    f = [f 0];
-end
-
-
-
-A = zeros(num_paths, g.edges_array.size() + length(cl));
-
-% set the corresponding entries in A
-Aeq = zeros(1,g.edges_array.size() + length(cl));
-for i=1:length(cl)
-    Aeq(g.edges_array.size() + i) = minBitrate; % this sets the min bitrate that has to be consumed
-end
-
-beq(1) = 1;
-
-paths_used = 0;
-
-for k=1:length(cl)
-    for i=1:length(cl{k}.paths)
-        paths_used = paths_used + 1;
-        for j=0:g.edges_array.size()-1
-            t = g.edges_array.get(j);
-            if cl{k}.paths{i}.containsEdge(t(1), t(2)) == 1
-                A(paths_used, j+1) = -1;
-            end
-        end
-        
-        A(paths_used, g.edges_array.size() + k) = 1;
-        
-    end
-end
-
-b = zeros(size(A,1),1);
-
-lb = zeros(size(A,2),1);
-
-[x,fval,exitflag,output,lambda] = linprog(f,A,b,Aeq,beq,lb,[]);
-
-
-
+upperBoundLP = (f*x) * minBitrate;
 
 
 % create the possible set of paths, we have 2^(sum length(cl{i}.paths))
