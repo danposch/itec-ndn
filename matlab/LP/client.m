@@ -1,4 +1,4 @@
-classdef client < handle
+classdef client < matlab.mixin.Copyable
     %PATH Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -14,6 +14,8 @@ classdef client < handle
         num_disjoint_path_sets = 0;
         disjointPaths_array = 0;
         maxPossibleBitrateForStreaming = 0;
+        maxBitrate = 0;
+        minBitrate = 0;
     end
     
     methods
@@ -26,6 +28,15 @@ classdef client < handle
             
         end
         
+        function ret = setMaxBitrate(cl, bitrate)
+            cl.maxBitrate = bitrate;
+            ret = cl.maxBitrate;
+        end
+        
+        function ret = setMinBitrate(cl, bitrate)
+            cl.minBitrate = bitrate;
+            ret = cl.minBitrate;
+        end
         
         function ret = calcPaths(cl)
             cl.paths = cl.myGraph.calcPaths(cl.start_vertex, cl.end_vertex);

@@ -2,13 +2,15 @@ clear all;
 
 %parameters
 csv_file = 'top-1.csv';
-minBitrate= 640;
-maxBitrate= 1400000
-
 parser = top_parser(csv_file);
 nodes = parser.nodes;
 g = parser.mygraph;
 cl = parser.clients;
+
+
+%% Solve the multi-commodity flow problem using a LP 
+
+[solution_clients, solution_graph, avg_bitrate, exitflag] =  solveFractionalMultiCommodityFlow(g, cl);
 
 %% Primal problem formulation FOR NO CACHING
 % solve the linear program that leads to an upper bound of the ILP that is
@@ -42,7 +44,7 @@ for k=1:length(cl)
         paths_used = paths_used + 1;
         A(k, paths_used) = -1;
     end
-    A(k, k) = minBitrate;
+    A(k, k) = cl{k}.minBitrate;
 end
 
 b = zeros(size(A,1),1);
@@ -77,7 +79,7 @@ for i=1:length(cl)
         A(length(cl) + g.edges_array.size() + i, length(cl) + paths_used) = 1;
     end
     
-    b(length(cl) + g.edges_array.size() + i) = maxBitrate;
+    b(length(cl) + g.edges_array.size() + i) = cl{i}.maxBitrate;
     
 end
 

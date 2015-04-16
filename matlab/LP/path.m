@@ -10,6 +10,7 @@ classdef path < handle
         myPath = -1;
         edgeMatrix = 0;
         fulledgeMatrix=0;
+        bitrate = 0;
     end
     
     methods
