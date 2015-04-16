@@ -10,7 +10,7 @@ nodes = parser.nodes;
 g = parser.mygraph;
 cl = parser.clients;
 
-%%
+%% Primal problem formulation FOR NO CACHING
 % solve the linear program that leads to an upper bound of the ILP that is
 % np-complete - This is the primal problem
 %f = [1];
@@ -27,7 +27,7 @@ f = zeros(length(cl) + num_paths,1);
 f(1:length(cl)) = -1;
 
 
-A = zeros(length(cl) + g.edges_array.size(), length(cl) + num_paths);
+A = zeros(2*length(cl) + g.edges_array.size(), length(cl) + num_paths);
 
 % set the corresponding entries in A
 
@@ -50,17 +50,17 @@ b = zeros(size(A,1),1);
 for i=0:g.edges_array.size()-1
     t = g.edges_array.get(i);
     paths_used = 0;
-
+    
     for k=1:length(cl)
         
         for j=1:length(cl{k}.paths)
-           
+            
             paths_used = paths_used + 1;
             
-            if cl{k}.paths{j}.containsEdge(t(1), t(2)) == 1         
-            
-                A(length(cl) + i + 1, length(cl) + paths_used) = 1;               
-        
+            if cl{k}.paths{j}.containsEdge(t(1), t(2)) == 1
+                
+                A(length(cl) + i + 1, length(cl) + paths_used) = 1;
+                
             end
             
         end
@@ -70,10 +70,206 @@ for i=0:g.edges_array.size()-1
     b(i+1 + length(cl)) = t(3);
 end
 
+paths_used = 0;
+for i=1:length(cl)
+    for j=1:length(cl{i}.paths)
+        paths_used = paths_used + 1;
+        A(length(cl) + g.edges_array.size() + i, length(cl) + paths_used) = 1;
+    end
+    
+    b(length(cl) + g.edges_array.size() + i) = maxBitrate;
+    
+end
 
 lb = zeros(size(A,2),1);
 
 [x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
+
+%% store the results of the LP for each client and its paths
+s = 0;
+for i=1:length(cl)
+    
+    s = s + x(i) * minBitrate;
+    cl{i}.maxPossibleBitrateForStreaming = x(i) * minBitrate;
+end
+
+s = s/length(cl);
+
+%% Primal problem formulaiton for CACHING
+
+
+combs = combvec(parser.servers_clients{:});
+
+maxV = 0;
+iteration = 1;
+
+for c = 1:size(combs, 2)
+    
+    tmp_cl  = cell(size(combs, 1),1);
+    
+    for i=1:size(combs, 1)
+        tmp_cl{i} = cl{combs(i,c)};
+    end
+    
+    num_paths = 0;
+    for i=1:length(tmp_cl)
+        num_paths = num_paths + length(tmp_cl{i}.paths);
+    end
+    
+    f = zeros(length(tmp_cl) + num_paths,1);
+    
+    f(1:length(tmp_cl)) = -1;
+    
+    
+    A = zeros(2*length(tmp_cl) + g.edges_array.size(), length(tmp_cl) + num_paths);
+    
+    % set the corresponding entries in A
+    
+    %for i=1:length(cl)
+    %    A(1,g.edges_array.size() + i) = -minBitrate; % this sets the min bitrate that has to be consumed
+    %end
+    
+    paths_used = length(tmp_cl);
+    
+    for k=1:length(tmp_cl)
+        for i=1:length(tmp_cl{k}.paths)
+            paths_used = paths_used + 1;
+            A(k, paths_used) = -1;
+        end
+        A(k, k) = minBitrate;
+    end
+    
+    b = zeros(size(A,1),1);
+    
+    for i=0:g.edges_array.size()-1
+        t = g.edges_array.get(i);
+        paths_used = 0;
+        
+        for k=1:length(tmp_cl)
+            
+            for j=1:length(tmp_cl{k}.paths)
+                
+                paths_used = paths_used + 1;
+                
+                if tmp_cl{k}.paths{j}.containsEdge(t(1), t(2)) == 1
+                    
+                    A(length(tmp_cl) + i + 1, length(tmp_cl) + paths_used) = 1;
+                    
+                end
+                
+            end
+            
+        end
+        
+        b(i+1 + length(tmp_cl)) = t(3);
+    end
+    
+    paths_used = 0;
+    for i=1:length(tmp_cl)
+        for j=1:length(tmp_cl{i}.paths)
+            paths_used = paths_used + 1;
+            A(length(tmp_cl) + g.edges_array.size() + i, length(tmp_cl) + paths_used) = 1;
+        end
+        
+        b(length(tmp_cl) + g.edges_array.size() + i) = maxBitrate;
+        
+    end
+    
+    lb = zeros(size(A,2),1);
+    
+    [x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
+    if (f'*x)*(-1) > maxV
+        maxV = (-1) * (f'*x);
+        iteration = c;
+    end
+end
+
+%% now calculate the best iteration again
+
+tmp_cl = cell(size(combs, 1),1);
+
+for i=1:size(combs, 1)
+    tmp_cl{i} = cl{combs(i,iteration)};
+end
+
+num_paths = 0;
+for i=1:length(tmp_cl)
+    num_paths = num_paths + length(tmp_cl{i}.paths);
+end
+
+f = zeros(length(tmp_cl) + num_paths,1);
+
+f(1:length(tmp_cl)) = -1;
+
+
+A = zeros(2*length(tmp_cl) + g.edges_array.size(), length(tmp_cl) + num_paths);
+
+% set the corresponding entries in A
+
+%for i=1:length(cl)
+%    A(1,g.edges_array.size() + i) = -minBitrate; % this sets the min bitrate that has to be consumed
+%end
+
+paths_used = length(tmp_cl);
+
+for k=1:length(tmp_cl)
+    for i=1:length(tmp_cl{k}.paths)
+        paths_used = paths_used + 1;
+        A(k, paths_used) = -1;
+    end
+    A(k, k) = minBitrate;
+end
+
+b = zeros(size(A,1),1);
+
+for i=0:g.edges_array.size()-1
+    t = g.edges_array.get(i);
+    paths_used = 0;
+    
+    for k=1:length(tmp_cl)
+        
+        for j=1:length(tmp_cl{k}.paths)
+            
+            paths_used = paths_used + 1;
+            
+            if tmp_cl{k}.paths{j}.containsEdge(t(1), t(2)) == 1
+                
+                A(length(tmp_cl) + i + 1, length(tmp_cl) + paths_used) = 1;
+                
+            end
+            
+        end
+        
+    end
+    
+    b(i+1 + length(tmp_cl)) = t(3);
+end
+
+paths_used = 0;
+for i=1:length(tmp_cl)
+    for j=1:length(tmp_cl{i}.paths)
+        paths_used = paths_used + 1;
+        A(length(tmp_cl) + g.edges_array.size() + i, length(tmp_cl) + paths_used) = 1;
+    end
+    
+    b(length(tmp_cl) + g.edges_array.size() + i) = maxBitrate;
+    
+end
+
+lb = zeros(size(A,2),1);
+
+[x,fval,exitflag,output,lambda] = linprog(f,A,b,[],[],lb);
+
+
+s = 0;
+for i=1:length(tmp_cl)
+    
+    s = s + x(i) * minBitrate;
+    tmp_cl{i}.maxPossibleBitrateForStreaming = x(i) * minBitrate;
+end
+
+s = s/length(tmp_cl);
+
 
 
 %%

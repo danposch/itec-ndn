@@ -13,6 +13,7 @@ classdef client < handle
         disjointPaths = 0;
         num_disjoint_path_sets = 0;
         disjointPaths_array = 0;
+        maxPossibleBitrateForStreaming = 0;
     end
     
     methods

@@ -7,6 +7,7 @@ classdef top_parser < handle
         nodes = 0;     %number of nodes for the graph
         mygraph = 0;     %result graph after parsing
         clients = cell(1);
+        servers_clients = cell(1);
     end
     
     methods
@@ -82,11 +83,21 @@ classdef top_parser < handle
             fprintf('Parsed %d client/server pairs. Calculating Paths:\n',length(cs{1}));
             for i=1:length(cs{1})
                 obj.clients{i} = client(cs{1}(i) + 1, cs{2}(i) + 1, obj.mygraph);
+                obj.clients{i}.id = i;
                 n_path = obj.clients{i}.calcPaths(); %calc all paths from client to server
                 fprintf('Client %2d has %3d paths to its Server\n',i,n_path);
             end       
             
             fclose(fid);
+            
+            %create server-client sets
+            obj.servers_clients = cell(obj.nodes,1);
+            for i=1:length(obj.clients)
+                
+                obj.servers_clients{obj.clients{i}.end_vertex} = [obj.servers_clients{obj.clients{i}.end_vertex}, obj.clients{i}.id];
+                
+            end
+            obj.servers_clients = obj.servers_clients(~cellfun('isempty',obj.servers_clients));  
         end
     end
 end
