@@ -54,4 +54,4 @@ tmp_cl = cell(size(combs, 1),1);
 for i=1:size(combs, 1)
     tmp_cl{i} = cl{combs(i,iteration)};
 end
-[optim_target_caching, solution_clients_caching, solution_graph_caching, avg_bitrate_caching, exitflag] =  solveFractionalMultiCommodityFlow(g, cl);
+[optim_target_caching, solution_clients_caching, solution_graph_caching, avg_bitrate_caching, exitflag] =  solveFractionalMultiCommodityFlow(g, tmp_cl);
