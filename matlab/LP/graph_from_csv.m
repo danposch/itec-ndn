@@ -2,7 +2,7 @@ clear all;
 
 %parameters
 csv_file = 'top-1.csv';
-minBitrate= 640000;
+minBitrate= 640;
 maxBitrate= 1400000
 
 parser = top_parser(csv_file);
