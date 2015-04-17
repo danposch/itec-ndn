@@ -1,4 +1,4 @@
-classdef path < handle
+classdef path < matlab.mixin.Copyable
     %PATH Summary of this class goes here
     %   Detailed explanation goes here
     

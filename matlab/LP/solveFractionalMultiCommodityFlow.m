@@ -1,7 +1,11 @@
-function [ optim_target, clients_, graph_with_residuals, average_bitrate, exitflag ] = solveFractionalMultiCommodityFlow(graph_, clients_)
+function [ optim_target, clients_, graph_with_residuals, average_bitrate, exitflag ] = solveFractionalMultiCommodityFlow(graph_, clients_, content_popularity)
 %solveFractionalMultiCommodityFlow This function solves a fractional multi-commodity flow problem. Thus, only providing an upper bound to multiple flow problems (especially if the flows shall be from a set of values, for such a solution see: solveMultiCommodityFlow).
 
-
+if nargin < 3
+    
+    content_popularity = ones(length(clients_));
+    
+end
 % The linear optimization problem for solving fractional multi-commodity
 % flow problems looks like follows. We introduce a fractional variable(s) y
 % for each client.
@@ -23,7 +27,9 @@ end
 f = zeros(length(clients_) + num_paths,1);
 
 %   min -||y||_{1}
-f(1:length(clients_)) = -1;
+for i=1:length(clients_)
+        f(i) = -1*content_popularity(i);
+end
 
 A = zeros(2*length(clients_) + graph_.edges_array.size(), length(clients_) + num_paths);
 
@@ -104,6 +110,15 @@ end
 
 optim_target = (-1) * (f'*x);
 
+% finally assign each path the consumed bitrate
+paths_used = length(clients_);
+
+for i=1:length(clients_)
+    for j=1:length(clients_{i}.paths)
+        paths_used = paths_used + 1;
+        clients_{i}.paths{j}.bitrate = x(paths_used);
+    end    
+end
 
 end
 
