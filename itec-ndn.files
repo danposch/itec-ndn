@@ -29,3 +29,4 @@ scenarios/fwt_delay.cc
 topologies/fwt_delay.top
 scenarios/amus.cc
 scenarios/dash.cc
+scenarios/dash_fixed_top.cc
