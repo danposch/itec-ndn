@@ -18,6 +18,18 @@ NetworkGenerator::NetworkGenerator(std::string conf_file)
   }
 }
 
+NetworkGenerator::NetworkGenerator(std::string conf_file, std::string seed_file, std::string newseed_file)
+{
+  rvariable = CreateObject<UniformRandomVariable>();
+  this->briteHelper = new NDNBriteHelper(conf_file, seed_file, newseed_file);
+  briteHelper->BuildBriteTopology ();
+
+  for(int i=0; i<getAllASNodes ().size (); i++)
+  {
+    Names::Add (std::string("Node_" + boost::lexical_cast<std::string>(i)), getAllASNodes ().Get (i));
+  }
+}
+
 void NetworkGenerator::randomlyPlaceNodes(int nodeCount, std::string setIdentifier, NodePlacement place, PointToPointHelper *p2p)
 {
   std::vector<int> allAS;
@@ -341,4 +353,66 @@ double NetworkGenerator::calculateConnectivity ()
   connectivity /= (allNodes.size () - 1);
 
   return connectivity;
+}
+
+void NetworkGenerator::exportTopology(std::string fname, string server_identifier, string client_identifier)
+{
+  ofstream file;
+  file.open (fname.c_str (),ios::out);
+
+  //first extract all nodes / edges
+
+  ns3::NodeContainer nodes = getAllASNodes ();
+  nodes.Add (getCustomNodes(server_identifier));
+  nodes.Add (getCustomNodes(client_identifier));
+
+  //print heading
+  file << "#number of nodes\n" << boost::lexical_cast<std::string>(nodes.size ()) << "\n";
+
+  //print heading
+  file << "#nodes (n1,n2,bandwidth in bits)\n";
+
+  for(NodeContainer::iterator n1 = nodes.begin (); n1!=nodes.end ();++n1)
+  {
+    for(NodeContainer::iterator n2 = n1+1; n2!=nodes.end (); ++n2)
+    {
+      /*if((*n1)->GetId() == (*n2)->GetId())
+        continue;*/
+
+      if(nodesConnected(*n1,*n2))
+      {
+        //fprintf(stderr,"%d connected with %d\n", (*n1)->GetId(),(*n2)->GetId());
+        file << "(" << boost::lexical_cast<std::string>((*n1)->GetId()) << ","
+                    << boost::lexical_cast<std::string>((*n2)->GetId()) << ","
+                    << boost::lexical_cast<std::string>(getBandwidth (*n1,*n2)) << ")\n";
+      }
+    }
+  }
+
+  file.close ();
+}
+
+uint64_t NetworkGenerator::getBandwidth(Ptr<Node> n1, Ptr<Node> n2)
+{
+  int n1_nr_dev = n1->GetNDevices ();
+
+  for(int i = 0; i < n1_nr_dev; i++)
+  {
+    Ptr<NetDevice> dev = n1->GetDevice (i);
+    Ptr<Channel> channel = dev->GetChannel ();
+    int channel_nr_dev = channel->GetNDevices ();
+
+    for(int j = 0; j < channel_nr_dev; j++)
+    {
+      Ptr<Node> con_node = channel->GetDevice (j)->GetNode ();
+      if(n2->GetId () == con_node->GetId ())
+      {
+        ns3::Ptr<ns3::PointToPointNetDevice> nd1 = dev->GetObject<ns3::PointToPointNetDevice>();
+        ns3::DataRateValue dv;
+        nd1->GetAttribute("DataRate", dv);
+        return dv.Get().GetBitRate();
+      }
+    }
+  }
+  return 0;
 }

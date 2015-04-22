@@ -36,6 +36,17 @@ public:
   NetworkGenerator(std::string conf_file);
 
   /**
+   * @brief NetworkGenerator generates a random network using BRITE.
+   * @param conf_file the path to a BRITE configuration file.
+   * @param seed_file
+   * @param newseed_file
+   */
+  NetworkGenerator(std::string conf_file,
+                   std::string seed_file,
+                   std::string newseed_file);
+
+
+  /**
    * @brief randomlyPlaceNodes adds nodes randomly to the network topology.
    * @param nodeCount the number of nodes to add.
    * @param setIdentifier the identifier the nodes carry. Can be used later to retrieve only those nodes.
@@ -141,11 +152,14 @@ public:
    */
   void creatRandomLinkFailure(double minTimestamp, double maxTimestamp, double minDuration, double maxDuration);
 
+  void exportTopology(std::string fname, std::string server_identifier = std::string(""), std::string client_identifier = std::string(""));
+
 
 protected:
   NDNBriteHelper *briteHelper;
 
   bool nodesConnected(Ptr<Node> n1, Ptr<Node> n2);
+  uint64_t getBandwidth(Ptr<Node> n1, Ptr<Node> n2);
   NodeContainer getPairOfUnconnectedNodes(int as1, int as2);
   NodeContainer removeNode(NodeContainer container, Ptr<Node> node);
 
