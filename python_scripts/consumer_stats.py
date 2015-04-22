@@ -225,8 +225,7 @@ def process_aggregate_trace(file):
 	#print stats
 	return stats
 
-#main
-
-#SIMULATION_DIR=os.getcwd()
-#SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
-#generateStatsPerSimulation(SIMULATION_OUTPUT)
+if __name__ == "__main__":
+	SIMULATION_DIR=os.getcwd()
+	SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
+	generateStatsPerSimulation(SIMULATION_OUTPUT)
