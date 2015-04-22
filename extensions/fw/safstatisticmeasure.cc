@@ -159,7 +159,7 @@ double SAFStatisticMeasure::getSumOfUnreliabilities(std::vector<int> set_of_face
 
 int SAFStatisticMeasure::determineContentLayer(const Interest& interest)
 {
-  std::string layer = interest.getName ().get (1).toUri ();
+  /*std::string layer = interest.getName ().get (1).toUri ();
   //fprintf(stderr, "layer = %s\n",interest.getName ().get (1).toUri ().c_str ());
 
   if(layer.compare ("layer0") == 0)
@@ -170,6 +170,17 @@ int SAFStatisticMeasure::determineContentLayer(const Interest& interest)
 
   if(layer.compare ("layer2") == 0)
     return 2;
+
+  layer = interest.getName ().toUri ();
+
+  if(layer.find ("-L0.svc") != std::string::npos)
+    return 0;
+
+  if(layer.find ("-L1.svc") != std::string::npos)
+    return 1;
+
+  if(layer.find ("-L2.svc") != std::string::npos)
+    return 2;*/
 
   return 0;
 }
