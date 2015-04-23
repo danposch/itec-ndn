@@ -172,11 +172,11 @@ int main (int argc, char *argv[])
   }
 
   //export top
-  gen.exportTopology (export_top_file, "Server", "Client");
-  ofstream file;
-  file.open (export_top_file.c_str (), ios::app);
+  //gen.exportTopology (export_top_file, "Server", "Client");
+  //ofstream file;
+  //file.open (export_top_file.c_str (), ios::app);
   //print heading
-  file << "#properties (Client, Server)\n";
+  //file << "#properties (Client, Server)\n";
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
   for(int i=0; i<client.size (); i++)
@@ -200,10 +200,10 @@ int main (int argc, char *argv[])
     ns3::ndn::AppDelayTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
                                  std::string(outputFolder +"/app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));*/
 
-    file << "(" << boost::lexical_cast<std::string>(client.Get (i)->GetId ()) << ","
-                << boost::lexical_cast<std::string>(server.Get (i%server.size ())->GetId ()) << ")\n";
+    /*file << "(" << boost::lexical_cast<std::string>(client.Get (i)->GetId ()) << ","
+                << boost::lexical_cast<std::string>(server.Get (i%server.size ())->GetId ()) << ")\n";*/
   }
-  file.close ();
+  //file.close ();
 
    // Calculate and install FIBs
   if(route.compare ("all") == 0)
