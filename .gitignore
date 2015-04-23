@@ -21,6 +21,9 @@
 # no *.lock* files
 *.lock*
 
+#no *pyc files
+*.pyc
+
 #exclude the build directoy
 build/
 
