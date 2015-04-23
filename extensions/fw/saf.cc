@@ -44,7 +44,7 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
     bool success = engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop));
 
     /*DISABLING LIMITS FOR NOW*/
-    //success = true;
+    success = true; // its better to keep it disabled as it may cause trouble with multimedia streaming...
 
     if(success)
     {
@@ -102,7 +102,6 @@ std::vector<int> SAF::getAllOutFaces(shared_ptr<pit::Entry> pitEntry)
 /*void SAF::sendInterest(shared_ptr<pit::Entry> pitEntry, shared_ptr<Face> outFace, bool wantNewNonce = false)
 {
 }
-
 void SAF::rejectPendingInterest(shared_ptr<pit::Entry> pitEntry)
 {
 }*/
