@@ -242,8 +242,8 @@ def	order_dash_results(path):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 1
-SIMULATION_RUNS = 1
+THREADS = 24
+SIMULATION_RUNS = 50
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
 
 #order_dash_results(SIMULATION_OUTPUT)
@@ -265,12 +265,14 @@ saf="--fw-strategy=saf " + allRoute
 
 forwardingStrategies = [bestRoute, broadcast, saf, ncc]
 #forwardingStrategies = [saf,bestRoute]
+#forwardingStrategies = [ncc]
 
 buf = "--adaptation=buffer"
 rate = "--adaptation=rate"
 no = "--adaptation=nologic"
 
 adaptationStrategies = [buf, rate, no]
+#adaptationStrategies = [buf]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
