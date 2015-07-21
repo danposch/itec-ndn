@@ -9,7 +9,7 @@ clear all;
 
 % parse the graph and compute all possible ways from the clients to their
 % corresponding content sources
-csv_file = 'top-1.csv';
+csv_file = 'top-2.csv';
 parser = top_parser(csv_file);
 nodes = parser.nodes;
 g = parser.mygraph;
@@ -22,7 +22,9 @@ cl = parser.clients;
 % For further details on the LP see: solveFractionalMultiCommodityFlow.m
 
 [optim_target, solution_clients, solution_graph, avg_bitrate, exitflag] =  solveFractionalMultiCommodityFlow(g, cl);
-
+for i=1:length(cl)
+    fprintf('Client %d max possible streaming bitrate: %f kbps\n', cl{i}.id, cl{i}.maxPossibleBitrateForStreaming/1000);
+end
 %% now solve the same scenario but with caching
 % therefore, we have to check all combinations of clients that try to
 % stream the same content

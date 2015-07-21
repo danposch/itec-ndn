@@ -167,8 +167,10 @@ classdef graph < matlab.mixin.Copyable
             gr.current_path = java.util.Stack();
             gr.paths = cell(1);
             gr.foundpaths = 1;
-            
-            gr.calcAllPaths(s, s, t);
+            % comupte all paths from s to server(s) for this client
+            for i=1:length(t)
+                gr.calcAllPaths(s, s, t(i));
+            end
             ret = gr.paths;        
         end
         

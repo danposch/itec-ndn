@@ -85,7 +85,7 @@ classdef top_parser < handle
                 obj.clients{i} = client(cs{1}(i) + 1, cs{2}(i) + 1, obj.mygraph);
                 obj.clients{i}.id = i;
                 obj.clients{i}.setMaxBitrate(1400000);
-                obj.clients{i}.setMinBitrate(640000);
+                obj.clients{i}.setMinBitrate(1);
                 n_path = obj.clients{i}.calcPaths(); %calc all paths from client to server
                 fprintf('Client %2d has %3d paths to its Server\n',i,n_path);
             end       
