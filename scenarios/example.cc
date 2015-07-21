@@ -130,6 +130,8 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/ncc");
   else if(strategy.compare ("broadcast") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/broadcast");
+  else if (strategy.compare ("omccrf"))
+    ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/omccrf");
   else
   {
     fprintf(stderr, "Invalid Strategy!\n");
