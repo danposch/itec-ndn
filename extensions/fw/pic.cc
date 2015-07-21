@@ -7,6 +7,7 @@ PIC::PIC()
 {
   pic = 0;
   avg_pic = 0.0;
+  update();
 }
 
 PIC::~PIC ()

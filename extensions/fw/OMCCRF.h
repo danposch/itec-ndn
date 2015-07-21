@@ -25,7 +25,7 @@
 #include "boost/shared_ptr.hpp"
 #include "ns3/random-variable.h"
 
-#define PREFIX_COMPONENTS 1
+#define PREFIX_COMPONENT 0
 
 namespace nfd
 {
@@ -61,6 +61,7 @@ protected:
 
   std::string extractContentPrefix(nfd::Name name);
   std::vector<int> getAllOutFaces(shared_ptr<pit::Entry> pitEntry);
+  std::vector<int> getAllInFaces(shared_ptr<pit::Entry> pitEntry);
 
   boost::shared_ptr<PIC> findPICEntry(int face_id, std::string prefix);
 
