@@ -20,6 +20,8 @@ extensions/fw/safforwardingtable.h
 extensions/fw/safforwardingtable.cc
 extensions/fw/mratio.h
 extensions/fw/mratio.cc
+extensions/fw/mdelay.h
+extensions/fw/mdelay.cc
 extensions/fw/limits/limiter.cc
 extensions/fw/limits/limiter.h
 extensions/fw/limits/facelimitmanager.h
@@ -30,3 +32,7 @@ topologies/fwt_delay.top
 scenarios/amus.cc
 scenarios/dash.cc
 scenarios/dash_fixed_top.cc
+extensions/fw/OMCCRF.h
+extensions/fw/OMCCRF.cc
+extensions/fw/pic.h
+extensions/fw/pic.cc
