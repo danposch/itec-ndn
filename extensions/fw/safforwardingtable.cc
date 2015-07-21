@@ -130,9 +130,6 @@ int SAFForwardingTable::determineNextHop(const Interest& interest, std::vector<i
 
   if(fw_prob >= curReliability[ilayer] && fw_prob != 0) // in this case we drop...
   {
-    //fprintf(stderr,"fw_prob >= curReliability[ilayer] && fw_prob != 0\n"); //TODO REMOVE
-    //fprintf(stderr, "fw_prob = %f\n", fw_prob);
-    //fprintf(stderr, " curReliability[ilayer] = %f\n",  curReliability[ilayer]);
     return DROP_FACE_ID;
   }
 
@@ -636,9 +633,9 @@ void SAFForwardingTable::updateReliabilityThreshold(int layer, bool increase)
   double new_t = 0.0;
 
   if(increase)
-    new_t = curReliability[layer] + ((p->getParameter("RELIABILITY_THRESHOLD_MAX") - curReliability[layer]) * p->getParameter("ALPHA"));
+    new_t = curReliability[layer] + ((p->getParameter("RELIABILITY_THRESHOLD_MAX") - curReliability[layer]) * p->getParameter("LAMBDA"));
   else
-    new_t = curReliability[layer] - ((curReliability[layer] - p->getParameter("RELIABILITY_THRESHOLD_MIN")) * p->getParameter("ALPHA"));
+    new_t = curReliability[layer] - ((curReliability[layer] - p->getParameter("RELIABILITY_THRESHOLD_MIN")) * p->getParameter("LAMBDA"));
 
   if(new_t > p->getParameter("RELIABILITY_THRESHOLD_MAX"))
     new_t = p->getParameter("RELIABILITY_THRESHOLD_MAX");

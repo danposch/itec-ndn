@@ -135,30 +135,10 @@ double SAFStatisticMeasure::getFaceReliability(int face_id, int layer)
   return stats[layer].last_reliability[face_id];
 }
 
-double SAFStatisticMeasure::getSumOfReliabilities(std::vector<int> set_of_faces, int layer)
-{
-  //sum up reliabilities
-  double sum = 0.0;
-  for(std::vector<int>::iterator it = set_of_faces.begin(); it != set_of_faces.end(); ++it)
-  {
-    sum += getFaceReliability (*it, layer);
-  }
-  return sum;
-}
-
-double SAFStatisticMeasure::getSumOfUnreliabilities(std::vector<int> set_of_faces, int layer)
-{
-  //sum up reliabilities
-  double sum = 0.0;
-  for(std::vector<int>::iterator it = set_of_faces.begin(); it != set_of_faces.end(); ++it)
-  {
-    sum += 1 - getFaceReliability (*it, layer);
-  }
-  return sum;
-}
-
 int SAFStatisticMeasure::determineContentLayer(const Interest& interest)
 {
+  //TODO once content layers are introduced
+
   /*std::string layer = interest.getName ().get (1).toUri ();
   //fprintf(stderr, "layer = %s\n",interest.getName ().get (1).toUri ().c_str ());
 
@@ -190,7 +170,7 @@ void SAFStatisticMeasure::updateVariance (int layer)
   for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it) // for each face
   {
     stats[layer].satisfied_requests_history[*it].push_back(stats[layer].satisfied_requests[*it]);
-    if(stats[layer].satisfied_requests_history[*it].size() > HISTORY_SIZE)
+    if(stats[layer].satisfied_requests_history[*it].size() > ParameterConfiguration::getInstance ()->getParameter("HISTORY_SIZE"))
       stats[layer].satisfied_requests_history[*it].pop_front();
 
     if(stats[layer].satisfied_requests_history[*it].size() <= 1)

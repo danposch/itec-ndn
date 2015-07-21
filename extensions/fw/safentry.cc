@@ -29,9 +29,9 @@ void SAFEntry::initFaces ()
   }
 }
 
-int SAFEntry::determineNextHop(const Interest& interes, std::vector<int> alreadyTriedFaces)
+int SAFEntry::determineNextHop(const Interest& interest, std::vector<int> alreadyTriedFaces)
 {
-  return ftable->determineNextHop (interes,alreadyTriedFaces);
+  return ftable->determineNextHop (interest,alreadyTriedFaces);
 }
 
 void SAFEntry::update()

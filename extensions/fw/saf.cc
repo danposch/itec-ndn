@@ -7,7 +7,6 @@ const Name SAF::STRATEGY_NAME("ndn:/localhost/nfd/strategy/saf");
 
 SAF::SAF(Forwarder &forwarder, const Name &name) : Strategy(forwarder, name)
 {
-  //fprintf(stderr, "SAF activated\n");
   const FaceTable& ft = getFaceTable();
   int prefixComponets = 0;
   engine = boost::shared_ptr<SAFEngine>(new SAFEngine(ft, prefixComponets));
@@ -19,10 +18,10 @@ SAF::~SAF()
 
 void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry)
 {
-  /* WARNING!!! interest != pitEntry->interest*/
+  /* Attention!!! interest != pitEntry->interest*/ // necessary to emulate NACKs in ndnSIM2.0
   /* interst could be /NACK/suffix, while pitEntry->getInterest is /suffix */
 
-  //find + exclue inface(s) and already tried outface(s)
+  //find + exclude inface(s) and already tried outface(s)
   std::vector<int> originInFaces = getAllInFaces(pitEntry);
   std::vector<int> alreadyTriedFaces; // keep them empty for now and check if nack or retransmission?
 
@@ -34,9 +33,6 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
     alreadyTriedFaces = getAllOutFaces(pitEntry);
   }
 
-  /*if(alreadyTriedFaces.size () != getAllOutFaces(pitEntry).size())
-    fprintf(stderr, "We got a Rtx: %s\n", pitEntry->getInterest().getName().toUri().c_str());*/
-
   const Interest int_to_forward = pitEntry->getInterest();
   int nextHop = engine->determineNextHop(int_to_forward, alreadyTriedFaces, fibEntry);
   while(nextHop != DROP_FACE_ID && (std::find(originInFaces.begin (),originInFaces.end (), nextHop) == originInFaces.end ()))
@@ -44,7 +40,7 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
     bool success = engine->tryForwardInterest (int_to_forward, getFaceTable ().get (nextHop));
 
     /*DISABLING LIMITS FOR NOW*/
-    success = true; // its better to keep it disabled as it may cause trouble with multimedia streaming...
+    success = true; // as not used in the SAF paper.
 
     if(success)
     {
@@ -98,11 +94,4 @@ std::vector<int> SAF::getAllOutFaces(shared_ptr<pit::Entry> pitEntry)
 
   return faces;
 }
-
-/*void SAF::sendInterest(shared_ptr<pit::Entry> pitEntry, shared_ptr<Face> outFace, bool wantNewNonce = false)
-{
-}
-void SAF::rejectPendingInterest(shared_ptr<pit::Entry> pitEntry)
-{
-}*/
 

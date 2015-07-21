@@ -4,20 +4,13 @@ ParameterConfiguration* ParameterConfiguration::instance = NULL;
 
 ParameterConfiguration::ParameterConfiguration()
 {
-  setParameter ("ALPHA", P_ALPHA);
-  setParameter ("X_DROPPING", P_X_DROPPING);
-  setParameter ("PROBING_TRAFFIC", P_PROBING_TRAFFIC);
-  setParameter ("SHIFT_THRESHOLD", P_SHIFT_THRESHOLD);
-  setParameter ("SHIFT_TRAFFIC", P_SHIFT_TRAFFIC);
+  setParameter ("LAMBDA", P_LAMBDA);
   setParameter ("UPDATE_INTERVALL", P_UPDATE_INTERVALL);
   setParameter ("MAX_LAYERS", P_MAX_LAYERS);
   setParameter ("DROP_FACE_ID", P_DROP_FACE_ID);
-  setParameter ("MAX_DELAY_MS", MAX_DELAY_MS);
-
-  //setParameter ("RELIABILITY_THRESHOLD", P_RELIABILITY_THRESHOLD);
-
-  setParameter ("RELIABILITY_THRESHOLD_MIN", P_RELIABILITY_THRESHOLD);
-  setParameter ("RELIABILITY_THRESHOLD_MAX", 0.999);
+  setParameter ("RELIABILITY_THRESHOLD_MIN", P_RELIABILITY_THRESHOLD_MIN);
+  setParameter ("RELIABILITY_THRESHOLD_MAX", P_RELIABILITY_THRESHOLD_MAX);
+  setParameter ("HISTORY_SIZE",P_HISTORY_SIZE);
 }
 
 
