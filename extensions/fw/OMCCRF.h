@@ -15,6 +15,8 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/* Implements the Request Forwarding Strategy from the paper: Optimal multipath congestion control and request forwarding in Information-Centric Networks*/
+
 #ifndef OMCCRF_H
 #define OMCCRF_H
 
