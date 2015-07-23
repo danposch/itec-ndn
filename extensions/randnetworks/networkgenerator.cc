@@ -416,3 +416,24 @@ uint64_t NetworkGenerator::getBandwidth(Ptr<Node> n1, Ptr<Node> n2)
   }
   return 0;
 }
+
+void NetworkGenerator::introduceError (double min_error_rate, double max_error_rate)
+{
+  NodeContainer c = getAllASNodes ();
+
+  for(int i = 0; i < c.size (); i++)
+  {
+    Ptr<Node> n = c.Get (i);
+    for(int k = 0; k < n->GetNDevices (); k++)
+    {
+      //creates error model between
+      Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
+      em->SetAttribute ("ErrorRate", DoubleValue (rvariable->GetValue (min_error_rate, max_error_rate)));
+
+      Ptr<NetDevice> dev = n->GetDevice (k);
+      dev->SetAttribute ("ReceiveErrorModel", PointerValue (em));
+
+    }
+  }
+
+}

@@ -152,6 +152,13 @@ public:
    */
   void creatRandomLinkFailure(double minTimestamp, double maxTimestamp, double minDuration, double maxDuration);
 
+  /**
+   * @brief introduceError introduces uniform random link errors on all links
+   * @param min_error_rate minimum link error rate on a given link
+   * @param max_error_rate maximum link error rate on a given link.
+   */
+  void introduceError(double min_error_rate, double max_error_rate);
+
   void exportTopology(std::string fname, std::string server_identifier = std::string(""), std::string client_identifier = std::string(""));
 
 
