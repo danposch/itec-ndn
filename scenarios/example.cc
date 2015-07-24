@@ -9,6 +9,7 @@
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
+#include "../extensions/fw/OMCCRF.h"
 #include "NFD/daemon/fw/broadcast-strategy.hpp"
 
 using namespace ns3;
@@ -17,11 +18,13 @@ int main (int argc, char *argv[])
 {
   // BRITE needs a configuration file to build its graph.
   std::string confFile = "brite_configs/brite_low_bw.conf";
-  std::string strategy = "saf";
+  std::string strategy = "bestRoute";
   std::string route = "all";
   std::string outputFolder = "output/";
   std::string connectivity = "medium";
   int totalLinkFailures = 0;
+  double min_link_error_rate = 0.0;
+  double max_link_error_rate = 0.0;
 
   /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
@@ -35,8 +38,13 @@ int main (int argc, char *argv[])
   cmd.AddValue ("route", "defines if you use a single route or all possible routes", route);
   cmd.AddValue ("outputFolder", "defines specific output subdir", outputFolder);
   cmd.AddValue ("linkFailures", "defines number of linkfailures events", totalLinkFailures);
+  cmd.AddValue ("min_link_error_rate", "Minimum error rate on network links", min_link_error_rate);
+  cmd.AddValue ("max_link_error_rate", "MaxiumumError rate on network links", max_link_error_rate);
 
   cmd.Parse (argc,argv);
+
+  Config::SetDefault ("ns3::RateErrorModel::ErrorRate", DoubleValue (0.00));
+  Config::SetDefault ("ns3::RateErrorModel::ErrorUnit", StringValue ("ERROR_UNIT_PACKET"));
 
   ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
   ns3::ndn::NetworkGenerator gen(confFile);
@@ -103,6 +111,9 @@ int main (int argc, char *argv[])
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
 
+  //introduce error model if needed
+  //gen.introduceError (min_link_error_rate, max_link_error_rate);
+
   //2. create server and clients nodes
   PointToPointHelper *p2p = new PointToPointHelper;
   p2p->SetChannelAttribute ("Delay", StringValue ("2ms"));
@@ -130,8 +141,8 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/ncc");
   else if(strategy.compare ("broadcast") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/broadcast");
-  else if (strategy.compare ("omccrf"))
-    ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/omccrf");
+  else if (strategy.compare ("omccrf") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
   else
   {
     fprintf(stderr, "Invalid Strategy!\n");

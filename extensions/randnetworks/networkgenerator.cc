@@ -419,6 +419,10 @@ uint64_t NetworkGenerator::getBandwidth(Ptr<Node> n1, Ptr<Node> n2)
 
 void NetworkGenerator::introduceError (double min_error_rate, double max_error_rate)
 {
+
+  if(min_error_rate == 0.0 && max_error_rate == 0.0 || min_error_rate > max_error_rate)
+    return;
+
   NodeContainer c = getAllASNodes ();
 
   for(int i = 0; i < c.size (); i++)
