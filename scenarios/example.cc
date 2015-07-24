@@ -145,7 +145,7 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
   else
   {
-    fprintf(stderr, "Invalid Strategy!\n");
+    fprintf(stderr, "Invalid Strategy::%s!\n",strategy.c_str ());
     exit(-1);
   }
 
