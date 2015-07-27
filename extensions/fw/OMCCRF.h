@@ -34,9 +34,6 @@ namespace nfd
 namespace fw
 {
 
-/**
- * @brief The SAF class implements the SAF forwarding strategy.
- */
 class OMCCRF : public nfd::fw::Strategy
 {
 public:
