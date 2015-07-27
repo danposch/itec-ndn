@@ -81,6 +81,7 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 
 		# Ok now install custom forwarder to enable nacks in NFD
 		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
+		* cp itec-ndn/extern/forwarder.hpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.hpp
 		* cd ns-3/
 		* sudo ./waf install
 

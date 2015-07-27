@@ -36,3 +36,9 @@ extensions/fw/OMCCRF.h
 extensions/fw/OMCCRF.cc
 extensions/fw/pic.h
 extensions/fw/pic.cc
+extensions/fw/oracle.h
+extensions/fw/oracle.cc
+extensions/fw/oraclecontainer.h
+extensions/fw/oraclecontainer.cc
+extensions/utils/extendedglobalroutinghelper.h
+extensions/utils/extendedglobalroutinghelper.cc
