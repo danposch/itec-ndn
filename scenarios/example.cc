@@ -49,7 +49,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::RateErrorModel::ErrorRate", DoubleValue (0.00));
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit", StringValue ("ERROR_UNIT_PACKET"));
 
-  ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
+  //ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
   ns3::ndn::NetworkGenerator gen(confFile);
 
   int min_bw_as = -1;
