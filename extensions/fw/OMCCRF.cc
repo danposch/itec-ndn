@@ -25,12 +25,6 @@ void OMCCRF::afterReceiveInterest(const Face& inFace, const Interest& interest ,
     return;
   }
 
-  //check for pit hit/miss
-  if(getAllOutFaces (pitEntry).size () > 0)
-  {
-    return; // on hit we do nothing
-  }
-
   std::string prefix = extractContentPrefix(pitEntry->getInterest().getName());
 
   if(pmap.find (prefix) == pmap.end ()) //check if prefix is listed if not create it
@@ -118,18 +112,15 @@ void OMCCRF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 {
 
   std::vector<int> faces = getAllOutFaces (pitEntry);
-  if(faces.size () != 1)
-  {
-    fprintf(stderr, "Error this should not happen in OMCCRF strategy!\n");
-    Strategy::beforeExpirePendingInterest (pitEntry);
-    return;
-  }
 
-  boost::shared_ptr<PIC> p = findPICEntry((*faces.begin ()), extractContentPrefix (pitEntry->getName ()));
-  if(p != NULL)
+  for(int i = 0; i < faces.size (); i++)
   {
-    p->decrease ();
-    p->update ();
+    boost::shared_ptr<PIC> p = findPICEntry((*faces.begin ()), extractContentPrefix (pitEntry->getName ()));
+    if(p != NULL)
+    {
+      p->decrease ();
+      p->update ();
+    }
   }
 
   Strategy::beforeExpirePendingInterest (pitEntry);
