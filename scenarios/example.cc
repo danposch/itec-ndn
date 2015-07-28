@@ -102,7 +102,7 @@ int main (int argc, char *argv[])
 
   if(min_bw_as == -1 || max_bw_as == -1 || additional_random_connections_as == -1 || additional_random_connections_leaf == -1)
   {
-    fprintf(stderr, "check szenario setting\n");
+    fprintf(stderr, "check scenario setting\n");
     exit(0);
   }
 
