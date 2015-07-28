@@ -53,7 +53,6 @@ public:
 
 protected:
 
-  //std::vector<int> getAllOutNetDeviceFace(shared_ptr<pit::Entry> pitEntry);
   std::vector<ns3::ndn::NetDeviceFace *> getAllInNetDeviceFaces(shared_ptr<pit::Entry> pitEntry);
 
   std::vector<ns3::Ptr<ns3::NetDevice> > getAllNetDevicesFromNode(ns3::Ptr<ns3::Node> node);
