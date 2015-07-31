@@ -33,8 +33,6 @@ void Oracle::afterReceiveInterest(const Face& inFace, const Interest& interest ,
   /* Attention!!! interest != pitEntry->interest*/ // necessary to emulate NACKs in ndnSIM2.0
   /* interst could be /NACK/suffix, while pitEntry->getInterest is /suffix */
 
-  //fprintf(stderr, "receive Interest %s\n", interest.getName ().toUri ().c_str ());
-
   if(!fibEntry->hasNextHops())
     return;
 
@@ -198,7 +196,7 @@ bool Oracle::checkCacheHit(shared_ptr<pit::Entry> pitEntry, ns3::Ptr<ns3::Node> 
   }
   else
   {
-   shared_ptr<Data> csMatch = csFromNdnSim->Lookup(make_shared<Interest>(interest));
+   shared_ptr<Data> csMatch = csFromNdnSim->Lookup(make_shared<Interest>(interest), false);
    if(csMatch != nullptr)
      return true;
   }

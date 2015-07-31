@@ -79,9 +79,13 @@ Install Guide (testet on Ubuntu 14.04 64bit)
     * ./waf 
 		* cd../
 
-		# Ok now install custom forwarder to enable nacks in NFD
+		# Ok now install custom forwarder to enable nacks in NFD; Install modified content store;
 		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
 		* cp itec-ndn/extern/forwarder.hpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.hpp
+		* cp itec-ndn/extern/ndn-content-store.hpp ns-3/src/ndnSIM/model/cs/ndn-content-store.hpp
+		* cp itec-ndn/extern/content-store-impl.hpp ns-3/src/ndnSIM/model/cs/content-store-impl.hpp
+		* cp itec-ndn/extern/content-store-nocache.hpp ns-3/src/ndnSIM/model/cs/content-store-nocache.hpp
+		* cp itec-ndn/extern/content-store-nocache.cpp ns-3/src/ndnSIM/model/cs/content-store-nocache.cpp
 		* cd ns-3/
 		* sudo ./waf install
 
