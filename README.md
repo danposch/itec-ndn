@@ -44,19 +44,38 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		*	sudo mkdir /usr/local/include/libdash
 		* sudo cp -r ./libdash/libdash/libdash/include/* /usr/local/include/libdash/
 
-    # Fetch and build ndn-cxx
+    # Fetch and ndn-cxx, ndnsim and itec-ndn scenarios
     * git clone https://github.com/named-data/ndn-cxx.git ndn-cxx
+		* git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
+    * git clone https://github.com/cawka/pybindgen.git pybindgen
+		* git clone https://github.com/ChristianKreuzberger/amus-ndnSIM.git ns-3/src/ndnSIM
+		* git clone https://github.com/danposch/itec-ndn.git
+
+		# (RECOMMENDED) checkout verified compatible versions of ndn-cxx and ndnsim
     * cd ndn-cxx
+		* git checkout 9bd4d9832ac16021ba956bb3a0bfb16199572e32
+		* cd ..
+    * cd ns-3/src/ndnSIM/
+		* git checkout 86a881d9898df74fa4cfd8e85684a3ae81ab02e6
+		* cd ../../../
+		
+		# Patch forwarder to enable nacks in NFD; patch content store;
+		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
+		* cp itec-ndn/extern/forwarder.hpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.hpp
+		* cp itec-ndn/extern/ndn-content-store.hpp ns-3/src/ndnSIM/model/cs/ndn-content-store.hpp
+		* cp itec-ndn/extern/content-store-impl.hpp ns-3/src/ndnSIM/model/cs/content-store-impl.hpp
+		* cp itec-ndn/extern/content-store-nocache.hpp ns-3/src/ndnSIM/model/cs/content-store-nocache.hpp
+		* cp itec-ndn/extern/content-store-nocache.cpp ns-3/src/ndnSIM/model/cs/content-store-nocache.cpp
+
+		# Build ndn-cxx
+		* cd ndn-cxx
     * ./waf configure
     * ./waf
     * sudo ./waf install
     * cd ../
 
-    # Fetch and build NS-3 + (amus-)ndnSIM2.x
-    * git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
-    * git clone https://github.com/cawka/pybindgen.git pybindgen
-		* git clone https://github.com/ChristianKreuzberger/amus-ndnSIM.git ns-3/src/ndnSIM
-    * cd ns-3
+    # Build NS-3 + (amus-)ndnSIM2.x
+    * cd ns-3.
     * ./waf configure -d optimized --with-brite=../BRITE
     * ./waf
     * sudo ./waf install
@@ -72,21 +91,10 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		* sudo cp *.h /usr/local/include/ns3-dev/ns3/Models
 		* cd ../..
 
-    # Fetch and build itec-ndn scnearios
-    * git clone https://github.com/danposch/itec-ndn.git
+    # Build itec-ndn scnearios
     * cd itec-ndn
     * ./waf configure
     * ./waf 
 		* cd../
-
-		# Ok now install custom forwarder to enable nacks in NFD; Install modified content store;
-		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
-		* cp itec-ndn/extern/forwarder.hpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.hpp
-		* cp itec-ndn/extern/ndn-content-store.hpp ns-3/src/ndnSIM/model/cs/ndn-content-store.hpp
-		* cp itec-ndn/extern/content-store-impl.hpp ns-3/src/ndnSIM/model/cs/content-store-impl.hpp
-		* cp itec-ndn/extern/content-store-nocache.hpp ns-3/src/ndnSIM/model/cs/content-store-nocache.hpp
-		* cp itec-ndn/extern/content-store-nocache.cpp ns-3/src/ndnSIM/model/cs/content-store-nocache.cpp
-		* cd ns-3/
-		* sudo ./waf install
 
 ==============
