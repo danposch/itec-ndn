@@ -28,6 +28,7 @@ int main (int argc, char *argv[])
   int totalLinkFailures = 0;
   double min_link_error_rate = 0.0;
   double max_link_error_rate = 0.0;
+  std::string content_popularity = "uniform";
 
   /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
@@ -43,6 +44,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("linkFailures", "defines number of linkfailures events", totalLinkFailures);
   cmd.AddValue ("min_link_error_rate", "Minimum error rate on network links", min_link_error_rate);
   cmd.AddValue ("max_link_error_rate", "MaxiumumError rate on network links", max_link_error_rate);
+  cmd.AddValue ("content-popularity", "Defines the model for the content popularity", content_popularity);
 
   cmd.Parse (argc,argv);
 
@@ -207,19 +209,48 @@ int main (int argc, char *argv[])
   consumerHelper.SetAttribute ("LifeTime", StringValue("1s"));
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
-  for(int i=0; i<client.size (); i++)
+  if(content_popularity.compare ("uniform") == 0)
   {
-    consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
-    ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
+    for(int i=0; i<client.size (); i++)
+    {
+      consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
+      ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
 
-    consumer.Start (Seconds(r->GetInteger (0,30)));
-    consumer.Stop (Seconds(simTime));
+      consumer.Start (Seconds(r->GetInteger (0,30)));
+      consumer.Stop (Seconds(simTime));
 
-    ns3::ndn::L3RateTracer::Install (Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
-                                     std::string(outputFolder + "/aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
+      ns3::ndn::L3RateTracer::Install (Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
+                                       std::string(outputFolder + "/aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
 
-    ns3::ndn::AppDelayTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
-                                 std::string(outputFolder +"/app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
+      ns3::ndn::AppDelayTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
+                                   std::string(outputFolder +"/app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
+    }
+  }
+  else if(content_popularity.compare ("zipf") == 0)
+  {
+    Ptr<ZipfRandomVariable> x = CreateObject<ZipfRandomVariable> ();
+    x->SetAttribute ("N", IntegerValue (11)); // 1 more than clients then -1
+    x->SetAttribute ("Alpha", DoubleValue (0.668)); // from paper: Statistics and Social Network of YouTube Videos
+
+    for(int i=0; i<client.size (); i++)
+    {
+      consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(x->GetInteger()-1) + "/layer0"));
+      ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
+
+      consumer.Start (Seconds(r->GetInteger (0,30)));
+      consumer.Stop (Seconds(simTime));
+
+      ns3::ndn::L3RateTracer::Install (Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
+                                       std::string(outputFolder + "/aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
+
+      ns3::ndn::AppDelayTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
+                                   std::string(outputFolder +"/app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
+    }
+  }
+  else
+  {
+    fprintf(stderr, "Invalid content popularity!\n");
+    exit(-1);
   }
 
   if(strategy.compare ("oracle") == 0) // calc all routs ammoung the nodes
