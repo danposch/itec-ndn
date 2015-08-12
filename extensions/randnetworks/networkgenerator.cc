@@ -293,6 +293,30 @@ bool NetworkGenerator::nodesConnected(Ptr<Node> n1, Ptr<Node> n2)
   return false;
 }
 
+bool NetworkGenerator::nodesConnected(Ptr<Node> n1, Ptr<Node> n2, int& n1_dev_id, int& n2_dev_id)
+{
+  int n1_nr_dev = n1->GetNDevices ();
+
+  for(int i = 0; i < n1_nr_dev; i++)
+  {
+    Ptr<NetDevice> dev = n1->GetDevice (i);
+    Ptr<Channel> channel = dev->GetChannel ();
+    int channel_nr_dev = channel->GetNDevices ();
+
+    for(int j = 0; j < channel_nr_dev; j++)
+    {
+      Ptr<Node> con_node = channel->GetDevice (j)->GetNode ();
+      if(n2->GetId () == con_node->GetId ())
+      {
+        n1_dev_id = i;
+        n2_dev_id = j;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 NodeContainer NetworkGenerator::getPairOfUnconnectedNodes(int as1, int as2)
 {
   NodeContainer as1_nodes = getAllASNodesFromAS (as1);
@@ -388,7 +412,44 @@ void NetworkGenerator::exportTopology(std::string fname, string server_identifie
       }
     }
   }
+  file << "#eof";
+  file.close ();
+}
 
+void NetworkGenerator::exportCoreNetworkWithFaceInformation(std::string fname)
+{
+  ofstream file;
+  file.open (fname.c_str (),ios::out);
+
+  //first extract all nodes / edges
+  ns3::NodeContainer nodes = getAllASNodes ();
+
+  //print heading
+  file << "#number of nodes\n" << boost::lexical_cast<std::string>(nodes.size ()) << "\n";
+
+  //print heading
+  file << "#nodes (n1,n1_faceId,n2,n2_faceId,bandwidth in bits)\n";
+
+  for(NodeContainer::iterator n1 = nodes.begin (); n1!=nodes.end ();++n1)
+  {
+    for(NodeContainer::iterator n2 = n1+1; n2!=nodes.end (); ++n2)
+    {
+      int n1_dev_id = INT_MIN;
+      int n2_dev_id = INT_MIN;
+
+      if(nodesConnected(*n1,*n2, n1_dev_id, n2_dev_id))
+      {
+        //fprintf(stderr,"%d connected with %d\n", (*n1)->GetId(),(*n2)->GetId());
+        file << "(" << boost::lexical_cast<std::string>((*n1)->GetId()) << ","
+                    << boost::lexical_cast<std::string>(n1_dev_id+256) << "," // +256
+                    << boost::lexical_cast<std::string>((*n2)->GetId()) << ","
+                    << boost::lexical_cast<std::string>(n2_dev_id+256) << "," // +256
+                    << boost::lexical_cast<std::string>(getBandwidth (*n1,*n2)) << ")\n";
+      }
+    }
+  }
+
+  file << "#eof";
   file.close ();
 }
 
