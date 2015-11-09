@@ -192,7 +192,7 @@ int main (int argc, char *argv[])
   else if(adaptation.compare ("rate") == 0)
     consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::SVCRateBasedAdaptationLogic"));
   else if(adaptation.compare ("nologic") == 0)
-    consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::NoLogic"));
+    consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::SVCNoAdaptationLogic"));
   else
   {
     fprintf(stderr, "Invalid adaptation selected\n");
