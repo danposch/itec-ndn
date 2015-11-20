@@ -31,6 +31,7 @@ int main (int argc, char *argv[])
   int totalLinkFailures = 0;
   std::string export_top_file = "/home/dposch/top.csv";
   std::string adaptation = "buffer";
+  int range_for_client_start_delay = 1;
 
   /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
@@ -45,6 +46,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("outputFolder", "defines specific output subdir", outputFolder);
   cmd.AddValue ("linkFailures", "defines number of linkfailures events", totalLinkFailures);
   cmd.AddValue ("adaptation", "Adaptation Strategy used by Client", adaptation);
+  cmd.AddValue ("start_delay", "Delay Range client may start streaming (1,n) [seconds]", range_for_client_start_delay);
 
   cmd.Parse (argc,argv);
 
@@ -78,7 +80,7 @@ int main (int argc, char *argv[])
 
   //2876sec duration of concatenated dataset
   //int simTime = 2880;
-  int simTime = 2880;
+  int simTime = 2880+range_for_client_start_delay;
 
   /*for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);*/
@@ -216,7 +218,7 @@ int main (int argc, char *argv[])
     //consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
     ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
 
-    consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(r->GetInteger (0,range_for_client_start_delay)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::DASHPlayerTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
