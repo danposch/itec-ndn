@@ -235,8 +235,6 @@ int main (int argc, char *argv[])
     consumerHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
     //consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
     ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
-
-    fprintf(stderr,"val = %f\n", r->GetValue ());
     consumer.Start (Seconds(r->GetValue ()*bound));
     consumer.Stop (Seconds(simTime));
 
