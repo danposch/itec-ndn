@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
   int totalLinkFailures = 0;
   std::string export_top_file = "/home/dposch/top.csv";
   std::string adaptation = "buffer";
-  int range_for_client_start_delay = 1;
+  std::string client_delay = "no-delay";
 
   /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("outputFolder", "defines specific output subdir", outputFolder);
   cmd.AddValue ("linkFailures", "defines number of linkfailures events", totalLinkFailures);
   cmd.AddValue ("adaptation", "Adaptation Strategy used by Client", adaptation);
-  cmd.AddValue ("start_delay", "Delay Range client may start streaming (1,n) [seconds]", range_for_client_start_delay);
+  cmd.AddValue ("delay-model", "Client Start Time delay Model", client_delay);
 
   cmd.Parse (argc,argv);
 
@@ -77,10 +77,6 @@ int main (int argc, char *argv[])
 
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
-
-  //2876sec duration of concatenated dataset
-  //int simTime = 2880;
-  int simTime = 2880+range_for_client_start_delay;
 
   /*for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);*/
@@ -208,7 +204,29 @@ int main (int argc, char *argv[])
   //print heading
   //file << "#properties (Client, Server)\n";
 
-  Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
+  //2876sec duration of concatenated dataset
+  int simTime = 2880;
+  Ptr<RandomVariableStream> r;
+  int bound = 1;
+  if(client_delay.compare ("exponential") == 0)
+  {
+    r = CreateObject<ExponentialRandomVariable>();
+    r->SetAttribute ("Mean", DoubleValue (60));
+    bound = 180;
+    r->SetAttribute ("Bound", DoubleValue (bound));
+  }
+  else if (client_delay.compare ("no-delay") == 0)
+  {
+    r = CreateObject<UniformRandomVariable>();
+    r->SetAttribute ("Min", DoubleValue (0));
+    r->SetAttribute ("Max", DoubleValue (bound));
+  }
+  else
+  {
+    fprintf(stderr, "Invalid Delay Model choosen\n");
+  }
+  simTime += bound;
+
   for(int i=0; i<client.size (); i++)
   {
     std::string mpd("/Server_" + boost::lexical_cast<std::string>(i%server.size ())
@@ -218,7 +236,8 @@ int main (int argc, char *argv[])
     //consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
     ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
 
-    consumer.Start (Seconds(r->GetInteger (0,range_for_client_start_delay)));
+    fprintf(stderr,"val = %f\n", r->GetValue ());
+    consumer.Start (Seconds(r->GetValue ()*bound));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::DASHPlayerTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
