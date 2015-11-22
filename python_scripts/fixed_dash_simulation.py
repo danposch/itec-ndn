@@ -102,6 +102,10 @@ def getScenarioName(strategy,linkfailure,adap):
 		name += "Broadcast"
 	elif("fw-strategy=ncc" in strategy):
 		name += "NCC"
+	elif("fw-strategy=oracle" in strategy):
+                name += "NRR"
+	elif("fw-strategy=omccrf" in strategy):
+                name += "OMCCRF"
 	else:
 		name += "UnknownStrategy"
 
@@ -242,16 +246,17 @@ def	order_dash_results(path):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 24
-SIMULATION_RUNS = 50
+THREADS = 5 
+SIMULATION_RUNS = 25 
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
+CLIENT_START_DELAY = "--delay-model=exponential"
 
 #order_dash_results(SIMULATION_OUTPUT)
 #exit(0)
 
 #brite config file
 scenario="dash_fixed_top"
-britePath="/home/dposch/ndnSIM/itec-ndn/"
+britePath="/home/danposch/ndnSIM/itec-ndn/"
 
 briteConfig="--briteConfFile="+britePath+"brite_configs/fixed.conf"
 
@@ -262,10 +267,12 @@ bestRoute="--fw-strategy=bestRoute " + allRoute
 ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
+oracle="--fw-strategy=oracle " + allRoute
+omccrf="--fw-strategy=omccrf " + allRoute
 
-forwardingStrategies = [bestRoute, broadcast, saf, ncc]
+forwardingStrategies = [bestRoute, broadcast, saf, ncc, oracle]
 #forwardingStrategies = [saf,bestRoute]
-#forwardingStrategies = [ncc]
+#forwardingStrategies = [oracle, omccrf]
 
 buf = "--adaptation=buffer"
 rate = "--adaptation=rate"
@@ -285,7 +292,7 @@ for strategy in forwardingStrategies:
 	for adap in adaptationStrategies:
 		for failures in linkFailures:
 			name = getScenarioName(strategy,failures,adap) 
-			SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [strategy, adap, failures, briteConfig] }})			
+			SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [strategy, adap, failures, briteConfig, CLIENT_START_DELAY] }})			
 		settings_counter += 1
 
 #build project before
@@ -332,8 +339,12 @@ for scenarioName in SCENARIOS.keys():
 
 	   # start thread, get callback method to be called when thread is done
 		thread = Thread(job_number, sysCall, threadFinished, src, dst)
-		#if(job_number != 0 and job_number<THREADS): # do this to avoid that all threads copy at the same time
-			#time.sleep(15.0)
+
+		if(os.path.exists(dst)):
+                	print str(dst) + " exists.. SKIPPING!"
+                        job_number += 1
+                        continue
+
 		thread.start()
 
 		job_number += 1
