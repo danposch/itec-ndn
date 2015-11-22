@@ -13,7 +13,7 @@ import threading
 import time
 import operator
 import random
-import dashplayer_stats as dashplayer_stats
+
 import consumer_stats as consumer_stats
 
 curActiveThreads = 0
@@ -63,17 +63,17 @@ def threadFinished(job_number,src,dst,returncode):
 		print "computeStats(job_" + str(job_number) + ")"
 		try:
 			print src
-			dashplayer_stats.computeStats(src+"/traces/")
-			#consumer_stats.generateStatsPerSimulation(src)
+			#calculate_average.computeStats(src+"/traces/")
+			consumer_stats.generateStatsPerSimulation(src)
 		except Exception:
 			invalid_runs += 1
 			pass
 
 	#copy results
 	files = glob.glob(src + "/traces/*STATS*.txt")
-	files.extend(glob.glob(src + "/traces/*dashplayer-trace*.txt"))
 	files.extend(glob.glob(src + "/traces/*cs-trace*.txt"))
-	#files = glob.glob(src + "/traces/*.txt") # copy everthing
+	files.extend(glob.glob(src + "/traces/*heat-map-trace.txt"))
+	#files = glob.glob(src + "/traces/*.txt")
 
 	if not os.path.exists(dst):
 		os.makedirs(dst)
@@ -87,117 +87,8 @@ def threadFinished(job_number,src,dst,returncode):
 	print "statsCollected(job_" + str(job_number) + ")"
 
 	curActiveThreads -= 1
-		
-def getScenarioName(strategy,linkfailure,adap):
-	
-	name = ""
 
-	if("fw-strategy=bestRoute" in strategy):
-		name += "BestRoute"
-	elif("fw-strategy=smartflooding" in strategy):
-		name += "SmartFlooding"
-	elif("fw-strategy=saf" in strategy):
-		name += "SAF"
-	elif("fw-strategy=broadcast" in strategy):
-		name += "Broadcast"
-	elif("fw-strategy=ncc" in strategy):
-		name += "NCC"
-	elif("fw-strategy=oracle" in strategy):
-                name += "NRR"
-	elif("fw-strategy=omccrf" in strategy):
-                name += "OMCCRF"
-	else:
-		name += "UnknownStrategy"
-
-	if("route=single" in strategy):
-		name += "_SingleRoute"
-	elif("route=all" in strategy):
-		name += "_AllRoutes"
-	else:
-		name += "_UnkownRoute"
-
-	if("--adaptation=buffer" in adap):
-		name += "_BufferAdap"
-	elif("--adaptation=rate" in adap):
-		name += "_RateAdap"
-	elif("--adaptation=nologic" in adap):
-		name += "_NoAdap"
-	else:
-		name += "_UnknownAdaptation"
-
-	failure = re.findall('\d+', linkfailure)
-
-	if(len(failure) == 1):
-		name += "_LinkFailure_"+failure[0]
-	else:
-		name +="_UnkownLinkFailurey"
-
-	return name
-
-def	order_dash_results(path):
-	results_level = {}
-	results_stalls = {}
-	results_bitrate = {}
-	results_cachehits = {}
-
-	for root, dirs, files in os.walk(path):
-		for subdir in dirs:
-		
-			if "output_run" in subdir:
-				continue
-
-			#print root+subdir
-
-			files = glob.glob(root+subdir + "/*/DASH-STATS.txt" ) #match DASH-STATS exectly as there is STATS too
-		
-			avg_layer = 0.0
-			avg_stalls_msec = 0.0
-			avg_video_bitrate = 0.0
-			avg_cache_hitratio = 0.0
-			file_count = 0
-
-			for file in files:
-
-				#print file
-				f = open(file, "r")
-				for line in f:
-					if(line.startswith("AVG Level per Client:")):
-						avg_layer += float(line[len("AVG Level per Client:"):])
-						
-					if(line.startswith("AVG Stalls (msec):")):
-						avg_stalls_msec += float(line[len("AVG Stalls (msec):"):])
-
-					if(line.startswith("AVG Video Bitrate (bit/s):")):
-						avg_video_bitrate += float(line[len("AVG Video Bitrate (bit/s):"):])
-
-					if(line.startswith("Cache_Hit_Ratio:")):
-						avg_cache_hitratio += float(line[len("Cache_Hit_Ratio:"):])
-					
-				file_count +=1
-			
-
-			if(file_count > 0):
-	 			avg_layer /= file_count
-				avg_stalls_msec /= file_count
-				avg_video_bitrate /= file_count
-				avg_cache_hitratio /= file_count
-	
-			#print avg_ratio
-			results_level.update({"AVG Level per Client:"+ subdir : avg_layer})
-			results_stalls.update({"AVG Stalls (msec):"+ subdir : avg_stalls_msec})
-			results_bitrate.update({"AVG Video Bitrate (bit/s):"+ subdir : avg_video_bitrate})
-			results_cachehits.update({"Cache_Hit_Ratio:"+ subdir : avg_cache_hitratio})
-
-	result_list = [results_level, results_stalls, results_bitrate, results_cachehits]
-
-	f = open(path + "/dash_result.txt", "w")
-	for results in result_list: 
-		sorted_results = reversed(sorted(results.items(), key=operator.itemgetter(1)))
-		for entry in sorted_results:
-			f.write(entry[0] + ": " + str(entry[1]) + "\n")
-		f.write("\n\n")
-
-'''def	order_consumer_results(path):
+def	order_results(path):
 	results = {}
 
 	for root, dirs, files in os.walk(path):
@@ -208,7 +99,7 @@ def	order_dash_results(path):
 
 			#print root+subdir
 
-			files = glob.glob(root+subdir + "/*/STATS.txt" ) # match stats exectly as there is DASH-STATS too
+			files = glob.glob(root+subdir + "/*/*STATS*.txt" )
 		
 			avg_ratio = 0.0
 			file_count = 0
@@ -240,25 +131,93 @@ def	order_dash_results(path):
 	f = open(path + "/result.txt", "w")
 	for entry in sorted_results:
 		f.write(entry[0] + ":" + str(entry[1]) + "\n")
-'''	
+		
+def getScenarioName(config,connectivity,strategy,linkfailure):
+	
+	name = ""
 
-###NOTE Start this script FROM itec-ndn MAIN-FOLDER!!!
+	if("fw-strategy=bestRoute" in strategy):
+		name += "BestRoute"
+	elif("fw-strategy=smartflooding" in strategy):
+		name += "SmartFlooding"
+	elif("fw-strategy=saf" in strategy):
+		name += "SAF"
+	elif("fw-strategy=broadcast" in strategy):
+		name += "Broadcast"
+	elif("fw-strategy=ncc" in strategy):
+		name += "NCC"
+	elif("fw-strategy=omccrf" in strategy):
+		name += "OMCCRF"
+	elif("fw-strategy=oracle" in strategy):
+		name += "NRR"
+	else:
+		name += "UnknownStrategy"
+
+	if("route=single" in strategy):
+		name += "_SingleRoute"
+	elif("route=all" in strategy):
+		name += "_AllRoutes"
+	else:
+		name += "_UnkownRoute"
+
+	if("low_bw" in config):
+		name += "_LowBW"
+	elif("medium_bw" in config):
+		name += "_MediumBW"
+	elif("high_bw" in config):
+		name += "_HighBW"
+	else:
+		name +="_UnkownBriteConfig"
+
+	if("connectivity=low" in connectivity):
+		name += "_LowConnectivity"
+	elif("connectivity=medium" in connectivity):
+		name += "_MediumConnectivity"
+	elif("connectivity=high" in connectivity):
+		name += "_HighConnectivity"
+	else:
+		name +="_UnkownConnectivity"
+
+
+	failure = re.findall('\d+', linkfailure)
+
+	if(len(failure) == 1):
+		name += "_LinkFailure_"+failure[0]
+	else:
+		name +="_UnkownLinkFailurey"
+
+	return name
+	
+
+###NOTE Start this script FROM itec-scenarios MAIN-FOLDER!!!
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 5 
-SIMULATION_RUNS = 25 
+THREADS = 1
+SIMULATION_RUNS = 1
 SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
-CLIENT_START_DELAY = "--delay-model=exponential"
-
-#order_dash_results(SIMULATION_OUTPUT)
-#exit(0)
 
 #brite config file
-scenario="dash_fixed_top"
-britePath="/home/danposch/ndnSIM/itec-ndn/"
+scenario="example_heatmap"
 
-briteConfig="--briteConfFile="+britePath+"brite_configs/fixed.conf"
+#britePath="/local/users/ndnsim2/ndnSIM/itec-ndn/"
+britePath="/home/dposch/ndnSIM/itec-ndn/"
+
+briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
+briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/brite_medium_bw.conf"
+briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/brite_high_bw.conf"
+
+#briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
+#briteConfigs = [briteConfigLowBw, briteConfigMediumBw]
+briteConfigs = [briteConfigHighBw]
+
+lowConnectivity="--connectivity=low"
+mediumConnectivity="--connectivity=medium"
+highConnectivity="--connectivity=high"
+
+#connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
+#connectivities = [lowConnectivity, mediumConnectivity]
+connectivities = [mediumConnectivity]
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -267,19 +226,11 @@ bestRoute="--fw-strategy=bestRoute " + allRoute
 ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
-oracle="--fw-strategy=oracle " + allRoute
 omccrf="--fw-strategy=omccrf " + allRoute
+oracle="--fw-strategy=oracle " + allRoute
 
-forwardingStrategies = [bestRoute, broadcast, saf, ncc, oracle]
-#forwardingStrategies = [saf,bestRoute]
-#forwardingStrategies = [oracle, omccrf]
-
-buf = "--adaptation=buffer"
-rate = "--adaptation=rate"
-no = "--adaptation=nologic"
-
-adaptationStrategies = [buf, rate, no]
-#adaptationStrategies = [buf]
+#forwardingStrategies = [bestRoute, broadcast, saf, oracle, omccrf] #ncc
+forwardingStrategies = [ncc]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
@@ -288,12 +239,14 @@ linkFailures = ["--linkFailures=0"]
 SCENARIOS = {}
 
 settings_counter = 0
-for strategy in forwardingStrategies:
-	for adap in adaptationStrategies:
-		for failures in linkFailures:
-			name = getScenarioName(strategy,failures,adap) 
-			SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [strategy, adap, failures, briteConfig, CLIENT_START_DELAY] }})			
-		settings_counter += 1
+for config in briteConfigs:
+	for connectivity in connectivities:
+		for strategy in forwardingStrategies:
+			#for route in routes:
+			for failures in linkFailures:
+				name = getScenarioName(config,connectivity,strategy,failures) 
+				SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [config, connectivity, strategy, failures, "--content-popularity=zipf"] }}) #TODO REMOVE ZIPF
+				settings_counter += 1
 
 #build project before
 call([SIMULATION_DIR + "/waf"])
@@ -331,7 +284,7 @@ for scenarioName in SCENARIOS.keys():
 
 		print "----------"
 		print "Simulation run " + str(i) + " in progress..." 
-		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--RngRun=" + str(1+i)] + ["--outputFolder=traces"] ## working folder of subprocess is determined by Thread
+		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--RngRun=" + str(i)] + ["--outputFolder=traces"] ## working folder of subprocess is determined by Thread
 		print sysCall
 
 		dst = SIMULATION_OUTPUT+scenarioName + "/output_run"+str(i)
@@ -339,12 +292,8 @@ for scenarioName in SCENARIOS.keys():
 
 	   # start thread, get callback method to be called when thread is done
 		thread = Thread(job_number, sysCall, threadFinished, src, dst)
-
-		if(os.path.exists(dst)):
-                	print str(dst) + " exists.. SKIPPING!"
-                        job_number += 1
-                        continue
-
+		#if(job_number != 0 and job_number<THREADS): # do this to avoid that all threads copy at the same time
+			#time.sleep(15.0)
 		thread.start()
 
 		job_number += 1
@@ -355,8 +304,7 @@ while curActiveThreads != 0:
     time.sleep(15)
     print "Active Threads: " + str(curActiveThreads)
 
-order_dash_results(SIMULATION_OUTPUT) #dash_results
-#order_consumer_results(SIMULATION_OUTPUT) # basic consumer results
+order_results(SIMULATION_OUTPUT)
 
 print ""
 print "We had " + str(invalid_runs) + " invalid runs"

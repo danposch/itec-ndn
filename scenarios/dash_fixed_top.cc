@@ -13,14 +13,17 @@
 
 #include "ns3/ndnSIM/utils/tracers/ndn-dashplayer-tracer.hpp"
 
+#include "../extensions/fw/OMCCRF.h"
+#include "../extensions/fw/oracle.h"
+#include "../extensions/fw/oraclecontainer.h"
+#include "../extensions/utils/extendedglobalroutinghelper.h"
+
 using namespace ns3;
 
 int main (int argc, char *argv[])
 {
   // BRITE needs a configuration file to build its graph.
   std::string confFile = "brite_configs/fixed.conf";
-  //std::string seedFile = "brite_configs/fixed_brite_seed";
-  //std::string newSeedFile = "brite_configs/fixed_brite_seed_new";
   std::string strategy = "saf";
   std::string route = "all";
   std::string outputFolder = "output/";
@@ -28,6 +31,7 @@ int main (int argc, char *argv[])
   int totalLinkFailures = 0;
   std::string export_top_file = "/home/dposch/top.csv";
   std::string adaptation = "buffer";
+  std::string client_delay = "no-delay";
 
   /*LogComponentEnableAll (LOG_ALL);
   LogComponentDisableAll (LOG_LOGIC);
@@ -42,6 +46,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("outputFolder", "defines specific output subdir", outputFolder);
   cmd.AddValue ("linkFailures", "defines number of linkfailures events", totalLinkFailures);
   cmd.AddValue ("adaptation", "Adaptation Strategy used by Client", adaptation);
+  cmd.AddValue ("delay-model", "Client Start Time delay Model", client_delay);
 
   cmd.Parse (argc,argv);
 
@@ -73,10 +78,6 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  //2876sec duration of concatenated dataset
-  //int simTime = 2880;
-  int simTime = 2880;
-
   /*for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);*/
 
@@ -103,8 +104,13 @@ int main (int argc, char *argv[])
   ns3::ndn::StackHelper ndnHelper;
   //ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "25000"); // all entities can store up to xk chunks in cache (about 100MB)
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "12500"); // all entities can store up to xk chunks in cache (about 50MB)
-  //ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "1"); // all entities can store up to xk chunks in cache (about 0MB)
   ndnHelper.Install(gen.getAllASNodes ());// install all on network nodes...
+
+  // install helper on client / server
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1"); // all entities can store up to xk chunks in cache (about 0MB)
+  ndnHelper.Install (server);
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1250"); // all entities can store up to 1k chunks in cache (about 5MB)
+  ndnHelper.Install (client);
 
   if(strategy.compare ("saf") == 0)
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(gen.getAllASNodes (),"/");
@@ -114,22 +120,42 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/ncc");
   else if(strategy.compare ("broadcast") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/broadcast");
+  else if (strategy.compare ("omccrf") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
+  else if (strategy.compare ("oracle") == 0)
+  {
+    //somehow distribute the knowlege of the nodes to the strategys...
+    NodeContainer c = gen.getAllASNodes();
+    for(int i = 0; i < c.size(); i++)
+    {
+      //fprintf(stderr, "Name = %s\n", Names::FindName (c.Get (i)).c_str ());
+      Names::Rename (Names::FindName (c.Get (i)), "StrategyNode" + boost::lexical_cast<std::string>(i));
+
+      nfd::fw::StaticOracaleContainer::getInstance()->insertNode("StrategyNode" + boost::lexical_cast<std::string>(i), c.Get (i));
+      ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::Oracle>(c.Get (i),"/");
+    }
+
+    for(int i = 0; i < client.size (); i++)// register clients as potential chaches for the oracle
+    {
+      std::string oldname = Names::FindName (client.Get (i));
+      std::string newname = "StrategyNode" + boost::lexical_cast<std::string>(i + gen.getAllASNodes ().size ());
+      Names::Rename (oldname, newname);
+      nfd::fw::StaticOracaleContainer::getInstance()->insertNode(newname, client.Get (i));
+      ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::Oracle>(client.Get (i),"/");
+      Names::Rename (newname, oldname);
+    }
+  }
   else
   {
     fprintf(stderr, "Invalid Strategy!\n");
     exit(-1);
   }
 
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1250"); // all entities can store up to 1k chunks in cache (about 5MB)
-  ndnHelper.Install (client);
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Stats::Lru","MaxSize", "1");
-  ndnHelper.Install (server);
-
   //install cstore tracers
   NodeContainer routers = gen.getAllASNodes ();
   ns3::ndn::CsTracer::Install(routers, std::string(outputFolder + "/cs-trace.txt"), Seconds(1.0));
 
-  ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+  ns3::ndn::ExtendedGlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
 
   ns3::ndn::AppHelper producerHelper ("ns3::ndn::FileServer");
@@ -164,7 +190,7 @@ int main (int argc, char *argv[])
   else if(adaptation.compare ("rate") == 0)
     consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::SVCRateBasedAdaptationLogic"));
   else if(adaptation.compare ("nologic") == 0)
-    consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::NoLogic"));
+    consumerHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::SVCNoAdaptationLogic"));
   else
   {
     fprintf(stderr, "Invalid adaptation selected\n");
@@ -178,7 +204,29 @@ int main (int argc, char *argv[])
   //print heading
   //file << "#properties (Client, Server)\n";
 
-  Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
+  //2876sec duration of concatenated dataset
+  int simTime = 2880;
+  Ptr<RandomVariableStream> r;
+  int bound = 1;
+  if(client_delay.compare ("exponential") == 0)
+  {
+    r = CreateObject<ExponentialRandomVariable>();
+    r->SetAttribute ("Mean", DoubleValue (60));
+    bound = 180;
+    r->SetAttribute ("Bound", DoubleValue (bound));
+  }
+  else if (client_delay.compare ("no-delay") == 0)
+  {
+    r = CreateObject<UniformRandomVariable>();
+    r->SetAttribute ("Min", DoubleValue (0));
+    r->SetAttribute ("Max", DoubleValue (bound));
+  }
+  else
+  {
+    fprintf(stderr, "Invalid Delay Model choosen\n");
+  }
+  simTime += bound;
+
   for(int i=0; i<client.size (); i++)
   {
     std::string mpd("/Server_" + boost::lexical_cast<std::string>(i%server.size ())
@@ -187,8 +235,7 @@ int main (int argc, char *argv[])
     consumerHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
     //consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(i%server.size ()) + "/layer0"));
     ApplicationContainer consumer = consumerHelper.Install (Names::Find<Node>(std::string("Client_" + boost::lexical_cast<std::string>(i))));
-
-    consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(r->GetValue()));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::DASHPlayerTracer::Install(Names::Find<Node>(std::string("Client_") + boost::lexical_cast<std::string>(i)),
@@ -204,6 +251,11 @@ int main (int argc, char *argv[])
                 << boost::lexical_cast<std::string>(server.Get (i%server.size ())->GetId ()) << ")\n";*/
   }
   //file.close ();
+
+  if(strategy.compare ("oracle") == 0) // calc all routs ammoung the nodes
+  {
+    ndnGlobalRoutingHelper.AddOriginsForAllUsingNodeIds ();
+  }
 
    // Calculate and install FIBs
   if(route.compare ("all") == 0)

@@ -42,3 +42,4 @@ extensions/fw/oraclecontainer.h
 extensions/fw/oraclecontainer.cc
 extensions/utils/extendedglobalroutinghelper.h
 extensions/utils/extendedglobalroutinghelper.cc
+scenarios/example_heatmap.cc

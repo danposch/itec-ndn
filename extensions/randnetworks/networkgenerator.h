@@ -161,11 +161,14 @@ public:
 
   void exportTopology(std::string fname, std::string server_identifier = std::string(""), std::string client_identifier = std::string(""));
 
+  void exportCoreNetworkWithFaceInformation(std::string fname);
+
 
 protected:
   NDNBriteHelper *briteHelper;
 
   bool nodesConnected(Ptr<Node> n1, Ptr<Node> n2);
+  bool nodesConnected(Ptr<Node> n1, Ptr<Node> n2, int& n1_dev_id, int& n2_dev_id);
   uint64_t getBandwidth(Ptr<Node> n1, Ptr<Node> n2);
   NodeContainer getPairOfUnconnectedNodes(int as1, int as2);
   NodeContainer removeNode(NodeContainer container, Ptr<Node> node);

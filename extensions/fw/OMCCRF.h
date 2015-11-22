@@ -67,6 +67,17 @@ protected:
   PrefixMap pmap;
 
   ns3::UniformVariable randomVariable;
+
+  typedef std::map<
+  std::string /*interest name*/,
+  std::list<int> /*known infaces*/
+  > KnownInFaceMap;
+
+  KnownInFaceMap inFaceMap;
+
+  bool isRtx(const nfd::Face& inFace, const ndn::Interest&interest);
+  void addToKnownInFaces(const nfd::Face& inFace, const ndn::Interest&interest);
+  void clearKnownFaces(const ndn::Interest&interest);
 };
 
 
