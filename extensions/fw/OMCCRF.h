@@ -15,7 +15,7 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-/* Implements the Request Forwarding Strategy from the paper: Optimal multipath congestion control and request forwarding in Information-Centric Networks*/
+/*This Strategy implements the RFA as presented in Carofiglio et al.: Optimal Multipath Congestion Control and Request Forwarding in Information-Centric Networks*/
 
 #ifndef OMCCRF_H
 #define OMCCRF_H
@@ -26,8 +26,7 @@
 
 #include "boost/shared_ptr.hpp"
 #include "ns3/random-variable.h"
-
-#define PREFIX_COMPONENT 0
+#include "../utils/parameterconfiguration.h"
 
 namespace nfd
 {
@@ -78,6 +77,8 @@ protected:
   bool isRtx(const nfd::Face& inFace, const ndn::Interest&interest);
   void addToKnownInFaces(const nfd::Face& inFace, const ndn::Interest&interest);
   void clearKnownFaces(const ndn::Interest&interest);
+
+  int prefixComponents;
 };
 
 
