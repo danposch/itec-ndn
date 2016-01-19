@@ -24,7 +24,7 @@ typedef std::map<int /*client*/,int /*server*/> ClientServerPairs;
 int main (int argc, char *argv[])
 {
   // BRITE needs a configuration file to build its graph.
-  std::string confFile = "comsoc_tops/LowBW_LowCon_top_0.top";
+  std::string confFile = "comsoc_tops/LowBW_LowCon_0.top";
   std::string strategy = "bestRoute";
   std::string route = "all";
   std::string outputFolder = "output/";
@@ -236,6 +236,7 @@ int main (int argc, char *argv[])
       producerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(s_id)));
       producerHelper.Install (nodes.Get (s_id));
       ndnGlobalRoutingHelper.AddOrigin(std::string("/Server_" + boost::lexical_cast<std::string>(s_id)),nodes.Get (s_id));
+      ns3::ndn::L3RateTracer::Install (nodes.Get (s_id), std::string(outputFolder + "/server_aggregate-trace_"  + boost::lexical_cast<std::string>(s_id)).append(".txt"), Seconds (simTime));
     }
 
     consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(s_id)));
@@ -243,8 +244,26 @@ int main (int argc, char *argv[])
     consumer.Start (Seconds(r->GetValue()*5.0));
     consumer.Stop (Seconds(simTime));
 
-    ns3::ndn::L3RateTracer::Install (nodes.Get (c_id), std::string(outputFolder + "/aggregate-trace_"  + boost::lexical_cast<std::string>(c_id)).append(".txt"), Seconds (simTime));
-    ns3::ndn::AppDelayTracer::Install(nodes.Get (c_id), std::string(outputFolder +"/app-delays-trace_"  + boost::lexical_cast<std::string>(c_id)).append(".txt"));
+    ns3::ndn::L3RateTracer::Install (nodes.Get (c_id), std::string(outputFolder + "/consumer_aggregate-trace_"  + boost::lexical_cast<std::string>(c_id)).append(".txt"), Seconds (simTime));
+    ns3::ndn::AppDelayTracer::Install(nodes.Get (c_id), std::string(outputFolder +"/consumer_app-delays-trace_"  + boost::lexical_cast<std::string>(c_id)).append(".txt"));
+  }
+
+  bool isRouter;
+  for(int index = 0; index < nodes.size (); index++)
+  {
+    bool isRouter = true;
+    for(ClientServerPairs::iterator it = pairs.begin (); it != pairs.end (); it++)
+    {
+      if(it->first == index || it->second == index)
+      {
+        isRouter = false;
+        break;
+      }
+    }
+    if(isRouter)
+    {
+      ns3::ndn::L3RateTracer::Install (nodes.Get (index), std::string(outputFolder + "/router_aggregate-trace_"  + boost::lexical_cast<std::string>(index)).append(".txt"), Seconds (simTime));
+    }
   }
 
   /*if(strategy.compare ("oracle") == 0) // calc all routs ammoung the nodes
