@@ -71,7 +71,7 @@ def threadFinished(job_number,src,dst,returncode):
 
 	#copy results
 	files = glob.glob(src + "/traces/*STATS*.txt")
-	files.extend(glob.glob(src + "/traces/*cs-trace*.txt"))
+        files.extend(glob.glob(src + "/traces/*cs-trace*.txt"))
 	#files = glob.glob(src + "/traces/*.txt")
 
 	if not os.path.exists(dst):
@@ -145,6 +145,10 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 		name += "Broadcast"
 	elif("fw-strategy=ncc" in strategy):
 		name += "NCC"
+	elif("fw-strategy=omccrf" in strategy):
+		name += "OMCCRF"
+	elif("fw-strategy=oracle" in strategy):
+                name += "NRR"
 	else:
 		name += "UnknownStrategy"
 
@@ -188,29 +192,37 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 4
-SIMULATION_RUNS = 2
-SIMULATION_OUTPUT = SIMULATION_DIR + "/output/"
+THREADS = 10
+SIMULATION_RUNS = 35
+
+CONTENT_POPULARITY="--content-popularity=zipf"
+SIMULATION_OUTPUT = SIMULATION_DIR 
+if("uniform" in CONTENT_POPULARITY):
+	SIMULATION_OUTPUT += "/output_uniform/"
+elif("zipf" in CONTENT_POPULARITY):
+	SIMULATION_OUTPUT += "/output_zipf/"
+else:
+	SIMULATION_OUTPUT += "/output_unknown_popularity/"
 
 #brite config file
 scenario="example"
 
-#britePath="/local/users/ndnsim2/ndnSIM/itec-ndn/"
-britePath="/home/dposch/ndnSIM/itec-ndn/"
+britePath="/local/users/ndnsim2/ndnSIM/itec-ndn/"
+#britePath="/home/dposch/ndnSIM/itec-ndn/"
 
 briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
 briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/brite_medium_bw.conf"
 briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/brite_high_bw.conf"
 
-#briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
-briteConfigs = [briteConfigLowBw]
+briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
+#briteConfigs = [briteConfigMediumBw]
 
 lowConnectivity="--connectivity=low"
 mediumConnectivity="--connectivity=medium"
 highConnectivity="--connectivity=high"
 
-#connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
-connectivities = [mediumConnectivity]
+connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
+#connectivities = [mediumConnectivity]
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -219,13 +231,18 @@ bestRoute="--fw-strategy=bestRoute " + allRoute
 ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
+omccrf="--fw-strategy=omccrf " + allRoute
+oracle="--fw-strategy=oracle " + allRoute
 
-#forwardingStrategies = [bestRoute, ncc, broadcast, saf]
-forwardingStrategies = [bestRoute]
+forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf]
+#forwardingStrategies = [omccrf, oracle, saf, bestRoute, broadcast]
+#forwardingStrategies = [omccrf]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
-linkFailures = ["--linkFailures=0"]
+linkFailures = ["--linkFailures=0", "--linkFailures=50", "--linkFailures=100"]
+#linkFailures = ["--linkFailures=50", "--linkFailures=100"]
+#linkFailures = ["--linkFailures=0"]
 
 SCENARIOS = {}
 
@@ -236,7 +253,7 @@ for config in briteConfigs:
 			#for route in routes:
 			for failures in linkFailures:
 				name = getScenarioName(config,connectivity,strategy,failures) 
-				SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [config, connectivity, strategy, failures] }})			
+				SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [config, connectivity, strategy, failures, CONTENT_POPULARITY] }})			
 				settings_counter += 1
 
 #build project before
@@ -244,6 +261,7 @@ call([SIMULATION_DIR + "/waf"])
 
 ###script start
 print "\nCurring working dir = " + SIMULATION_DIR + "\n"
+print "Content Popularity = " + CONTENT_POPULARITY + " OutputFolder=" + SIMULATION_OUTPUT
 
 print str(settings_counter) + " different settings selected"
 print str(SIMULATION_RUNS) + " runs per setting"
@@ -285,6 +303,11 @@ for scenarioName in SCENARIOS.keys():
 		thread = Thread(job_number, sysCall, threadFinished, src, dst)
 		#if(job_number != 0 and job_number<THREADS): # do this to avoid that all threads copy at the same time
 			#time.sleep(15.0)
+		#if(job_number < 200):#23.04.2014 #contiune @ run 200
+		if(os.path.exists(dst)):
+			print str(dst) + " exists.. SKIPPING!"
+			job_number += 1
+			continue
 		thread.start()
 
 		job_number += 1
