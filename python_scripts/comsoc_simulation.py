@@ -136,7 +136,6 @@ def	order_results(path):
 SIMULATION_DIR=os.getcwd()
 
 THREADS = 16
-SIMULATION_RUNS = 30
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/comsoc_output/"
@@ -144,9 +143,9 @@ SIMULATION_OUTPUT += "/comsoc_output/"
 #brite config file
 scenario="comsoc"
 
-#comsocConfigFolder = "/local/users/ndnsim2/ndnSIM/itec-ndn/comsoc_tops"
-comsocConfigFolder = "/home/dposch/ndnSIM/itec-ndn/comsoc_tops"
-topFiles = glob.glob(comsocConfigFolder+"/*.top")
+comsocConfigFolder = "/local/users/ndnsim2/ndnSIM/itec-ndn/comsoc_tops"
+#comsocConfigFolder = "/home/dposch/ndnSIM/itec-ndn/comsoc_tops"
+topFiles = glob.glob(comsocConfigFolder+"/*_1.top")
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -227,7 +226,7 @@ for scenarioName in SCENARIOS.keys():
 
 		print "----------"
 		print "Simulation run " + top + " in progress..." 
-		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--outputFolder=traces"] ## working folder of subprocess is determined by Thread
+		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--outputFolder=traces"] + ["--comsocConfigFile="+top] ## working folder of subprocess is determined by Thread
 		print sysCall
 
 		dst = SIMULATION_OUTPUT+scenarioName + "/output_run"+str(re.findall(r'\d+', top)[-1])
