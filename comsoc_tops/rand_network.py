@@ -88,7 +88,7 @@ for run in range(0,RUNS):
 			for con in CONNECTIVITY:
 				EDGE_PROBABILITY =  CONNECTIVITY[con]
 	
-				fname = str(bw)+"_"+str(con)+"_top_"+str(run)+".top"
+				fname = str(bw)+"_"+str(con)+"_"+str(run)+".top"
 				print fname
 				genRandomNetwork(run)
 
