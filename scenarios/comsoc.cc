@@ -226,7 +226,7 @@ int main (int argc, char *argv[])
 
   for(ClientServerPairs::iterator it = pairs.begin (); it != pairs.end (); it++)
   {
-    fprintf(stderr, "(%d,%d)\n", it->first, it->second);
+    //fprintf(stderr, "(%d,%d)\n", it->first, it->second);
 
     c_id = it->first;
     s_id = it->second;
