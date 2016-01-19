@@ -131,98 +131,22 @@ def	order_results(path):
 	for entry in sorted_results:
 		f.write(entry[0] + ":" + str(entry[1]) + "\n")
 		
-def getScenarioName(config,connectivity,strategy,linkfailure):
-	
-	name = ""
-
-	if("fw-strategy=bestRoute" in strategy):
-		name += "BestRoute"
-	elif("fw-strategy=smartflooding" in strategy):
-		name += "SmartFlooding"
-	elif("fw-strategy=saf" in strategy):
-		name += "SAF"
-	elif("fw-strategy=broadcast" in strategy):
-		name += "Broadcast"
-	elif("fw-strategy=ncc" in strategy):
-		name += "NCC"
-	elif("fw-strategy=omccrf" in strategy):
-		name += "OMCCRF"
-	elif("fw-strategy=oracle" in strategy):
-                name += "NRR"
-	else:
-		name += "UnknownStrategy"
-
-	if("route=single" in strategy):
-		name += "_SingleRoute"
-	elif("route=all" in strategy):
-		name += "_AllRoutes"
-	else:
-		name += "_UnkownRoute"
-
-	if("low_bw" in config):
-		name += "_LowBW"
-	elif("medium_bw" in config):
-		name += "_MediumBW"
-	elif("high_bw" in config):
-		name += "_HighBW"
-	else:
-		name +="_UnkownBriteConfig"
-
-	if("connectivity=low" in connectivity):
-		name += "_LowConnectivity"
-	elif("connectivity=medium" in connectivity):
-		name += "_MediumConnectivity"
-	elif("connectivity=high" in connectivity):
-		name += "_HighConnectivity"
-	else:
-		name +="_UnkownConnectivity"
-
-
-	failure = re.findall('\d+', linkfailure)
-
-	if(len(failure) == 1):
-		name += "_LinkFailure_"+failure[0]
-	else:
-		name +="_UnkownLinkFailurey"
-
-	return name
-	
-
 ###NOTE Start this script FROM itec-scenarios MAIN-FOLDER!!!
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 10
-SIMULATION_RUNS = 35
+THREADS = 16
+SIMULATION_RUNS = 30
 
-CONTENT_POPULARITY="--content-popularity=zipf"
 SIMULATION_OUTPUT = SIMULATION_DIR 
-if("uniform" in CONTENT_POPULARITY):
-	SIMULATION_OUTPUT += "/output_uniform/"
-elif("zipf" in CONTENT_POPULARITY):
-	SIMULATION_OUTPUT += "/output_zipf/"
-else:
-	SIMULATION_OUTPUT += "/output_unknown_popularity/"
+SIMULATION_OUTPUT += "/comsoc_output/"
 
 #brite config file
-scenario="example"
+scenario="comsoc"
 
-britePath="/local/users/ndnsim2/ndnSIM/itec-ndn/"
-#britePath="/home/dposch/ndnSIM/itec-ndn/"
-
-briteConfigLowBw="--briteConfFile="+britePath+"brite_configs/brite_low_bw.conf"
-briteConfigMediumBw="--briteConfFile="+britePath+"brite_configs/brite_medium_bw.conf"
-briteConfigHighBw="--briteConfFile="+britePath+"brite_configs/brite_high_bw.conf"
-
-briteConfigs = [briteConfigLowBw, briteConfigMediumBw, briteConfigHighBw]
-#briteConfigs = [briteConfigMediumBw]
-
-lowConnectivity="--connectivity=low"
-mediumConnectivity="--connectivity=medium"
-highConnectivity="--connectivity=high"
-
-connectivities = [lowConnectivity, mediumConnectivity, highConnectivity]
-#connectivities = [mediumConnectivity]
+#comsocConfigFolder = "/local/users/ndnsim2/ndnSIM/itec-ndn/comsoc_tops"
+comsocConfigFolder = "/home/dposch/ndnSIM/itec-ndn/comsoc_tops"
+topFiles = glob.glob(comsocConfigFolder+"/*.top")
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -232,78 +156,86 @@ ncc="--fw-strategy=ncc " + allRoute
 broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
 omccrf="--fw-strategy=omccrf " + allRoute
-oracle="--fw-strategy=oracle " + allRoute
+#oracle="--fw-strategy=oracle " + allRoute
 
-forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf]
-#forwardingStrategies = [omccrf, oracle, saf, bestRoute, broadcast]
-#forwardingStrategies = [omccrf]
-
-#linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
-#linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
-linkFailures = ["--linkFailures=0", "--linkFailures=50", "--linkFailures=100"]
-#linkFailures = ["--linkFailures=50", "--linkFailures=100"]
-#linkFailures = ["--linkFailures=0"]
+forwardingStrategies = [bestRoute, ncc, broadcast, saf, omccrf]
+connectivities = ["HighCon", "LowCon", "MediumCon"]
+capacities = ["HighBW", "LowBW", "MediumBW"]
 
 SCENARIOS = {}
 
 settings_counter = 0
-for config in briteConfigs:
+for strategy in forwardingStrategies:
 	for connectivity in connectivities:
-		for strategy in forwardingStrategies:
-			#for route in routes:
-			for failures in linkFailures:
-				name = getScenarioName(config,connectivity,strategy,failures) 
-				SCENARIOS.update({name : { "executeable": scenario, "numRuns": SIMULATION_RUNS, "params": [config, connectivity, strategy, failures, CONTENT_POPULARITY] }})			
-				settings_counter += 1
+		for bw in capacities:
+
+			name = ""
+
+			if("fw-strategy=bestRoute" in strategy):
+				name += "BestRoute"
+			elif("fw-strategy=smartflooding" in strategy):
+				name += "SmartFlooding"
+			elif("fw-strategy=saf" in strategy):
+				name += "SAF"
+			elif("fw-strategy=broadcast" in strategy):
+				name += "Broadcast"
+			elif("fw-strategy=ncc" in strategy):
+				name += "NCC"
+			elif("fw-strategy=omccrf" in strategy):
+				name += "OMCCRF"
+			else:
+				name += "UnknownStrategy"
+
+			name += "_"+connectivity+"_"+bw
+		SCENARIOS.update({name : { "executeable": scenario, "params": [strategy], "bandwidth": bw, "connectivity": connectivity }})			
+		settings_counter += 1
 
 #build project before
 call([SIMULATION_DIR + "/waf"])
 
 ###script start
 print "\nCurring working dir = " + SIMULATION_DIR + "\n"
-print "Content Popularity = " + CONTENT_POPULARITY + " OutputFolder=" + SIMULATION_OUTPUT
 
 print str(settings_counter) + " different settings selected"
-print str(SIMULATION_RUNS) + " runs per setting"
-print "Total runs: " + str(settings_counter*SIMULATION_RUNS)
 
 time.sleep(5)
 
 ###script start
-print "\nCurring working dir = " + SIMULATION_DIR + "\n"
-
 job_number = 0
 
 for scenarioName in SCENARIOS.keys():
-	runs = SCENARIOS[scenarioName]['numRuns']
 	executeable = SCENARIOS[scenarioName]['executeable']
+
+	connectivity = SCENARIOS[scenarioName]['connectivity']
+	bandwidth = SCENARIOS[scenarioName]['bandwidth']
+
+	run_tops = [ k for k in topFiles if bandwidth in k and connectivity in k]
+
+	#print scenarioName
+	#print connectivity
+	#print bandwidth
+	#print run_tops
 	
 	executeable = "build/" + executeable
 	print "------------------------------------------------------------------------"
-	print "Starting", runs , "simulations of", scenarioName
+	print "Starting", len(run_tops) , "simulations of", scenarioName
 
-  #REMOVE JUST FOR SMALL TEST
-  #if(job_number>4):
-    #continue
-	
-	for i in range(0, runs):
+	for top in run_tops:
   	# See if we are using all available threads
 		while curActiveThreads >= THREADS:
 			time.sleep(1) # wait 1 second
 
 		print "----------"
-		print "Simulation run " + str(i) + " in progress..." 
-		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--RngRun=" + str(i)] + ["--outputFolder=traces"] ## working folder of subprocess is determined by Thread
+		print "Simulation run " + top + " in progress..." 
+		sysCall = [SIMULATION_DIR+"/" + executeable] +  SCENARIOS[scenarioName]['params'] + ["--outputFolder=traces"] ## working folder of subprocess is determined by Thread
 		print sysCall
 
-		dst = SIMULATION_OUTPUT+scenarioName + "/output_run"+str(i)
+		dst = SIMULATION_OUTPUT+scenarioName + "/output_run"+str(re.findall(r'\d+', top)[-1])
 		src = SIMULATION_OUTPUT+"../ramdisk/tmp_folder_" + str(job_number)
 
 	   # start thread, get callback method to be called when thread is done
 		thread = Thread(job_number, sysCall, threadFinished, src, dst)
-		#if(job_number != 0 and job_number<THREADS): # do this to avoid that all threads copy at the same time
-			#time.sleep(15.0)
-		#if(job_number < 200):#23.04.2014 #contiune @ run 200
+
 		if(os.path.exists(dst)):
 			print str(dst) + " exists.. SKIPPING!"
 			job_number += 1
