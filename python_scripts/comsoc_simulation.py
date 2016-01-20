@@ -72,7 +72,8 @@ def threadFinished(job_number,src,dst,returncode):
 	#copy results
 	files = glob.glob(src + "/traces/*STATS*.txt")
         files.extend(glob.glob(src + "/traces/*cs-trace*.txt"))
-	#files = glob.glob(src + "/traces/*.txt")
+	files.extend(glob.glob(src + "/traces/*aggregate*.txt"))
+	#iles = glob.glob(src + "/traces/*.txt")
 
 	if not os.path.exists(dst):
 		os.makedirs(dst)
@@ -135,7 +136,7 @@ def	order_results(path):
 
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 16
+THREADS = 10
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/comsoc_output/"
@@ -145,7 +146,7 @@ scenario="comsoc"
 
 comsocConfigFolder = "/local/users/ndnsim2/ndnSIM/itec-ndn/comsoc_tops"
 #comsocConfigFolder = "/home/dposch/ndnSIM/itec-ndn/comsoc_tops"
-topFiles = glob.glob(comsocConfigFolder+"/*_1.top")
+topFiles = glob.glob(comsocConfigFolder+"/*.top")
 
 singleRoute="--route=single"
 allRoute="--route=all"
@@ -186,8 +187,8 @@ for strategy in forwardingStrategies:
 				name += "UnknownStrategy"
 
 			name += "_"+connectivity+"_"+bw
-		SCENARIOS.update({name : { "executeable": scenario, "params": [strategy], "bandwidth": bw, "connectivity": connectivity }})			
-		settings_counter += 1
+			SCENARIOS.update({name : { "executeable": scenario, "params": [strategy], "bandwidth": bw, "connectivity": connectivity }})			
+			settings_counter += 1
 
 #build project before
 call([SIMULATION_DIR + "/waf"])
