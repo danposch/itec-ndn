@@ -235,3 +235,4 @@ void OMCCRF::clearKnownFaces(const ndn::Interest&interest)
   }
   inFaceMap.erase (it);
 }
+

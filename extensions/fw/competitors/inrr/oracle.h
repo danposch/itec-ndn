@@ -15,30 +15,38 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-/*This Strategy implements the RFA as presented in Carofiglio et al.: Optimal Multipath Congestion Control and Request Forwarding in Information-Centric Networks*/
-
-#ifndef OMCCRF_H
-#define OMCCRF_H
+#ifndef ORACLE_H
+#define ORACLE_H
 
 #include "face/face.hpp"
 #include "fw/strategy.hpp"
-#include "pic.h"
+#include "oraclecontainer.h"
 
 #include "boost/shared_ptr.hpp"
+#include "map"
+#include "ns3/node.h"
+#include "ns3/names.h"
+#include "limits.h"
+#include "ns3/ndnSIM/model/ndn-net-device-face.hpp"
+
+#include "ns3/ptr.h"
+#include "ns3/channel.h"
 #include "ns3/random-variable.h"
-#include "../utils/parameterconfiguration.h"
+#include "ns3/net-device.h"
+
+/* This Strategy implements the ideal Nearst Replica Routing iNRR as proposed by Rossini and Rossi in: Coupling Caching and Forwarding: Benefits, Analysis, and Implementation.*/
 
 namespace nfd
 {
 namespace fw
 {
 
-class OMCCRF : public nfd::fw::Strategy
+class Oracle : public nfd::fw::Strategy
 {
 public:
-  OMCCRF(Forwarder &forwarder, const Name &name = STRATEGY_NAME);
+  Oracle(Forwarder &forwarder, const Name &name = STRATEGY_NAME);
 
-  virtual ~OMCCRF();
+  virtual ~Oracle();
   virtual void afterReceiveInterest(const nfd::Face& inFace, const ndn::Interest& interest,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry);
   virtual void beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const nfd::Face& inFace, const ndn::Data& data);
   virtual void beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry);
@@ -47,40 +55,22 @@ public:
 
 protected:
 
-  typedef std::map
-    < int, /*face ID*/
-      boost::shared_ptr<PIC> /*Pending Interest Count*/
-    > FacePicEntryMap;
+  std::vector<ns3::ndn::NetDeviceFace *> getAllInNetDeviceFaces(shared_ptr<pit::Entry> pitEntry);
 
-  typedef std::map
-    < std::string, /*prefix*/
-      FacePicEntryMap
-    > PrefixMap;
+  std::vector<ns3::Ptr<ns3::NetDevice> > getAllNetDevicesFromNode(ns3::Ptr<ns3::Node> node);
 
-  std::string extractContentPrefix(nfd::Name name);
-  std::vector<int> getAllOutFaces(shared_ptr<pit::Entry> pitEntry);
-  std::vector<int> getAllInFaces(shared_ptr<pit::Entry> pitEntry);
+  ns3::Ptr<ns3::Node> findNearestReplica(std::vector<ns3::Ptr<ns3::Node> > visitedNodes, std::vector<ns3::Ptr<ns3::Node> > relevantNodes, shared_ptr<pit::Entry> pitEntry, int remainingSteps);
+  ns3::Ptr<ns3::Node> getCounterpart(ns3::Ptr<ns3::NetDevice> face, ns3::Ptr<ns3::Node> node);
+  ns3::Ptr<ns3::Node> getCounterpart(ns3::ndn::NetDeviceFace* face, ns3::Ptr<ns3::Node> node);
 
-  boost::shared_ptr<PIC> findPICEntry(int face_id, std::string prefix);
-
-  PrefixMap pmap;
+  bool checkCacheHit(shared_ptr<pit::Entry> pitEntry, ns3::Ptr<ns3::Node> node);
 
   ns3::UniformVariable randomVariable;
 
-  typedef std::map<
-  std::string /*interest name*/,
-  std::list<int> /*known infaces*/
-  > KnownInFaceMap;
+  ns3::Ptr<ns3::Node> node;
 
-  KnownInFaceMap inFaceMap;
-
-  bool isRtx(const nfd::Face& inFace, const ndn::Interest&interest);
-  void addToKnownInFaces(const nfd::Face& inFace, const ndn::Interest&interest);
-  void clearKnownFaces(const ndn::Interest&interest);
-
-  int prefixComponents;
+  Forwarder* forwarder;
 };
-
 
 }
 }
