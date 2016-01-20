@@ -6,15 +6,15 @@
 namespace nfd {
 namespace fw {
 
-MDelay::MDelay(std::vector<int> faces, int max_delay_ms = 1000) : SAFStatisticMeasure(faces)
+MDelay::MDelay(std::vector<int> faces) : SAFStatisticMeasure(faces)
 {
     curMaxDelay = boost::chrono::duration<long int, boost::ratio<1l, 1000000000l> >(
-                ((long int) max_delay_ms) * 1000000);
+                (long) (ParameterConfiguration::getInstance()->getParameter("MAX_DELAY_MS")) * 1000000);
 }
 
 void MDelay::logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
 {
-  //check if rtt < max_delay
+  //TODO: check if rtt < max_delay
   time::steady_clock::TimePoint now = time::steady_clock::now();
   std::list<nfd::pit::OutRecord>::const_iterator outRecord = pitEntry->getOutRecord(inFace);
 
@@ -38,12 +38,6 @@ void MDelay::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
   {
     stats[ilayer].unsatisfied_requests[(*it).getFace()->getId()] += 1;
   }
-}
-
-void MDelay::logNack(const Face& inFace, const Interest& interest)
-{
-  int ilayer = SAFStatisticMeasure::determineContentLayer(interest);
-  stats[ilayer].unsatisfied_requests[inFace.getId()] += 1;
 }
 
 }

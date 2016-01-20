@@ -13,9 +13,9 @@
 
 #include "ns3/ndnSIM/utils/tracers/ndn-dashplayer-tracer.hpp"
 
-#include "../extensions/fw/OMCCRF.h"
-#include "../extensions/fw/oracle.h"
-#include "../extensions/fw/oraclecontainer.h"
+#include "../extensions/fw/competitors/rfa/OMCCRF.h"
+#include "../extensions/fw/competitors/inrr/oracle.h"
+#include "../extensions/fw/competitors/inrr/oraclecontainer.h"
 #include "../extensions/utils/extendedglobalroutinghelper.h"
 
 using namespace ns3;

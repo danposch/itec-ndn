@@ -9,9 +9,9 @@
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
-#include "../extensions/fw/OMCCRF.h"
-#include "../extensions/fw/oracle.h"
-#include "../extensions/fw/oraclecontainer.h"
+#include "../extensions/fw/competitors/rfa/OMCCRF.h"
+#include "../extensions/fw/competitors/inrr/oracle.h"
+#include "../extensions/fw/competitors/inrr/oraclecontainer.h"
 #include "NFD/daemon/fw/broadcast-strategy.hpp"
 #include "../extensions/utils/extendedglobalroutinghelper.h"
 #include <fstream>
@@ -286,5 +286,7 @@ int main (int argc, char *argv[])
   Simulator::Stop (Seconds (simTime+0.1)); // 10 min
   Simulator::Run ();
   Simulator::Destroy ();
+
+  fprintf(stderr, "Simulation finished\n");
   return 0;
 }

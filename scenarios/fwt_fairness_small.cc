@@ -9,6 +9,9 @@
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
+#include "../extensions/fw/competitors/rfa/OMCCRF.h"
+#include "../extensions/fw/competitors/inrr/oracle.h"
+#include "../extensions/fw/competitors/inrr/oraclecontainer.h"
 #include "NFD/daemon/fw/broadcast-strategy.hpp"
 
 #include <boost/lexical_cast.hpp>
@@ -65,6 +68,9 @@ int main(int argc, char* argv[])
 
   parseParameters(argc, argv);
 
+  ParameterConfiguration::getInstance ()->setParameter ("PREFIX_COMPONENT",1);
+  ParameterConfiguration::getInstance ()->setParameter ("CONTENT_AWARE_ADAPTATION",1);
+
   NodeContainer streamers;
   int nodeIndex = 0;
   std::string nodeNamePrefix("ContentDst");
@@ -93,7 +99,7 @@ int main(int argc, char* argv[])
   while(router != NULL)
   {
     //if(nodeIndex == 2 || nodeIndex == 4)//is router 1 actually...
-    if(nodeIndex == 4)//is router 1 actually...
+    if(nodeIndex == 1)//is router 1 actually...
       routers1.Add (router);
     else
       routers2.Add (router);
@@ -111,31 +117,40 @@ int main(int argc, char* argv[])
 
   ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "25000");
   ndnHelper.Install (routers1);
+  //ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(routers1,"/");
   ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(routers1,"/");
-  ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(routers2,"/");
 
   // Install NDN applications
-  std::string prefix = "/data";
+  std::string prefix = "/background/";
 
   ns3::ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
   consumerHelper.SetPrefix (prefix);
-  consumerHelper.SetAttribute ("Frequency", StringValue ("150")); // ca. 5Mbit/s per streamer
+  //consumerHelper.SetAttribute ("Frequency", StringValue ("150")); // ca. 5Mbit/s per streamer
+  consumerHelper.SetAttribute ("Frequency", StringValue ("125")); // ca. 4Mbit/s per streamer
   consumerHelper.SetAttribute ("Randomize", StringValue ("uniform"));
+  consumerHelper.SetAttribute ("LifeTime", StringValue("1s"));
 
-  for(int i=0; i < 2; i++)
+  for(int i=0; i < streamers.size (); i++)
   {
-    consumerHelper.SetPrefix (prefix + "_c" + boost::lexical_cast<std::string>(i) + "/layer0");
+    //consumerHelper.SetPrefix (prefix + "_c" + boost::lexical_cast<std::string>(i) + "/layer0");
+    //consumerHelper.SetPrefix (prefix + "/layer" + boost::lexical_cast<std::string>(i));
+
+    consumerHelper.SetAttribute ("Frequency", StringValue ("100")); // ca. 3Mbit/s per streamer
+    consumerHelper.SetPrefix ("/class"+boost::lexical_cast<std::string>(i%3)+"/content"+ boost::lexical_cast<std::string>(i));
     consumerHelper.Install (streamers.Get (i));
   }
 
   ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
-  producerHelper.SetPrefix (prefix);
+  producerHelper.SetPrefix ("/");
   producerHelper.SetAttribute ("PayloadSize", StringValue("4096"));
   producerHelper.Install (providers);
 
   for(int i=0; i < providers.size (); i++)
   {
-    producerHelper.SetPrefix (prefix + "_c" + boost::lexical_cast<std::string>(i));
+    //producerHelper.SetPrefix (prefix + "_c" + boost::lexical_cast<std::string>(i));
+    //producerHelper.SetPrefix (prefix + "/layer" + boost::lexical_cast<std::string>(i));
+    //producerHelper.SetPrefix (prefix);
+    producerHelper.SetPrefix ("/");
     producerHelper.Install (providers.Get (i));
   }
 
@@ -144,7 +159,10 @@ int main(int argc, char* argv[])
   ndnGlobalRoutingHelper.InstallAll ();
 
   for(int i=0; i < providers.size (); i++)
-    ndnGlobalRoutingHelper.AddOrigins(prefix + "_c" + boost::lexical_cast<std::string>(i), providers.Get (i));
+    ndnGlobalRoutingHelper.AddOrigins("/", providers.Get (i));
+    //ndnGlobalRoutingHelper.AddOrigins(prefix, providers.Get (i));
+    //ndnGlobalRoutingHelper.AddOrigins(prefix + "/layer" + boost::lexical_cast<std::string>(i), providers.Get (i));
+    //ndnGlobalRoutingHelper.AddOrigins(prefix + "_c" + boost::lexical_cast<std::string>(i), providers.Get (i));
 
   // Calculate and install FIBs
   //this is needed because otherwise On::Interest()-->createPITEntry will fail. Has no negative effect on the algorithm
@@ -152,7 +170,7 @@ int main(int argc, char* argv[])
 
   NS_LOG_UNCOND("Simulation will be started!");
 
-  Simulator::Stop (Seconds(60)); //runs for 5 min.
+  Simulator::Stop (Seconds(120)); //runs for 5 min.
   Simulator::Run ();
   Simulator::Destroy ();
 

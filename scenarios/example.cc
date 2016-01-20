@@ -9,9 +9,9 @@
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
-#include "../extensions/fw/OMCCRF.h"
-#include "../extensions/fw/oracle.h"
-#include "../extensions/fw/oraclecontainer.h"
+#include "../extensions/fw/competitors/rfa/OMCCRF.h"
+#include "../extensions/fw/competitors/inrr/oracle.h"
+#include "../extensions/fw/competitors/inrr/oraclecontainer.h"
 #include "NFD/daemon/fw/broadcast-strategy.hpp"
 #include "../extensions/utils/extendedglobalroutinghelper.h"
 
@@ -111,7 +111,7 @@ int main (int argc, char *argv[])
   gen.randomlyAddConnectionsBetweenTwoAS (additional_random_connections_as,min_bw_as,max_bw_as,5,20);
   gen.randomlyAddConnectionsBetweenTwoNodesPerAS(additional_random_connections_leaf,min_bw_leaf,max_bw_leaf,5,20);
 
-  int simTime = 1800;
+  int simTime = 300;
 
   for(int i = 0; i < totalLinkFailures; i++)
     gen.creatRandomLinkFailure(0, simTime, 0, simTime/10);
