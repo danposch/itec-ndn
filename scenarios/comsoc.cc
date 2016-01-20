@@ -237,6 +237,7 @@ int main (int argc, char *argv[])
       producerHelper.Install (nodes.Get (s_id));
       ndnGlobalRoutingHelper.AddOrigin(std::string("/Server_" + boost::lexical_cast<std::string>(s_id)),nodes.Get (s_id));
       ns3::ndn::L3RateTracer::Install (nodes.Get (s_id), std::string(outputFolder + "/server_aggregate-trace_"  + boost::lexical_cast<std::string>(s_id)).append(".txt"), Seconds (simTime));
+      producers_already_seen.push_back (s_id);
     }
 
     consumerHelper.SetPrefix (std::string("/Server_" + boost::lexical_cast<std::string>(s_id)));
