@@ -16,6 +16,7 @@
 #include "../extensions/utils/extendedglobalroutinghelper.h"
 #include <fstream>
 #include <string>
+#include "ns3/drop-tail-queue.h"
 
 using namespace ns3;
 
@@ -125,7 +126,12 @@ int main (int argc, char *argv[])
     Ptr<PointToPointNetDevice> devA = m_deviceFactory.Create<PointToPointNetDevice> ();
     devA->SetAddress (Mac48Address::Allocate ());
     a->AddDevice (devA);
-    Ptr<Queue> queueA = m_queueFactory.Create<Queue> ();
+
+    std::string queueSizeBytes = boost::lexical_cast<std::string>(bw_n1_n2*1000/8/10);//set queue size to 100ms
+    //fprintf(stderr, "queueSizeBytes =%s for rate %s kbps\n", queueSizeBytes.c_str (), rate.c_str ());
+    Ptr<Queue> queueA = m_queueFactory.Create<DropTailQueue> ();
+    queueA->SetAttribute ("Mode",StringValue("QUEUE_MODE_BYTES"));
+    queueA->SetAttribute ("MaxBytes", StringValue(queueSizeBytes));
     devA->SetQueue (queueA);
 
     rate = boost::lexical_cast<std::string>(bw_n2_n1);
@@ -135,7 +141,10 @@ int main (int argc, char *argv[])
     Ptr<PointToPointNetDevice> devB = m_deviceFactory.Create<PointToPointNetDevice> ();
     devB->SetAddress (Mac48Address::Allocate ());
     b->AddDevice (devB);
-    Ptr<Queue> queueB = m_queueFactory.Create<Queue> ();
+    Ptr<Queue> queueB = m_queueFactory.Create<DropTailQueue> ();
+    queueSizeBytes = boost::lexical_cast<std::string>(bw_n2_n1*1000/8/10);//set queue size to 100ms
+    queueB->SetAttribute ("Mode",StringValue("QUEUE_MODE_BYTES"));
+    queueB->SetAttribute ("MaxBytes", StringValue(queueSizeBytes));
     devB->SetQueue (queueB);
 
     Ptr<PointToPointChannel> channel = m_channelFactory.Create<PointToPointChannel> ();
