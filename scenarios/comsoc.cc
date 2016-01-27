@@ -189,7 +189,7 @@ int main (int argc, char *argv[])
 
   //3. install helper on network nodes
   ns3::ndn::StackHelper ndnHelper;
-  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Lru","MaxSize", "65536"); // cache size 250 MB assuming 4kb large data packets
+  ndnHelper.SetOldContentStore ("ns3::ndn::cs::Fifo","MaxSize", "65536"); // cache size 250 MB assuming 4kb large data packets
   ndnHelper.Install(nodes);// install all on network nodes...
 
   if(strategy.compare ("saf") == 0)
