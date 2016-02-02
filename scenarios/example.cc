@@ -28,6 +28,7 @@ int main (int argc, char *argv[])
   int totalLinkFailures = 0;
   double min_link_error_rate = 0.0;
   double max_link_error_rate = 0.0;
+  double saf_period = 1.0;
   std::string content_popularity = "uniform";
 
   /*LogComponentEnableAll (LOG_ALL);
@@ -45,11 +46,14 @@ int main (int argc, char *argv[])
   cmd.AddValue ("min_link_error_rate", "Minimum error rate on network links", min_link_error_rate);
   cmd.AddValue ("max_link_error_rate", "MaxiumumError rate on network links", max_link_error_rate);
   cmd.AddValue ("content-popularity", "Defines the model for the content popularity", content_popularity);
+  cmd.AddValue ("saf-period", "Period between two SAF update operations", saf_period);
 
   cmd.Parse (argc,argv);
 
   Config::SetDefault ("ns3::RateErrorModel::ErrorRate", DoubleValue (0.00));
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit", StringValue ("ERROR_UNIT_PACKET"));
+
+  ParameterConfiguration::getInstance ()->setParameter ("UPDATE_INTERVALL", saf_period);
 
   //ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("5000"));
   ns3::ndn::NetworkGenerator gen(confFile);
