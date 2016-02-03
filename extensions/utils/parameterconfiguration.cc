@@ -13,6 +13,7 @@ ParameterConfiguration::ParameterConfiguration()
   setParameter ("HISTORY_SIZE",P_HISTORY_SIZE);
   setParameter ("CONTENT_AWARE_ADAPTATION", P_CONTENT_AWARE_ADAPTATION);
   setParameter ("PREFIX_COMPONENT", P_PREFIX_COMPONENT);
+  setParameter ("RTX_DETECTION", P_USE_RTX_DETECTION);
 }
 
 
