@@ -41,6 +41,14 @@ extensions/fw/competitors/inrr/oracle.h
 extensions/fw/competitors/inrr/oracle.cc
 extensions/fw/competitors/inrr/oraclecontainer.h
 extensions/fw/competitors/inrr/oraclecontainer.cc
+extensions/fw/competitors/omp-if/ompif.h
+extensions/fw/competitors/omp-if/ompif.cc
+extensions/fw/competitors/omp-if/ompif-client.h
+extensions/fw/competitors/omp-if/ompif-client.cc
+extensions/fw/competitors/omp-if/ompif-router.h
+extensions/fw/competitors/omp-if/ompif-router.cc
+extensions/fw/competitors/omp-if/facecontrollerentry.h
+extensions/fw/competitors/omp-if/facecontrollerentry.cc
 extensions/utils/extendedglobalroutinghelper.h
 extensions/utils/extendedglobalroutinghelper.cc
 scenarios/example_heatmap.cc

@@ -59,13 +59,15 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		* git checkout 86a881d9898df74fa4cfd8e85684a3ae81ab02e6
 		* cd ../../../
 		
-		# Patch forwarder to enable nacks in NFD; patch content store;
+		# Patch forwarder to enable nacks in NFD; patch content store, patch strategy to enable ompif;
 		* cp itec-ndn/extern/forwarder.cpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.cpp
 		* cp itec-ndn/extern/forwarder.hpp ns-3/src/ndnSIM/NFD/daemon/fw/forwarder.hpp
 		* cp itec-ndn/extern/ndn-content-store.hpp ns-3/src/ndnSIM/model/cs/ndn-content-store.hpp
 		* cp itec-ndn/extern/content-store-impl.hpp ns-3/src/ndnSIM/model/cs/content-store-impl.hpp
 		* cp itec-ndn/extern/content-store-nocache.hpp ns-3/src/ndnSIM/model/cs/content-store-nocache.hpp
 		* cp itec-ndn/extern/content-store-nocache.cpp ns-3/src/ndnSIM/model/cs/content-store-nocache.cpp
+		* cp itec-ndn/extern/strategy.cpp ns-3/src/ndnSIM/NFD/daemon/fw/strategy.cpp
+		* cp itec-ndn/extern/strategy.hpp ns-3/src/ndnSIM/NFD/daemon/fw/strategy.hpp
 
 		# Build ndn-cxx
 		* cd ndn-cxx
