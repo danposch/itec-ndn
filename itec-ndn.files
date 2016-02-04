@@ -53,3 +53,5 @@ extensions/utils/extendedglobalroutinghelper.h
 extensions/utils/extendedglobalroutinghelper.cc
 scenarios/example_heatmap.cc
 scenarios/comsoc.cc
+topologies/ompif-test.top
+scenarios/ompif.cc

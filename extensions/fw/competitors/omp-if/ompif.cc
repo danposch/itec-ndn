@@ -19,7 +19,6 @@ void OMPIF::afterReceiveInterest(const Face& inFace, const Interest& interest ,s
 {
   if(!fibEntry->hasNextHops()) // check if nexthop(s) exist(s)
   {
-    //fprintf(stderr, "No next hop for prefix!\n");
     //rejectPendingInterest(pitEntry); this would create a NACK OMPIF does not use them, so just drop.
     return;
   }
@@ -86,7 +85,6 @@ void OMPIF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& in
       }
       break;
     }
-    //fprintf(stderr,"beforeSatisfyInterest face not found in delay map\n");
   }
 
   pitMap.erase (pit);
@@ -115,9 +113,10 @@ void OMPIF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 
 void OMPIF::onUnsolicitedData(const Face& inFace, const Data& data)
 {
-  std::string prefix = extractContentPrefix(data.getName());
   if(type == OMPIFType::Client)
   {
+    std::string prefix = extractContentPrefix(data.getName());
+
     //check if data prefix is known
     if(fMap.find (prefix) != fMap.end ()) //
     {

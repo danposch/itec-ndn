@@ -35,22 +35,31 @@ int FaceControllerEntry::determineOutFace (int inFace_id, double rvalue)
   }
   else if(map.size () > 0)
   {
-    int64_t w_sum;
+    double w_sum = 0.0;
     for(GoodFaceMap::iterator it = map.begin (); it != map.end (); it++)
     {
-      w_sum+=it->second.GetMilliSeconds (); //sum weights
+      if(it->first != inFace_id)
+      {
+        w_sum+= 1.0/(double) it->second.GetMilliSeconds (); //sum weights
+      }
     }
+
+    if(w_sum == 0.0)
+      return DROP_FACE_ID; // just in case..
 
     double sum = 0.0;
     for(GoodFaceMap::iterator it = map.begin (); it != map.end (); it++)
     {
-      if(rvalue <= ((double) it->second.GetMilliSeconds ()) / (double) (w_sum)) //inverse transfrom sampling on normalized values
+      if(it->first != inFace_id)
       {
-        return it->first;
+        sum += 1.0 / ((double) it->second.GetMilliSeconds () * (double) (w_sum));
+        if(rvalue <=  sum)//inverse transfrom sampling on normalized values
+        {
+          return it->first;
+        }
       }
     }
   }
-
   return DROP_FACE_ID;
 }
 
@@ -69,7 +78,7 @@ void FaceControllerEntry::satisfiedInterest(int face_id, ns3::Time delay)
   if(it != map.end ())
   {
     //there is no averaging mechanism suggested in the paper, thus we use an exponential moving average
-    map[face_id] = 0.95*map[face_id] + 0.05*delay;
+    map[face_id] = ns3::MilliSeconds(round((0.95*(double)map[face_id].GetMilliSeconds () + 0.05*(double)delay.GetMilliSeconds ())));
   }
 }
 
@@ -80,7 +89,7 @@ void FaceControllerEntry::addAlternativeGoodFace(int face_id)
     return; //already known
 
   //else add alternative path with some default rtt-delay
-  //we can not estimate the delay, and the paper does not provide a default value so we just take 2 sec as default!
+  //we can not estimate the delay, and the paper does not provide a default value so we just take 1 sec as default!
   map[face_id] = ns3::Time(DEFAULT_DELAY);
 }
 

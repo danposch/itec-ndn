@@ -3,11 +3,12 @@
 
 #include <map>
 #include <string>
+#include <math.h>
 
 #include "ns3/timer.h"
 #include "../../../utils/parameterconfiguration.h"
 
-#define DEFAULT_DELAY "2000.0ms"
+#define DEFAULT_DELAY "1000.0ms"
 
 namespace nfd
 {
