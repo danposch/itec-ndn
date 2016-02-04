@@ -31,7 +31,7 @@ int FaceControllerEntry::determineOutFace (int inFace_id, double rvalue)
 {
   if (map.size () == 1)
   {
-    return map.begin ()->first;
+    return map.begin ()->first; //typcial case for router
   }
   else if(map.size () > 0)
   {
@@ -78,7 +78,7 @@ void FaceControllerEntry::satisfiedInterest(int face_id, ns3::Time delay)
   if(it != map.end ())
   {
     //there is no averaging mechanism suggested in the paper, thus we use an exponential moving average
-    map[face_id] = ns3::MilliSeconds(round((0.95*(double)map[face_id].GetMilliSeconds () + 0.05*(double)delay.GetMilliSeconds ())));
+    map[face_id] = ns3::MilliSeconds(round((0.9*(double)map[face_id].GetMilliSeconds () + 0.1*(double)delay.GetMilliSeconds ())));
   }
 }
 
