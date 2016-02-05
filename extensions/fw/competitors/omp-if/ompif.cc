@@ -13,6 +13,8 @@ OMPIF::OMPIF(Forwarder &forwarder, const Name &name) : Strategy(forwarder, name)
 
 OMPIF::~OMPIF()
 {
+  for(InterestTimeOutMap::iterator it = timeOutMap.begin (); it != timeOutMap.end (); it++)
+    ns3::Simulator::Cancel (it->second); // cancel all open events
 }
 
 void OMPIF::afterReceiveInterest(const Face& inFace, const Interest& interest ,shared_ptr<fib::Entry> fibEntry, shared_ptr<pit::Entry> pitEntry)
@@ -26,17 +28,22 @@ void OMPIF::afterReceiveInterest(const Face& inFace, const Interest& interest ,s
   std::string prefix = extractContentPrefix(pitEntry->getInterest().getName());
 
   //lets start with OMPIF strategy here
-  if(fMap.find (prefix) != fMap.end ()) //
+  if(fMap.find (prefix) != fMap.end ()) //search FC-entry
   {
     boost::shared_ptr<FaceControllerEntry> entry = fMap[prefix];
 
     double rvalue = randomVariable.GetValue ();
-    int nextHop = entry->determineOutFace(inFace.getId (),rvalue);
+    int nextHop = entry->determineOutFace(inFace.getId (),rvalue); //get nexthop from entry
     if(nextHop != DROP_FACE_ID)
     {
-      DelayFaceMap dMap;
-      dMap[nextHop] = ns3::Simulator::Now ();
-      pitMap[pitEntry]=dMap;
+      //check if we observe the time out of the first arrived interest for this pit entry
+      if(timeOutMap.find (pitEntry) == timeOutMap.end ())
+      {
+        //if not start observing as client rtx may keep pit-entries alive... and we may never see an expire event..
+        int ltime = boost::chrono::duration_cast<boost::chrono::milliseconds>(interest.getInterestLifetime ()).count();
+        timeOutMap[pitEntry] = ns3::Simulator::Schedule(ns3::MilliSeconds(ltime), &OMPIF::onInterestTimeOut, this, pitEntry, nextHop);
+      }
+      pitMap[pitEntry][nextHop] = ns3::Simulator::Now (); //update delay measurment entry for this face
       sendInterest(pitEntry, getFaceTable ().get (nextHop));
       return;
     }
@@ -60,8 +67,34 @@ void OMPIF::afterReceiveInterest(const Face& inFace, const Interest& interest ,s
      pitMap[pitEntry]=dMap; //only store in measurement map if forwarding was possible
 }
 
+void OMPIF::onInterestTimeOut(shared_ptr<pit::Entry> pitEntry, int face)
+{
+  std::string prefix = extractContentPrefix(pitEntry->getName());
+
+  if(fMap.find (prefix) != fMap.end ()) //
+  {
+
+    fMap[prefix]->expiredInterest(face); // this will mark the face as unreliable
+  }
+
+  InterestTimeOutMap::iterator iit = timeOutMap.find (pitEntry); // erase the entry in the even table
+  if(iit != timeOutMap.end ())
+  {
+    timeOutMap.erase (iit); // cancel time event obsvering the first interest for this entry
+  }
+  else
+    fprintf(stderr, "Invalid  InterestTimeOutMap::iterator in onInterestTimeOut\n");
+}
+
 void OMPIF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
 {
+  InterestTimeOutMap::iterator iit = timeOutMap.find (pitEntry);
+  if(iit != timeOutMap.end ())
+  {
+    ns3::Simulator::Cancel (iit->second); //cancel time event if we were observing it
+    timeOutMap.erase (iit); //and delete it from map
+  }
+
   PitMap::iterator pit = pitMap.find (pitEntry);
   if(pit == pitMap.end ())
   {
@@ -106,7 +139,16 @@ void OMPIF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 
   PitMap::iterator it = pitMap.find (pitEntry);
   if(it != pitMap.end ())
+  {
     pitMap.erase (it);
+  }
+
+  InterestTimeOutMap::iterator iit = timeOutMap.find (pitEntry);
+  if(iit != timeOutMap.end ())
+  {
+    ns3::Simulator::Cancel (iit->second); //cancel time event if we were observing it
+    timeOutMap.erase (iit); //and delete it from map
+  }
 
   Strategy::beforeExpirePendingInterest(pitEntry);
 }
@@ -123,7 +165,6 @@ void OMPIF::onUnsolicitedData(const Face& inFace, const Data& data)
       fMap[prefix]->addAlternativeGoodFace(inFace.getId ());
     }
   } // router does not use multiple faces to ensure node disjointnes
-
   Strategy::onUnsolicitedData (inFace,data);
 }
 
@@ -136,28 +177,4 @@ std::string OMPIF::extractContentPrefix(nfd::Name name)
     prefix.append (name.get (i).toUri ());
   }
   return prefix;
-}
-
-std::vector<int> OMPIF::getAllOutFaces(shared_ptr<pit::Entry> pitEntry)
-{
-  std::vector<int> faces;
-  const nfd::pit::OutRecordCollection records = pitEntry->getOutRecords();
-
-  for(nfd::pit::OutRecordCollection::const_iterator it = records.begin (); it!=records.end (); ++it)
-    faces.push_back((*it).getFace()->getId());
-
-  return faces;
-}
-
-std::vector<int> OMPIF::getAllInFaces(shared_ptr<pit::Entry> pitEntry)
-{
-  std::vector<int> faces;
-  const nfd::pit::InRecordCollection records = pitEntry->getInRecords();
-
-  for(nfd::pit::InRecordCollection::const_iterator it = records.begin (); it!=records.end (); ++it)
-  {
-    if(! (*it).getFace()->isLocal())
-      faces.push_back((*it).getFace()->getId());
-  }
-  return faces;
 }

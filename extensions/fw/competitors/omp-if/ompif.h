@@ -28,6 +28,8 @@
 #include "../../../utils/parameterconfiguration.h"
 #include "facecontrollerentry.h"
 
+#include "boost/chrono.hpp"
+
 namespace nfd
 {
 namespace fw
@@ -52,8 +54,8 @@ public:
   OMPIF(Forwarder &forwarder, const Name &name = STRATEGY_NAME);
 
   std::string extractContentPrefix(nfd::Name name);
-  std::vector<int> getAllOutFaces(shared_ptr<pit::Entry> pitEntry);
-  std::vector<int> getAllInFaces(shared_ptr<pit::Entry> pitEntry);
+
+  void onInterestTimeOut(shared_ptr<pit::Entry> pitEntry, int face);
 
   ns3::UniformVariable randomVariable;
 
@@ -63,6 +65,13 @@ public:
   > FaceControllerMap;
 
   FaceControllerMap fMap;
+
+  typedef std::map<
+  shared_ptr< pit::Entry >,
+  ns3::EventId
+  > InterestTimeOutMap;
+
+  InterestTimeOutMap timeOutMap;
 
   typedef std::map<
   int /*face_id*/,
