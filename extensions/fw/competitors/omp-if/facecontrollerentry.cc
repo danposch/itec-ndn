@@ -72,7 +72,7 @@ void FaceControllerEntry::expiredInterest(int face_id)
   }
 }
 
-void FaceControllerEntry::satisfiedInterest(int face_id, ns3::Time delay)
+void FaceControllerEntry::satisfiedInterest(int face_id, ns3::Time delay, OMPIFType type)
 {
   GoodFaceMap::iterator it = map.find (face_id);
   if(it != map.end ())
@@ -80,9 +80,11 @@ void FaceControllerEntry::satisfiedInterest(int face_id, ns3::Time delay)
     //there is no averaging mechanism suggested in the paper, thus we use an exponential moving average
     map[face_id] = ns3::MilliSeconds(round((0.9*(double)map[face_id].GetMilliSeconds () + 0.1*(double)delay.GetMilliSeconds ())));
   }
+  else if(type == OMPIFType::Client || map.size () == 0) //only add if client if map size > 0
+    map[face_id] = delay; //new entry
 }
 
-void FaceControllerEntry::addAlternativeGoodFace(int face_id)
+void FaceControllerEntry::addAlternativeGoodFace(int face_id, OMPIFType type)
 {
   //check if face is known
   if(map.find (face_id) != map.end ())
@@ -90,10 +92,8 @@ void FaceControllerEntry::addAlternativeGoodFace(int face_id)
 
   //else add alternative path with some default rtt-delay
   //we can not estimate the delay, and the paper does not provide a default value so we just take 1 sec as default!
-  map[face_id] = ns3::Time(DEFAULT_DELAY);
+  if(type == OMPIFType::Client || map.size () == 0)
+    map[face_id] = ns3::Time(DEFAULT_DELAY);
 }
 
-void FaceControllerEntry::addGoodFace (int face_id, ns3::Time delay)
-{
-  map[face_id] = delay;
-}
+

@@ -15,6 +15,8 @@ namespace nfd
 namespace fw
 {
 
+enum OMPIFType {Client = 0, Router = 1, Invalid = 2};
+
 class FaceControllerEntry
 {
 public:
@@ -28,10 +30,9 @@ public:
   int determineOutFace(int inFace_id, double rvalue);
 
   void expiredInterest(int face_id);
-  void satisfiedInterest(int face_id, ns3::Time delay);
+  void satisfiedInterest(int face_id, ns3::Time delay, OMPIFType type);
 
-  void addAlternativeGoodFace(int face_id);
-  void addGoodFace(int face_id, ns3::Time delay);
+  void addAlternativeGoodFace(int face_id, OMPIFType type);
 
 protected:
 

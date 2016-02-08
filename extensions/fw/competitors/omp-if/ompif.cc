@@ -47,10 +47,12 @@ void OMPIF::afterReceiveInterest(const Face& inFace, const Interest& interest ,s
       sendInterest(pitEntry, getFaceTable ().get (nextHop));
       return;
     }
-    //else continue with broadcast
+    //else continue with broadcast probing
   }
 
-  const fib::NextHopList& nexthops = fibEntry->getNextHops();
+  fib::NextHopList nexthops = fib::NextHopList(fibEntry->getNextHops()); //create copy as we need to shuffle
+  std::random_shuffle(nexthops.begin (), nexthops.end(), randomShuffle);
+
   DelayFaceMap dMap;
 
    for (fib::NextHopList::const_iterator it = nexthops.begin(); it != nexthops.end(); ++it)
@@ -73,7 +75,6 @@ void OMPIF::onInterestTimeOut(shared_ptr<pit::Entry> pitEntry, int face)
 
   if(fMap.find (prefix) != fMap.end ()) //
   {
-
     fMap[prefix]->expiredInterest(face); // this will mark the face as unreliable
   }
 
@@ -82,8 +83,6 @@ void OMPIF::onInterestTimeOut(shared_ptr<pit::Entry> pitEntry, int face)
   {
     timeOutMap.erase (iit); // cancel time event obsvering the first interest for this entry
   }
-  else
-    fprintf(stderr, "Invalid  InterestTimeOutMap::iterator in onInterestTimeOut\n");
 }
 
 void OMPIF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data)
@@ -107,19 +106,14 @@ void OMPIF::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,const Face& in
     if(it->first == inFace.getId ())
     {
       std::string prefix = extractContentPrefix(data.getName());
-      if(fMap.find (prefix) != fMap.end ())
+      if(fMap.find (prefix) == fMap.end ())
       {
-        fMap[prefix]->satisfiedInterest(inFace.getId (), ns3::Simulator::Now ()-it->second);
+        fMap[prefix] = boost::shared_ptr<FaceControllerEntry>(new FaceControllerEntry(prefix)); //add new entry
       }
-      else
-      {
-        fMap[prefix] = boost::shared_ptr<FaceControllerEntry>(new FaceControllerEntry(prefix));
-        fMap[prefix]->addGoodFace(inFace.getId (), ns3::Simulator::Now () - it->second);
-      }
+      fMap[prefix]->satisfiedInterest(inFace.getId (), ns3::Simulator::Now ()-it->second, type); // log satisfied interest
       break;
     }
   }
-
   pitMap.erase (pit);
   Strategy::beforeSatisfyInterest(pitEntry,inFace,data);
 }
@@ -155,16 +149,13 @@ void OMPIF::beforeExpirePendingInterest(shared_ptr< pit::Entry > pitEntry)
 
 void OMPIF::onUnsolicitedData(const Face& inFace, const Data& data)
 {
-  if(type == OMPIFType::Client)
-  {
-    std::string prefix = extractContentPrefix(data.getName());
+  std::string prefix = extractContentPrefix(data.getName());
 
-    //check if data prefix is known
-    if(fMap.find (prefix) != fMap.end ()) //
-    {
-      fMap[prefix]->addAlternativeGoodFace(inFace.getId ());
-    }
-  } // router does not use multiple faces to ensure node disjointnes
+  //check if data prefix is known
+  if(fMap.find (prefix) != fMap.end ()) //
+  {
+    fMap[prefix]->addAlternativeGoodFace(inFace.getId (), type);
+  }
   Strategy::onUnsolicitedData (inFace,data);
 }
 

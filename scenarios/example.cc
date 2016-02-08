@@ -158,7 +158,10 @@ int main (int argc, char *argv[])
   else if(strategy.compare ("broadcast") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/broadcast");
   else if(strategy.compare ("ompif") == 0)
+  {
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMPIFRouter>(gen.getAllASNodes (),"/");
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMPIFClient>(client,"/");
+  }
   else if (strategy.compare ("omccrf") == 0)
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
   else if (strategy.compare ("oracle") == 0)

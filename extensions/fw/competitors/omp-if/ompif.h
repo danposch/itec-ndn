@@ -29,13 +29,12 @@
 #include "facecontrollerentry.h"
 
 #include "boost/chrono.hpp"
+#include <algorithm>
 
 namespace nfd
 {
 namespace fw
 {
-
-enum OMPIFType {Client = 0, Router = 1, Invalid = 2};
 
 class OMPIF : public nfd::fw::Strategy
 {
@@ -58,6 +57,9 @@ public:
   void onInterestTimeOut(shared_ptr<pit::Entry> pitEntry, int face);
 
   ns3::UniformVariable randomVariable;
+
+  static int randomShuffle(int i) { ns3::UniformVariable r;
+                                    return r.GetInteger (0,i-1);}
 
   typedef std::map<
   std::string /*prefix*/,

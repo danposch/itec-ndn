@@ -55,3 +55,4 @@ scenarios/example_heatmap.cc
 scenarios/comsoc.cc
 topologies/ompif-test.top
 scenarios/ompif.cc
+scenarios/simple-ompif.cc
