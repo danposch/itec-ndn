@@ -150,6 +150,8 @@ def getScenarioName(config,connectivity,strategy,linkfailure):
 		name += "OMCCRF"
 	elif("fw-strategy=oracle" in strategy):
 		name += "NRR"
+	elif("fw-strategy=ompif" in strategy):
+		name += "OMPIF"
 	else:
 		name += "UnknownStrategy"
 
@@ -228,9 +230,10 @@ broadcast="--fw-strategy=broadcast " + allRoute
 saf="--fw-strategy=saf " + allRoute
 omccrf="--fw-strategy=omccrf " + allRoute
 oracle="--fw-strategy=oracle " + allRoute
+ompif="--fw-strategy=ompif " + allRoute
 
 #forwardingStrategies = [bestRoute, broadcast, saf, oracle, omccrf] #ncc
-forwardingStrategies = [ncc]
+forwardingStrategies = [ompif]
 
 #linkFailures = ["--linkFailures=0", "--linkFailures=15", "--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]
 #linkFailures = ["--linkFailures=30", "--linkFailures=50", "--linkFailures=100"]

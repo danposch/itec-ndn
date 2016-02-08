@@ -9,6 +9,8 @@
 
 #include "../extensions/randnetworks/networkgenerator.h"
 #include "../extensions/fw/saf.h"
+#include "../extensions/fw/competitors/omp-if/ompif-router.h"
+#include "../extensions/fw/competitors/omp-if/ompif-client.h"
 #include "../extensions/fw/competitors/rfa/OMCCRF.h"
 #include "../extensions/fw/competitors/inrr/oracle.h"
 #include "../extensions/fw/competitors/inrr/oraclecontainer.h"
@@ -154,6 +156,8 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/ncc");
   else if(strategy.compare ("broadcast") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(gen.getAllASNodes (), "/", "/localhost/nfd/strategy/broadcast");
+  else if(strategy.compare ("ompif") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMPIFRouter>(gen.getAllASNodes (),"/");
   else if (strategy.compare ("omccrf") == 0)
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
   else if (strategy.compare ("oracle") == 0)
