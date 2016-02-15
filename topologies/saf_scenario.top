@@ -1,0 +1,66 @@
+router
+
+Router0       NA       35       5
+Router1       NA       30       5
+Router2       NA       28       10
+
+RouterA       NA       35       14
+
+RouterE       NA       35       15
+
+RouterNet0    NA       40       20
+RouterNet1    NA       35       20
+RouterNet2    NA       30       20
+
+VideoSrc   NA       38       25
+VoIPSrc   NA       35       25
+DataSrc   NA       32       25
+
+VideoStreamer0   NA       37       1
+VoIPStreamer0   NA       35       0
+DataStreamer0   NA       33       0
+
+VideoStreamer1   NA       30       0
+VoIPStreamer1   NA       28       0
+DataStreamer1   NA       26       1
+
+VideoStreamer2   NA       25       8
+VoIPStreamer2   NA       25       12
+
+link
+# srcNode    dstNode    bandwidth   metric    delay  queue
+Router0     Router1      10Mbps      1      1ms    50
+Router0     RouterA      10Mbps      1      1ms    50
+Router1     Router2      10Mbps      1      1ms    50
+Router2     RouterA      10Mbps      1      1ms    50
+
+RouterA     RouterE      100Mbps    1      0.1ms    50
+
+Router0     VideoStreamer0 5Mbps      1      1ms    50
+Router0     VoIPStreamer0  5Mbps      1      1ms    50
+Router0     DataStreamer0  5Mbps      1      1ms    50
+
+Router1    VideoStreamer1 5Mbps      1      1ms    50
+Router1    VoIPStreamer1  5Mbps      1      1ms    50
+Router1    DataStreamer1  5Mbps      1      1ms    50
+
+Router2     VideoStreamer2 5Mbps     1      1ms    50
+Router2     VoIPStreamer2  5Mbps     1      1ms    50
+
+RouterE     RouterNet0  10Mbps      1        10ms    50
+RouterE     RouterNet1  10Mbps      1      100ms    50
+RouterE     RouterNet2  10Mbps      1      250ms    50
+
+RouterNet0     VideoSrc 100Mbps      1      0.1ms    50
+RouterNet0     VoIPSrc  100Mbps      1      0.1ms    50
+RouterNet0     DataSrc  100Mbps      1      0.1ms    50
+
+RouterNet1     VideoSrc 100Mbps      1      0.1ms    50
+RouterNet1     VoIPSrc  100Mbps      1      0.1ms    50
+RouterNet1     DataSrc  100Mbps      1      0.1ms    50
+
+RouterNet2     VideoSrc 100Mbps      1      0.1ms    50
+RouterNet2     VoIPSrc  100Mbps      1      0.1ms    50
+RouterNet2     DataSrc  100Mbps      1      0.1ms    50
+
+

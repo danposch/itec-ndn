@@ -29,6 +29,7 @@ extensions/fw/limits/facelimitmanager.cc
 scenarios/fwt_fairness_small.cc
 scenarios/fwt_delay.cc
 topologies/fwt_delay.top
+topologies/example.top
 scenarios/amus.cc
 scenarios/dash.cc
 scenarios/context-content-dash.cc
@@ -56,3 +57,7 @@ scenarios/comsoc.cc
 topologies/ompif-test.top
 scenarios/ompif.cc
 scenarios/simple-ompif.cc
+topologies/saf_scenario.top
+scenarios/saf_scenario.cc
+extensions/fw/safmeasurefactory.h
+extensions/fw/safmeasurefactory.cc
