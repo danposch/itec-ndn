@@ -20,8 +20,8 @@ SAFMeasureFactory* SAFMeasureFactory::getInstance()
 boost::shared_ptr<SAFStatisticMeasure> SAFMeasureFactory::getMeasure(std::string name, std::vector<int> faces)
 {
   MeasureMap::iterator match = mmap.end ();
-  int matching_chars = 0;
-  int longest_match;
+  unsigned int matching_chars = 0;
+  unsigned int longest_match = 0;
 
   for(MeasureMap::iterator it = mmap.begin (); mmap.end () != it; it++)
   {
@@ -33,7 +33,7 @@ boost::shared_ptr<SAFStatisticMeasure> SAFMeasureFactory::getMeasure(std::string
       matching_chars++;
 
     if(matching_chars > 0 // is match
-       && (matching_chars == name.size () || (matching_chars < name.size () && name[matching_chars] == '/' || it->first.size() == 1) //is full component match
+       && (matching_chars == name.size () || ((matching_chars < name.size () && name[matching_chars] == '/' )|| it->first.size() == 1) //is full component match
        && longest_match < matching_chars)) // is longer match
     {
       longest_match = matching_chars;
