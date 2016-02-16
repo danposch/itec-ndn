@@ -15,7 +15,8 @@ public:
   virtual void logSatisfiedInterest(shared_ptr<pit::Entry> pitEntry,const Face& inFace, const Data& data);
 
 protected:
-  time::steady_clock::Duration curMaxDelay;
+  //time::steady_clock::Duration curMaxDelay;
+  int curMaxDelay;
 };
 
 }

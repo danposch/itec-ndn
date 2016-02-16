@@ -33,8 +33,8 @@ boost::shared_ptr<SAFStatisticMeasure> SAFMeasureFactory::getMeasure(std::string
       matching_chars++;
 
     if(matching_chars > 0 // is match
-       && (matching_chars == name.size () || ((matching_chars < name.size () && name[matching_chars] == '/' )|| it->first.size() == 1) //is full component match
-       && longest_match < matching_chars)) // is longer match
+       && (matching_chars == name.size () || ((matching_chars < name.size () && name[matching_chars] == '/' )|| it->first.size() == 1)) //is full component match
+       && longest_match < matching_chars) // is longer match
     {
       longest_match = matching_chars;
       match = it;
@@ -43,7 +43,7 @@ boost::shared_ptr<SAFStatisticMeasure> SAFMeasureFactory::getMeasure(std::string
 
   if(mmap.end () != match)
   {
-    //fprintf(stderr, "Found match for %s: %s\n", name.c_str (), match->first.c_str());
+    fprintf(stderr, "Found match for %s: %s\n", name.c_str (), match->first.c_str());
 
     switch (match->second)
     {
