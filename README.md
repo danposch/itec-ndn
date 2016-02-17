@@ -53,7 +53,7 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 
 		# (RECOMMENDED) checkout verified compatible versions of ndn-cxx and ndnsim
     * cd ndn-cxx
-		* git checkout 9bd4d9832ac16021ba956bb3a0bfb16199572e32
+		* git checkout ndn-cxx-0.3.2
 		* cd ..
     * cd ns-3/src/ndnSIM/
 		* git checkout 86a881d9898df74fa4cfd8e85684a3ae81ab02e6
