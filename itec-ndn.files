@@ -22,6 +22,8 @@ extensions/fw/mratio.h
 extensions/fw/mratio.cc
 extensions/fw/mdelay.h
 extensions/fw/mdelay.cc
+extensions/fw/mhop.h
+extensions/fw/mhop.cc
 extensions/fw/limits/limiter.cc
 extensions/fw/limits/limiter.h
 extensions/fw/limits/facelimitmanager.h
@@ -54,6 +56,7 @@ extensions/utils/extendedglobalroutinghelper.h
 extensions/utils/extendedglobalroutinghelper.cc
 scenarios/example_heatmap.cc
 scenarios/comsoc.cc
+scenarios/simple-saf.cc
 topologies/ompif-test.top
 scenarios/ompif.cc
 scenarios/simple-ompif.cc
