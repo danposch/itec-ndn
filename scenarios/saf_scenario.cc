@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
     consumerVideoHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
 
     ApplicationContainer consumer = consumerVideoHelper.Install (videoStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,0)));
+    consumer.Start (Seconds(r->GetInteger (0,1)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (videoStreamers.Get (i), std::string(outputFolder + "/videostreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
 
   //install voip consumers
   ns3::ndn::AppHelper consumerVOIPHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
-  consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("60")); //30 kbit with 64 byte large chunks
+  consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("100")); //1 packet every 10ms, https://goo.gl/TJF8S 56 kbits; with 70 byte large chunks = 100*70*8 = 56000 bit/s
   consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("uniform"));
   consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.15s"));
 
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
   {
     consumerVOIPHelper.SetPrefix(std::string("/voip/" + boost::lexical_cast<std::string>(i) + "/"));
     ApplicationContainer consumer = consumerVOIPHelper.Install (voipStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,0)));
+    consumer.Start (Seconds(r->GetInteger (0,1)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (voipStreamers.Get (i), std::string(outputFolder + "/voipstreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -237,8 +237,8 @@ int main(int argc, char* argv[])
   }
 
   //install data consumers
-  ns3::ndn::AppHelper consumerDataHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
-  consumerDataHelper.SetAttribute ("Frequency", StringValue ("60")); //2 Mbit with 4096 byte large chunks
+  ns3::ndn::AppHelper consumerDataHelper ("ns3::ndn::ConsumerCbr");
+  consumerDataHelper.SetAttribute ("Frequency", StringValue ("90")); //3 Mbit with 4096 byte large chunks
   consumerDataHelper.SetAttribute ("Randomize", StringValue ("uniform"));
   consumerDataHelper.SetAttribute ("LifeTime", StringValue("2s"));
 
@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
   {
     consumerDataHelper.SetPrefix(std::string("/data/" + boost::lexical_cast<std::string>(i) + "/"));
     ApplicationContainer consumer = consumerDataHelper.Install (dataStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,0)));
+    consumer.Start (Seconds(r->GetInteger (0,1)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (dataStreamers.Get (i), std::string(outputFolder + "/datastreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 
   ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   Ptr<Node> voipSrc = Names::Find<Node>("VoIPSrc");
-  producerHelper.SetAttribute ("PayloadSize", StringValue("64"));
+  producerHelper.SetAttribute ("PayloadSize", StringValue("70")); // 70 byte
   for(int i=0; i < videoStreamers.size (); i++)
   {
     std::string pref = "/voip/"+boost::lexical_cast<std::string>(i);
