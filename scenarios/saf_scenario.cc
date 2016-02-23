@@ -137,8 +137,7 @@ int main(int argc, char* argv[])
   ndnHelper.Install (SAFRouter);
 
   //set prefix components for forwarding
-  ParameterConfiguration::getInstance()->setParameter("PREFIX_COMPONENT", 1); // set to prefix componen
-  ParameterConfiguration::getInstance()->setParameter("SAF_USE_MULTIPLE_MEASURES", 1);
+  ParameterConfiguration::getInstance()->setParameter("PREFIX_COMPONENT", 0); // set to prefix componen
 
   //install SAF on routers
 

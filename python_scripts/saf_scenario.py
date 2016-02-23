@@ -209,7 +209,7 @@ def threadFinished(job_number,src,dst,returncode):
 	if(returncode != 0):
 		invalid_runs += 1
 		print "Error in job_" + str(job_number) +". Simulation incomplete!"
-	else: //TODO ADD THIS IF AGAIN
+	else:
 		print "computeStats(job_" + str(job_number) + ")"
 		try:
 			#print src
@@ -298,9 +298,9 @@ def getScenarioName(strategy):
 	elif("fw-strategy=omccrf" in strategy):
 		name += "OMCCRF"
 	elif("fw-strategy=oracle" in strategy):
-    name += "NRR"
+		name += "NRR"
 	elif("fw-strategy=ompif" in strategy):
-    name += "OMPIF"
+		name += "OMPIF"
 	else:
 		name += "UnknownStrategy"
 
