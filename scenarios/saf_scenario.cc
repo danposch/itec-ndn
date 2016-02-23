@@ -20,33 +20,45 @@
 #include "ns3/ndn-all.hpp"
 
 #include "../extensions/fw/saf.h"
+#include "../extensions/fw/competitors/omp-if/ompif-router.h"
+#include "../extensions/fw/competitors/omp-if/ompif-client.h"
+#include "../extensions/fw/competitors/rfa/OMCCRF.h"
+#include "../extensions/fw/competitors/inrr/oracle.h"
+#include "../extensions/fw/competitors/inrr/oraclecontainer.h"
 #include "../extensions/utils/parameterconfiguration.h"
 #include "../extensions/fw/safmeasurefactory.h"
+#include "ns3/ndnSIM/utils/tracers/ndn-dashplayer-tracer.hpp"
+#include "../extensions/utils/extendedglobalroutinghelper.h"
 
 using namespace ns3;
 
 int main(int argc, char* argv[])
 {
-
   std::string outputFolder = "output/";
+  std::string strategy = "bestRoute";
+  std::string topologyFile = "topologies/saf_scenario.top";
 
   CommandLine cmd;
   cmd.AddValue ("outputFolder", "defines specific output subdir", outputFolder);
+  cmd.AddValue ("topology", "path to the required topology file", topologyFile);
+  cmd.AddValue ("fw-strategy", "Forwarding Strategy", strategy);
   cmd.Parse (argc, argv);
 
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/", nfd::fw::SAFStatisticMeasure::MHop);
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/", std::string("MaxHops"), std::string("5"));
   nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/", nfd::fw::SAFStatisticMeasure::MThroughput);
   nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MDelay);
   nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("MaxDelayMS"), std::string("250"));
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MDelay);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("MaxDelayMS"), std::string("1000"));
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MDelay);
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("MaxDelayMS"), std::string("1000"));
 
   //parse the topology
   AnnotatedTopologyReader topologyReader ("", 5);
-  topologyReader.SetFileName ("topologies/saf_scenario.top");
+  topologyReader.SetFileName (topologyFile);
   topologyReader.Read();
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
-  int simTime = 60; //seconds
+  int simTime = 2880; //seconds
 
   //grep the nodes
   NodeContainer routers;
@@ -129,32 +141,90 @@ int main(int argc, char* argv[])
   ParameterConfiguration::getInstance()->setParameter("SAF_USE_MULTIPLE_MEASURES", 1);
 
   //install SAF on routers
-  ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(SAFRouter,"/");
+
+
+  if(strategy.compare ("saf") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(SAFRouter,"/");
+  else if(strategy.compare ("bestRoute") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install(SAFRouter, "/", "/localhost/nfd/strategy/best-route");
+  else if(strategy.compare ("ncc") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install(SAFRouter, "/", "/localhost/nfd/strategy/ncc");
+  else if(strategy.compare ("broadcast") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install(SAFRouter, "/", "/localhost/nfd/strategy/broadcast");
+  else if(strategy.compare ("ompif") == 0)
+  {
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMPIFRouter>(SAFRouter,"/");
+  }
+  else if (strategy.compare ("omccrf") == 0)
+    ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(SAFRouter,"/");
+  else if (strategy.compare ("oracle") == 0)
+  {
+    NodeContainer allNodes;
+    allNodes.Add (routers);
+    allNodes.Add (videoStreamers);
+    allNodes.Add (voipStreamers);
+    allNodes.Add (dataStreamers);
+    allNodes.Add (providers);
+    allNodes.Add (SAFRouter);
+
+    //somehow distribute the knowlege of the nodes to the strategys...
+    for(int i = 0; i < allNodes.size(); i++)
+    {
+      std::string oldname = Names::FindName (allNodes.Get (i));
+      std::string newname = "StrategyNode" + boost::lexical_cast<std::string>(i);
+
+      Names::Rename (oldname, newname);
+      nfd::fw::StaticOracaleContainer::getInstance()->insertNode("StrategyNode" + boost::lexical_cast<std::string>(i), allNodes.Get (i));
+      Names::Rename (newname, oldname);
+
+      if(oldname.compare ("RouterE") == 0)
+      {
+        ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::Oracle>(allNodes.Get (i),"/");
+        fprintf(stderr, "Oracle Installed\n");
+      }
+    }
+  }
+  else
+  {
+    fprintf(stderr, "Invalid Strategy::%s!\n",strategy.c_str ());
+    exit(-1);
+  }
 
   // Install NDN applications
 
   //install video consumers
-  ns3::ndn::AppHelper consumerVideoHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
-  consumerVideoHelper.SetAttribute ("Frequency", StringValue ("60")); //1 MBit with 2048 byte large chunks
-  consumerVideoHelper.SetAttribute ("Randomize", StringValue ("uniform"));
+  ns3::ndn::AppHelper consumerVideoHelper("ns3::ndn::FileConsumerCbr::MultimediaConsumer");
+  consumerVideoHelper.SetAttribute("AllowUpscale", BooleanValue(true));
+  consumerVideoHelper.SetAttribute("AllowDownscale", BooleanValue(false));
+  consumerVideoHelper.SetAttribute("ScreenWidth", UintegerValue(1920));
+  consumerVideoHelper.SetAttribute("ScreenHeight", UintegerValue(1080));
+  consumerVideoHelper.SetAttribute("StartRepresentationId", StringValue("auto"));
+  consumerVideoHelper.SetAttribute("AdaptationLogic", StringValue("dash::player::SVCBufferBasedAdaptationLogic"));
+  consumerVideoHelper.SetAttribute("MaxBufferedSeconds", UintegerValue(50));
+  consumerVideoHelper.SetAttribute("TraceNotDownloadedSegments", BooleanValue(true));
+  consumerVideoHelper.SetAttribute("StartUpDelay", DoubleValue(2.0));
   consumerVideoHelper.SetAttribute ("LifeTime", StringValue("1s"));
 
   for(int i=0; i<videoStreamers.size (); i++)
   {
-    consumerVideoHelper.SetPrefix(std::string("/video/" + boost::lexical_cast<std::string>(i) + "/"));
+    //consumerVideoHelper.SetPrefix(std::string("/video/" + boost::lexical_cast<std::string>(i) + "/"));
+    std::string mpd("/video/" + boost::lexical_cast<std::string>(i) +"/3layers-video" + boost::lexical_cast<std::string>(i) + ".mpd.gz");
+    consumerVideoHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
+
     ApplicationContainer consumer = consumerVideoHelper.Install (videoStreamers.Get (i));
     consumer.Start (Seconds(r->GetInteger (0,0)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (videoStreamers.Get (i), std::string(outputFolder + "/videostreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
     ns3::ndn::AppDelayTracer::Install(videoStreamers.Get (i),std::string(outputFolder +"/videostreamer-app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
+    ns3::ndn::DASHPlayerTracer::Install(videoStreamers.Get (i), std::string(outputFolder +"/videostreamer-dashplayer-trace_" + boost::lexical_cast<std::string>(i)).append(".txt"));
   }
 
   //install voip consumers
   ns3::ndn::AppHelper consumerVOIPHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
   consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("60")); //30 kbit with 64 byte large chunks
   consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("uniform"));
-  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("1s"));
+  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.15s"));
 
   for(int i=0; i<voipStreamers.size (); i++)
   {
@@ -171,7 +241,7 @@ int main(int argc, char* argv[])
   ns3::ndn::AppHelper consumerDataHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
   consumerDataHelper.SetAttribute ("Frequency", StringValue ("60")); //2 Mbit with 4096 byte large chunks
   consumerDataHelper.SetAttribute ("Randomize", StringValue ("uniform"));
-  consumerDataHelper.SetAttribute ("LifeTime", StringValue("1s"));
+  consumerDataHelper.SetAttribute ("LifeTime", StringValue("2s"));
 
   for(int i=0; i<dataStreamers.size (); i++)
   {
@@ -187,29 +257,48 @@ int main(int argc, char* argv[])
   ns3::ndn::L3RateTracer::Install (SAFRouter, std::string(outputFolder + "/saf-router-aggregate-trace.txt"), Seconds (simTime));
 
   // Installing global routing interface on all nodes
-  ns3::ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+  ns3::ndn::ExtendedGlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll ();
 
   //install producer application on the providers
-  ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
+  ns3::ndn::AppHelper videoProducerHelper ("ns3::ndn::FileServer");
+  videoProducerHelper.SetAttribute("ContentDirectory", StringValue("/home/dposch/data/concatenated/"));
+  //videoProducerHelper.SetAttribute ("MaxPayloadSize", StringValue("2048"));
 
   Ptr<Node> videoSrc = Names::Find<Node>("VideoSrc");
-  producerHelper.SetPrefix ("/video");
-  producerHelper.SetAttribute ("PayloadSize", StringValue("2048"));
-  producerHelper.Install (videoSrc);
-  ndnGlobalRoutingHelper.AddOrigins("/video", videoSrc);
+  for(int i=0; i < videoStreamers.size (); i++)
+  {
+    std::string pref = "/video/"+boost::lexical_cast<std::string>(i);
+    videoProducerHelper.SetPrefix (pref);
+    videoProducerHelper.Install (videoSrc);
+    ndnGlobalRoutingHelper.AddOrigins(pref, videoSrc);
+  }
 
+  ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   Ptr<Node> voipSrc = Names::Find<Node>("VoIPSrc");
-  producerHelper.SetPrefix ("/voip");
   producerHelper.SetAttribute ("PayloadSize", StringValue("64"));
-  producerHelper.Install (voipSrc);
-  ndnGlobalRoutingHelper.AddOrigins("/voip", voipSrc);
+  for(int i=0; i < videoStreamers.size (); i++)
+  {
+    std::string pref = "/voip/"+boost::lexical_cast<std::string>(i);
+    producerHelper.SetPrefix (pref);
+    producerHelper.Install (voipSrc);
+    ndnGlobalRoutingHelper.AddOrigins(pref, voipSrc);
+  }
 
   Ptr<Node> dataSrc = Names::Find<Node>("DataSrc");
-  producerHelper.SetPrefix ("/data");
   producerHelper.SetAttribute ("PayloadSize", StringValue("4096"));
-  producerHelper.Install (dataSrc);
-  ndnGlobalRoutingHelper.AddOrigins("/data", dataSrc);
+  for(int i=0; i < videoStreamers.size (); i++)
+  {
+    std::string pref = "/data/"+boost::lexical_cast<std::string>(i);
+    producerHelper.SetPrefix (pref);
+    producerHelper.Install (dataSrc);
+    ndnGlobalRoutingHelper.AddOrigins(pref, dataSrc);
+  }
+
+  if(strategy.compare ("oracle") == 0) // calc all routs ammoung the nodes
+  {
+    ndnGlobalRoutingHelper.AddOriginsForAllUsingNodeIds ();
+  }
 
   // Calculate and install FIBs
   ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();

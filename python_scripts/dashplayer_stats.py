@@ -58,6 +58,7 @@ def process_dash_trace(f):
 		stats[SEGMENT_REP_INDEX] /= line_counter
 		stats[SEGMENT_BITRATE_INDEX] /= line_counter
 
+	file.close()
 	#print stats
 	return stats
 
@@ -91,6 +92,7 @@ def process_cs_trace(file):
 			if("CacheMisses" in l[TYPE_INDEX]):
 				stats[l[NODE_INDEX]]['CacheMisses'] += int(l[PACKETS_COUNT_INDEX])
 		
+	f.close()
 	return stats
 
 ###programm#####################################################################
