@@ -64,3 +64,5 @@ topologies/saf_scenario.top
 scenarios/saf_scenario.cc
 extensions/fw/safmeasurefactory.h
 extensions/fw/safmeasurefactory.cc
+topologies/example_tree_network.top
+scenarios/example_tree_network.cc
