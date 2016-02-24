@@ -101,6 +101,8 @@ def generateStatsPerSimulation(rootdir):
 	output_file.write( "Avg Rtx:" + str(sim_avg_number_of_rtx - 1)+"\n")
 	output_file.write( "Cache_Hit_Ratio:" + str(sim_avg_cache_hit_ratio)+"\n")
 
+	output_file.close()
+
 def process_cs_trace(file):
 	#print("process_cs_trace(str(file))
 
@@ -132,6 +134,7 @@ def process_cs_trace(file):
 				stats[l[NODE_INDEX]]['CacheMisses'] += int(l[PACKETS_COUNT_INDEX])
 		
 	#print stats
+	f.close()
 	return stats
 
 def process_app_delay_trace(file):
@@ -176,7 +179,7 @@ def process_app_delay_trace(file):
 				stats[l[NODE_INDEX]]['HopCount'] += float(l[HOP_COUNT_INDEX])
 		
 	#print stats
-
+	f.close()
 	return stats
 
 
@@ -222,6 +225,7 @@ def process_aggregate_trace(file):
 		if("appFace" in l[FACE_DESCRIPTION_INDEX]):
 			stats[l[NODE_INDEX]][l[TYPE_INDEX]] += int(l[PACKET_NR_INDEX])
 	
+	f.close()
 	#print stats
 	return stats
 
