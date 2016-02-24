@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
   topologyReader.Read();
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
-  int simTime = 600; //seconds
+  double simTime = 600.0; //seconds
 
   //grep the nodes
   NodeContainer routers;
