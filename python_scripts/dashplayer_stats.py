@@ -20,6 +20,8 @@ SEGMENT_BITRATE_INDEX = 5
 STALLING_MSEC_INDEX = 6
 
 ALOGIC_NUMBER_SWITCHES_INDEX = 99
+AVG_SEGMENT_SWITCHES_BITRATE_DIFF = 98
+AVG_STALLING_TIME = 97
 
 def process_dash_trace(f):
 	
@@ -30,10 +32,13 @@ def process_dash_trace(f):
 	stats = {SEGMENT_REP_INDEX: 0.0,
 					STALLING_MSEC_INDEX: 0.0,
 					SEGMENT_BITRATE_INDEX: 0.0,
-					ALOGIC_NUMBER_SWITCHES_INDEX: 0.0}
+					ALOGIC_NUMBER_SWITCHES_INDEX: 0.0,
+					AVG_SEGMENT_SWITCHES_BITRATE_DIFF: 0.0,
+					AVG_STALLING_TIME: 0.0}
 	
 	line_counter = 0
 	last_rep_layer = -1
+	last_rep_bitrate = 0.0
 	for line in file:
 		l = re.split(r'\t+',line.rstrip('\t'))		
 		#print l
@@ -48,15 +53,20 @@ def process_dash_trace(f):
 		if line_counter > 1:
 			if(last_rep_layer != l[SEGMENT_REP_INDEX]):
 				stats[ALOGIC_NUMBER_SWITCHES_INDEX] += 1
+				stats[AVG_SEGMENT_SWITCHES_BITRATE_DIFF] += abs(last_rep_bitrate - float(l[SEGMENT_BITRATE_INDEX]))
 				last_rep_layer = l[SEGMENT_REP_INDEX]
+				last_rep_bitrate = float(l[SEGMENT_BITRATE_INDEX])
 		else:
 			last_rep_layer = l[SEGMENT_REP_INDEX]
+			last_rep_bitrate = float(l[SEGMENT_BITRATE_INDEX])
 
 		line_counter += 1
 
 	if(line_counter > 0):
 		stats[SEGMENT_REP_INDEX] /= line_counter
 		stats[SEGMENT_BITRATE_INDEX] /= line_counter
+		stats[AVG_SEGMENT_SWITCHES_BITRATE_DIFF] /= line_counter
+		stats[AVG_STALLING_TIME ] = stats[STALLING_MSEC_INDEX] / line_counter
 
 	file.close()
 	#print stats

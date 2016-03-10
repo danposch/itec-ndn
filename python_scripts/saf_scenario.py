@@ -35,7 +35,7 @@ def generateStats(rootdir):
 	#print data_res
 	
 	#calc costs
-	costs = calcCosts(rootdir)
+	total_costs, avg_costs = calcCosts(rootdir)
 	#print costs
 
 	#write file
@@ -55,8 +55,12 @@ def generateStats(rootdir):
 	output_file.write("Video_StallingMS:" +str(video_res["Avg.StallingMS"]) + "\n")
 	output_file.write("Video_SegmentBitrate:" +str(video_res["Avg.SegmentBitrate"]) + "\n")
 	output_file.write("Video_Switches:" +str(video_res["Avg.Switches"]) + "\n")
+	output_file.write("Avg.QoE.VideoQuality:" +str(video_res["Avg.QoE.VideoQuality"]) + "\n")
+	output_file.write("Avg.QoE.QualityVariations:" +str(video_res["Avg.QoE.QualityVariations"]) + "\n")
+	output_file.write("Avg.QoE.StallingTime:" +str(video_res["Avg.QoE.StallingTime"]) + "\n")
 	output_file.write("\n")
-	output_file.write("Costs:" + str(costs) + "\n")
+	output_file.write("Total_Costs:" + str(total_costs) + "\n")
+	output_file.write("Avg_Costs:" + str(avg_costs) + "\n")
 
 	output_file.close()
 
@@ -91,8 +95,8 @@ def calcCosts(rootdir):
 							total_interests += float(l[PACKET_NR_INDEX])
 				break
 
-	costs /= total_interests	
-	return costs
+	avg_costs = costs / total_interests	
+	return costs, avg_costs
 
 def calcVideoStats(rootdir):
 
@@ -102,6 +106,9 @@ def calcVideoStats(rootdir):
 	avg_representation = 0.0
 	clients = 0
 
+	avg_qoe_variations = 0.0
+	avg_qoe_stalling = 0.0
+	
 	for root, dirs, files in os.walk(rootdir):
 		for f in files:
 			if "videostreamer-dashplayer" in f:			
@@ -114,17 +121,28 @@ def calcVideoStats(rootdir):
 				avg_stalling_duration += ds_stats[6]
 				avg_segment_bitrate += ds_stats[5]
 				avg_representation += ds_stats[4]
+		
+				avg_qoe_variations += ds_stats[98]
+				avg_qoe_stalling += ds_stats[97]
 					
 	avg_number_switches /= clients
 	avg_stalling_duration /= clients
 	avg_segment_bitrate /= clients
 	avg_representation /= clients
+	avg_qoe_variations /= clients
+	avg_qoe_stalling /= clients
 
 	result = {}
 	result["Avg.Switches"] = avg_number_switches
 	result["Avg.StallingMS"] = avg_stalling_duration
 	result["Avg.SegmentBitrate"] = avg_segment_bitrate
 	result["Avg.Representation"] = avg_representation
+
+	#QoE values according to: A Control-Theoretic Approach for Dynamic Adaptive Video Streaming over HTTP
+	result["Avg.QoE.VideoQuality"] = avg_segment_bitrate
+	result["Avg.QoE.QualityVariations"] = avg_qoe_variations
+	result["Avg.QoE.StallingTime"] = avg_qoe_stalling
+	
 
 	return result
 
@@ -136,6 +154,7 @@ def calcSimpleStats(rootdir, filter_str):
 	avg_number_of_hops = 0.0
 	avg_number_of_rtx = 0.0
 	avg_delay_of_request = 0.0
+	avg_delay_var = 0.0
 
 	for root, dirs, files in os.walk(rootdir):
 		for f in files:
@@ -206,18 +225,19 @@ def threadFinished(job_number,src,dst,returncode):
 
 	global curActiveThreads, invalid_runs
 
-	if(returncode != 0):
+	#TODO ADD CODE AGAIN
+	#if(returncode != 0):
+	#	invalid_runs += 1
+	#	print "Error in job_" + str(job_number) +". Simulation incomplete!"
+	#else:
+	print "computeStats(job_" + str(job_number) + ")"
+	try:
+		#print src
+		generateStats(src+"/traces/")
+	
+	except Exception:
 		invalid_runs += 1
-		print "Error in job_" + str(job_number) +". Simulation incomplete!"
-	else:
-		print "computeStats(job_" + str(job_number) + ")"
-		try:
-			#print src
-			generateStats(src+"/traces/")
-		
-		except Exception:
-			invalid_runs += 1
-			pass
+		pass
 
 	#copy results
 	#files = glob.glob(src + "/traces/*STATS*.txt")
@@ -309,17 +329,24 @@ def getScenarioName(strategy):
 	
 
 ###NOTE Start this script FROM itec-scenarios MAIN-FOLDER!!!
-
-#generateStats("/home/dposch/ndnSIM/itec-ndn/output_saf/SAFContentAware/output_run0")
-#exit(0)
-
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 1
-SIMULATION_RUNS = 1
+THREADS = 4
+SIMULATION_RUNS = 10
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/output_saf/"
+
+for root, dirs, files in os.walk(SIMULATION_OUTPUT):
+		for d in dirs:
+			if "output_run" not in d:
+				for r, folders, files in os.walk(SIMULATION_OUTPUT+d):
+					for folder in folders:
+						if "output_run" in folder:
+							print SIMULATION_OUTPUT+d+"/"+folder
+							generateStats(SIMULATION_OUTPUT+d+"/"+folder)
+exit(0)
+
 
 #brite config file
 scenario="saf_scenario"
