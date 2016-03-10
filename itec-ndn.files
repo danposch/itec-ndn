@@ -66,3 +66,5 @@ extensions/fw/safmeasurefactory.h
 extensions/fw/safmeasurefactory.cc
 topologies/example_tree_network.top
 scenarios/example_tree_network.cc
+extensions/apps/consumer-cbr-noRtx.h
+extensions/apps/consumer-cbr-noRtx.cc
