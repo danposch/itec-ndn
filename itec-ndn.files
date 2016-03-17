@@ -68,3 +68,9 @@ topologies/example_tree_network.top
 scenarios/example_tree_network.cc
 extensions/apps/consumer-cbr-noRtx.h
 extensions/apps/consumer-cbr-noRtx.cc
+extensions/apps/voip_client.h
+extensions/apps/voip_client.cc
+extensions/apps/voip_producer.h
+extensions/apps/voip_producer.cc
+extensions/apps/fixedjitterbuffer.h
+extensions/apps/fixedjitterbuffer.cc

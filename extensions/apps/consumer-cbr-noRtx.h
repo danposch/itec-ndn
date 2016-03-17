@@ -32,6 +32,24 @@
 #include "ns3/ndnSIM/utils/ndn-rtt-estimator.hpp"
 #include "ns3/ndnSIM/utils/ndn-fw-hop-count-tag.hpp"
 
+#include "ns3/ptr.h"
+#include "ns3/log.h"
+#include "ns3/simulator.h"
+#include "ns3/packet.h"
+#include "ns3/callback.h"
+#include "ns3/string.h"
+#include "ns3/boolean.h"
+#include "ns3/uinteger.h"
+#include "ns3/integer.h"
+#include "ns3/double.h"
+
+#include "utils/ndn-ns3-packet-tag.hpp"
+#include "model/ndn-app-face.hpp"
+#include "utils/ndn-rtt-mean-deviation.hpp"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/ref.hpp>
+
 #include <set>
 #include <map>
 
@@ -64,16 +82,9 @@ public:
   OnData(shared_ptr<const Data> contentObject);
 
   /**
-   * @brief Timeout event
-   * @param sequenceNumber time outed sequence number
-   */
-  virtual void
-  OnTimeout(uint32_t sequenceNumber);
-
-  /**
    * @brief Actually send packet
    */
-  void
+  virtual void
   SendPacket();
 
   /**

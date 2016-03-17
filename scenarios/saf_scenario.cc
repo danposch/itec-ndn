@@ -44,11 +44,12 @@ int main(int argc, char* argv[])
   cmd.AddValue ("fw-strategy", "Forwarding Strategy", strategy);
   cmd.Parse (argc, argv);
 
+  ParameterConfiguration::getInstance ()->setParameter ("UPDATE_INTERVALL", 0.5);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/", nfd::fw::SAFStatisticMeasure::MHop);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/", std::string("MaxHops"), std::string("5"));
   nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/", nfd::fw::SAFStatisticMeasure::MThroughput);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MDelay);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("MaxDelayMS"), std::string("250"));
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MDelay);
+  //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("MaxDelayMS"), std::string("250"));
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MDelay);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("MaxDelayMS"), std::string("1000"));
 
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
   topologyReader.Read();
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
-  int simTime = 2880; //seconds
+  int simTime = 600; //seconds
 
   //grep the nodes
   NodeContainer routers;
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])
   }
 
   routers.Add (Names::Find<Node>("RouterA"));
-  fprintf(stderr, "Parsed %d Routers\n", routers.size ());
+  //fprintf(stderr, "Parsed %d Routers\n", routers.size ());
 
   NodeContainer videoStreamers;
   nodeIndex = 0;
@@ -92,7 +93,7 @@ int main(int argc, char* argv[])
     videoStreamers.Add (videoStreamer);
     videoStreamer =  Names::Find<Node>(nodeNamePrefix +  boost::lexical_cast<std::string>(nodeIndex++));
   }
-  fprintf(stderr, "Parsed %d VideoStreamers\n", videoStreamers.size ());
+  //fprintf(stderr, "Parsed %d VideoStreamers\n", videoStreamers.size ());
 
   NodeContainer voipStreamers;
   nodeIndex = 0;
@@ -103,7 +104,7 @@ int main(int argc, char* argv[])
     voipStreamers.Add (voipStreamer);
     voipStreamer =  Names::Find<Node>(nodeNamePrefix +  boost::lexical_cast<std::string>(nodeIndex++));
   }
-  fprintf(stderr, "Parsed %d VoIPStreamers\n", voipStreamers.size ());
+  //fprintf(stderr, "Parsed %d VoIPStreamers\n", voipStreamers.size ());
 
   NodeContainer dataStreamers;
   nodeIndex = 0;
@@ -114,13 +115,13 @@ int main(int argc, char* argv[])
     dataStreamers.Add (dataStreamer);
     dataStreamer =  Names::Find<Node>(nodeNamePrefix +  boost::lexical_cast<std::string>(nodeIndex++));
   }
-  fprintf(stderr, "Parsed %d DataStreamers\n", dataStreamers.size ());
+  //fprintf(stderr, "Parsed %d DataStreamers\n", dataStreamers.size ());
 
   NodeContainer providers;
   providers.Add (Names::Find<Node>("VideoSrc"));
   providers.Add (Names::Find<Node>("VoIPSrc"));
   providers.Add (Names::Find<Node>("DataSrc"));
-  fprintf(stderr, "Parsed %d Providers\n", providers.size ());
+  //fprintf(stderr, "Parsed %d Providers\n", providers.size ());
 
   Ptr<Node> SAFRouter = Names::Find<Node>("RouterE");
 
@@ -134,13 +135,18 @@ int main(int argc, char* argv[])
   ndnHelper.Install (dataStreamers);
   ndnHelper.Install (providers);
 
+  ns3::ndn::StrategyChoiceHelper::Install((routers), "/", "/localhost/nfd/strategy/best-route");
+  ns3::ndn::StrategyChoiceHelper::Install(videoStreamers, "/", "/localhost/nfd/strategy/best-route");
+  ns3::ndn::StrategyChoiceHelper::Install(voipStreamers, "/", "/localhost/nfd/strategy/best-route");
+  ns3::ndn::StrategyChoiceHelper::Install(dataStreamers, "/", "/localhost/nfd/strategy/best-route");
+  ns3::ndn::StrategyChoiceHelper::Install(providers, "/", "/localhost/nfd/strategy/best-route");
+
   ndnHelper.Install (SAFRouter);
 
   //set prefix components for forwarding
   ParameterConfiguration::getInstance()->setParameter("PREFIX_COMPONENT", 0); // set to prefix componen
 
   //install SAF on routers
-
 
   if(strategy.compare ("saf") == 0)
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(SAFRouter,"/");
@@ -179,7 +185,6 @@ int main(int argc, char* argv[])
       if(oldname.compare ("RouterE") == 0)
       {
         ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::Oracle>(allNodes.Get (i),"/");
-        fprintf(stderr, "Oracle Installed\n");
       }
     }
   }
@@ -220,16 +225,21 @@ int main(int argc, char* argv[])
   }
 
   //install voip consumers
-  ns3::ndn::AppHelper consumerVOIPHelper ("ns3::ndn::ConsumerCbr"); //TODO change app
-  consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("100")); //1 packet every 10ms, https://goo.gl/TJF8S 56 kbits; with 70 byte large chunks = 100*70*8 = 56000 bit/s
-  consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("uniform"));
-  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.15s"));
+  ns3::ndn::AppHelper consumerVOIPHelper ("ns3::ndn::VoIPClient");
+  //we assume voip packets (G.711) with 10ms speech per packet ==> 100 pakcets per second
+  consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("100"));
+  consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("none"));
+  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.100s"));
+  //consumerVOIPHelper.SetAttribute ("JitterBufferSize", StringValue("100ms"));
 
   for(int i=0; i<voipStreamers.size (); i++)
   {
     consumerVOIPHelper.SetPrefix(std::string("/voip/" + boost::lexical_cast<std::string>(i) + "/"));
+    consumerVOIPHelper.SetAttribute ("BurstLogFile", StringValue(outputFolder+"/voipstreamer-burst-trace_"+ boost::lexical_cast<std::string>(i)+".txt"));
+
     ApplicationContainer consumer = consumerVOIPHelper.Install (voipStreamers.Get (i));
     consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(0));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (voipStreamers.Get (i), std::string(outputFolder + "/voipstreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -273,10 +283,10 @@ int main(int argc, char* argv[])
     ndnGlobalRoutingHelper.AddOrigins(pref, videoSrc);
   }
 
-  ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
+  ns3::ndn::AppHelper producerHelper ("ns3::ndn::VoIPProducer");
   Ptr<Node> voipSrc = Names::Find<Node>("VoIPSrc");
-  producerHelper.SetAttribute ("PayloadSize", StringValue("70")); // 70 byte
-  for(int i=0; i < videoStreamers.size (); i++)
+  producerHelper.SetAttribute ("PayloadSize", StringValue("80")); // 80 byte per G.177 packet 64kbits/100 ==> 640bit/s
+  for(int i=0; i < voipStreamers.size (); i++)
   {
     std::string pref = "/voip/"+boost::lexical_cast<std::string>(i);
     producerHelper.SetPrefix (pref);
@@ -286,7 +296,7 @@ int main(int argc, char* argv[])
 
   Ptr<Node> dataSrc = Names::Find<Node>("DataSrc");
   producerHelper.SetAttribute ("PayloadSize", StringValue("4096"));
-  for(int i=0; i < videoStreamers.size (); i++)
+  for(int i=0; i < dataStreamers.size (); i++)
   {
     std::string pref = "/data/"+boost::lexical_cast<std::string>(i);
     producerHelper.SetPrefix (pref);
@@ -300,6 +310,7 @@ int main(int argc, char* argv[])
   }
 
   // Calculate and install FIBs
+  //ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
   ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   //clean up the simulation

@@ -24,6 +24,10 @@ def generateStats(rootdir):
 
 	#calc voip stats
 	voip_res = calcSimpleStats(rootdir, "voipstreamer")
+	voip_res["Avg.DelayS"] -= LOOKAHEAD_VOIP_DELAY / 1000.0 #removes the lookahead time for voip
+	voip_res["Ppl"] = (1-(voip_res["SatisfiedInterests"]/voip_res["TotalInterests"])) *100 #Ppl is actually a probabilty * 100 WTF?
+	voip_res["BurstR"] = calcVOIPBurstR(rootdir, voip_res["Ppl"])
+	voip_res["AvgMos"] = calcVoIPMOS(voip_res)
 	#print voip_res
 
 	#calc video stats
@@ -45,6 +49,8 @@ def generateStats(rootdir):
 	output_file.write("VoIP_Satisfaction_Delay:" + str(voip_res["Avg.DelayS"])+"s"+"\n")
 	output_file.write("VoIP_Rtx:" + str(voip_res["Avg.Rtx"])+"\n")
 	output_file.write("VoIP_HopCount:" + str(voip_res["Avg.HopCount"])+"\n")
+	output_file.write("VoIP_MOS:" + str(voip_res["AvgMos"])+"\n")
+
 	output_file.write("\n")
 	output_file.write("Data_Satisfaction_Ratio:" + str(data_res["SatisfiedInterests"]/data_res["TotalInterests"])+"\n")
 	output_file.write("Data_Satisfaction_Delay:" + str(data_res["Avg.DelayS"])+"s"+"\n")
@@ -63,6 +69,136 @@ def generateStats(rootdir):
 	output_file.write("Avg_Costs:" + str(avg_costs) + "\n")
 
 	output_file.close()
+
+def calcVOIPBurstR(rootdir, Ppl):
+
+	avg_from_no_loss_to_loss = 0.0
+	processed_files = 0.0
+
+	for root, dirs, files in os.walk(rootdir):
+		for f in files:
+			if "voipstreamer-burst-trace" in f:
+
+				last = 0 #no loss
+				loss_after_no_loss = 0.0
+				no_loss_after_no_loss = 0.0
+
+				fp = open(rootdir+"/"+f,"r")
+				for line in fp:
+					if("seq_nr, lost" in line): #skip header
+						continue
+
+					l = line.split(',')
+					
+					if last == 0:
+						if("0" in l[1]):
+							no_loss_after_no_loss += 1
+							last = 0
+						else:
+							loss_after_no_loss += 1
+							last = 1
+					elif last == 1:
+						if("0" in l[1]):
+							last = 0
+
+				fp.close();
+
+				from_no_loss_to_loss = loss_after_no_loss / (loss_after_no_loss + no_loss_after_no_loss)
+				avg_from_no_loss_to_loss += from_no_loss_to_loss
+				processed_files += 1
+				
+	avg_from_no_loss_to_loss/=processed_files
+
+
+
+	avg_loss_to_no_loss = 0.0
+	processed_files = 0.0
+	for root, dirs, files in os.walk(rootdir):
+		for f in files:
+			if "voipstreamer-burst-trace" in f:
+
+				last = 0 #no loss
+				no_loss_after_loss = 0.0
+				loss_after_loss = 0.0
+
+				fp = open(rootdir+"/"+f,"r")
+				for line in fp:
+					if("seq_nr, lost" in line): #skip header
+						continue
+
+					l = line.split(',')
+					
+					if last == 1:
+						if("1" in l[1]):
+							loss_after_loss += 1
+							last = 1
+						else:
+							no_loss_after_loss += 1
+							last = 0
+					elif last == 0:
+						if("1" in l[1]):
+							last = 1
+
+				fp.close();
+
+				from_loss_to_no_loss = no_loss_after_loss / (no_loss_after_loss +loss_after_loss)
+				avg_loss_to_no_loss += from_loss_to_no_loss
+				processed_files += 1
+				
+	avg_loss_to_no_loss/=processed_files
+
+	print "Ppl = " + str(Ppl)
+	print "p = " + str(avg_from_no_loss_to_loss)
+	print "q = " + str(avg_loss_to_no_loss)
+
+	BurstR = (Ppl/100.0)/avg_from_no_loss_to_loss
+	print "BurstR = " + str(BurstR)
+	BurstR = 1/(avg_from_no_loss_to_loss+avg_loss_to_no_loss)
+	print "BurstR = " + str(BurstR)
+
+	return BurstR
+
+def calcVoIPMOS(voip_res):
+
+	print "calcVoIPMOS"
+
+	#calc Id
+	d = FIXED_JITTER_BUFFER + voip_res["Avg.DelayS"]*1000.0 + CODEC_DELAY
+
+	print "d = " + str(d)
+
+	if(d - 177.3 < 0):
+		H = 0
+	else:
+		H = 1
+
+	Id = 0.024*d+0.11*(d-177.3)*H
+	print "Id = " + str(Id)
+
+	#calc Ieeff
+
+	Ppl = voip_res["Ppl"]
+	Bpl = 34#for G.711 
+	Ie = 0.0
+	BurstR = voip_res["BurstR"]
+	Ieeff = Ie + (95.0 - Ie) * (Ppl / ( (Ppl / BurstR) + Bpl))
+
+	print "Ieeff = " +str(Ieeff)
+
+	#calc R
+	R = 93.2 - Id - Ieeff
+
+	print "R = " + str(R)
+
+	if(R <= 0):
+		MOS = 1
+	elif(R <= 100):
+		MOS = 1+0.035*R+R*(R-60)*(100-R)*7*0.000001
+	else:
+		MOS = 4.5
+
+	print "MOS = " + str(MOS) +"\n"
+	return MOS
 
 def calcCosts(rootdir):
 
@@ -332,10 +468,13 @@ def getScenarioName(strategy):
 SIMULATION_DIR=os.getcwd()
 
 THREADS = 4
-SIMULATION_RUNS = 10
+SIMULATION_RUNS = 1
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/output_saf/"
+LOOKAHEAD_VOIP_DELAY = 1000.0 #ms
+FIXED_JITTER_BUFFER = 100.0 #ms
+CODEC_DELAY = 0.25 #ms
 
 for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 		for d in dirs:
@@ -364,7 +503,8 @@ omccrf="--fw-strategy=omccrf"
 oracle="--fw-strategy=oracle"
 ompif="--fw-strategy=ompif"
 
-forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
+#forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
+forwardingStrategies = [saf,ompif,bestRoute]
 
 SCENARIOS = {}
 
