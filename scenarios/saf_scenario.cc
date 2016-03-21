@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
   topologyReader.Read();
 
   Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
-  int simTime = 600; //seconds
+  int simTime = 2880; //seconds
 
   //grep the nodes
   NodeContainer routers;
@@ -239,7 +239,6 @@ int main(int argc, char* argv[])
 
     ApplicationContainer consumer = consumerVOIPHelper.Install (voipStreamers.Get (i));
     consumer.Start (Seconds(r->GetInteger (0,1)));
-    consumer.Start (Seconds(0));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (voipStreamers.Get (i), std::string(outputFolder + "/voipstreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -314,7 +313,7 @@ int main(int argc, char* argv[])
   ns3::ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes ();
 
   //clean up the simulation
-  Simulator::Stop (Seconds(simTime+1)); //runs for 10 min.
+  Simulator::Stop (Seconds(simTime+1));
   Simulator::Run ();
   Simulator::Destroy ();
 

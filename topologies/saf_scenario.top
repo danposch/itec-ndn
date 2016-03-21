@@ -47,9 +47,9 @@ Router1    DataStreamer1  5Mbps      1      1ms    30
 Router2     VideoStreamer2 5Mbps     1      1ms    30
 Router2     VoIPStreamer2  5Mbps     1      1ms    30
 
-RouterE     RouterNet0   2Mbps      1       10ms   30
-RouterE     RouterNet1   5Mbps       1      20ms   30
-RouterE     RouterNet2   5Mbps       1      50ms   30
+RouterE     RouterNet0   3Mbps      1       10ms   30
+RouterE     RouterNet1   6Mbps       1      20ms   30
+RouterE     RouterNet2   6Mbps       1      40ms   30
 
 RouterNet0     VideoSrc 100Mbps      1      1ms    30
 RouterNet0     VoIPSrc  100Mbps      1      1ms    30
