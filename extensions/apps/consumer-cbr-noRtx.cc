@@ -1,21 +1,4 @@
 #include "consumer-cbr-noRtx.h"
-#include "ns3/ptr.h"
-#include "ns3/log.h"
-#include "ns3/simulator.h"
-#include "ns3/packet.h"
-#include "ns3/callback.h"
-#include "ns3/string.h"
-#include "ns3/boolean.h"
-#include "ns3/uinteger.h"
-#include "ns3/integer.h"
-#include "ns3/double.h"
-
-#include "utils/ndn-ns3-packet-tag.hpp"
-#include "model/ndn-app-face.hpp"
-#include "utils/ndn-rtt-mean-deviation.hpp"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/ref.hpp>
 
 NS_LOG_COMPONENT_DEFINE("ndn.ConsumerCbrNoRtx");
 
@@ -232,19 +215,6 @@ ConsumerCbrNoRtx::OnData(shared_ptr<const Data> data)
   m_seqTimeouts.erase(seq);
 
   m_rtt->AckSeq(SequenceNumber32(seq));
-}
-
-void
-ConsumerCbrNoRtx::OnTimeout(uint32_t sequenceNumber)
-{
-  NS_LOG_FUNCTION(sequenceNumber);
-  // std::cout << Simulator::Now () << ", TO: " << sequenceNumber << ", current RTO: " <<
-  // m_rtt->RetransmitTimeout ().ToDouble (Time::S) << "s\n";
-
-  m_rtt->IncreaseMultiplier(); // Double the next RTO
-  m_rtt->SentSeq(SequenceNumber32(sequenceNumber),
-                 1); // make sure to disable RTT calculation for this sample
-  ScheduleNextPacket();
 }
 
 void
