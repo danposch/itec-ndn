@@ -178,7 +178,8 @@ def calcVoIPMOS(voip_res):
 	#calc Ieeff
 
 	Ppl = voip_res["Ppl"]
-	Bpl = 34#for G.711 
+	#Bpl = 10 #for G.711
+	Bpl =  34 #for G.711 with PCL
 	Ie = 0.0
 	BurstR = voip_res["BurstR"]
 	Ieeff = Ie + (95.0 - Ie) * (Ppl / ( (Ppl / BurstR) + Bpl))
@@ -476,7 +477,7 @@ LOOKAHEAD_VOIP_DELAY = 1000.0 #ms
 FIXED_JITTER_BUFFER = 100.0 #ms
 CODEC_DELAY = 0.25 #ms
 
-for root, dirs, files in os.walk(SIMULATION_OUTPUT):
+'''for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 		for d in dirs:
 			if "output_run" not in d:
 				for r, folders, files in os.walk(SIMULATION_OUTPUT+d):
@@ -484,7 +485,7 @@ for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 						if "output_run" in folder:
 							print SIMULATION_OUTPUT+d+"/"+folder
 							generateStats(SIMULATION_OUTPUT+d+"/"+folder)
-exit(0)
+exit(0)'''
 
 
 #brite config file
@@ -504,7 +505,7 @@ oracle="--fw-strategy=oracle"
 ompif="--fw-strategy=ompif"
 
 #forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
-forwardingStrategies = [saf,ompif,bestRoute]
+forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute]
 
 SCENARIOS = {}
 
