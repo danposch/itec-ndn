@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
     consumerVideoHelper.SetAttribute("MpdFileToRequest", StringValue(mpd.c_str()));
 
     ApplicationContainer consumer = consumerVideoHelper.Install (videoStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(r->GetInteger (0,3)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (videoStreamers.Get (i), std::string(outputFolder + "/videostreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
     consumerVOIPHelper.SetAttribute ("BurstLogFile", StringValue(outputFolder+"/voipstreamer-burst-trace_"+ boost::lexical_cast<std::string>(i)+".txt"));
 
     ApplicationContainer consumer = consumerVOIPHelper.Install (voipStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(r->GetInteger (0,3)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (voipStreamers.Get (i), std::string(outputFolder + "/voipstreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
   {
     consumerDataHelper.SetPrefix(std::string("/data/" + boost::lexical_cast<std::string>(i) + "/"));
     ApplicationContainer consumer = consumerDataHelper.Install (dataStreamers.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,1)));
+    consumer.Start (Seconds(r->GetInteger (0,3)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (dataStreamers.Get (i), std::string(outputFolder + "/datastreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
