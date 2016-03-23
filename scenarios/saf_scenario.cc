@@ -229,7 +229,8 @@ int main(int argc, char* argv[])
   //we assume voip packets (G.711) with 10ms speech per packet ==> 100 pakcets per second
   consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("100"));
   consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("none"));
-  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.100s"));
+  consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.050s"));
+  consumerVOIPHelper.SetAttribute ("LookaheadLiftime", IntegerValue(250)); //250ms
   //consumerVOIPHelper.SetAttribute ("JitterBufferSize", StringValue("100ms"));
 
   for(int i=0; i<voipStreamers.size (); i++)
