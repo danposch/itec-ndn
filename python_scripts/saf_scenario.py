@@ -362,19 +362,19 @@ def threadFinished(job_number,src,dst,returncode):
 
 	global curActiveThreads, invalid_runs
 
-	#TODO ADD CODE AGAIN
-	#if(returncode != 0):
-	#	invalid_runs += 1
-	#	print "Error in job_" + str(job_number) +". Simulation incomplete!"
-	#else:
-	print "computeStats(job_" + str(job_number) + ")"
-	try:
-		#print src
-		generateStats(src+"/traces/")
-	
-	except Exception:
+	TODO ADD CODE AGAIN
+	if(returncode != 0):
 		invalid_runs += 1
-		pass
+		print "Error in job_" + str(job_number) +". Simulation incomplete!"
+	else:
+		print "computeStats(job_" + str(job_number) + ")"
+		try:
+			#print src
+			generateStats(src+"/traces/")
+	
+		except Exception:
+			invalid_runs += 1
+			pass
 
 	#copy results
 	#files = glob.glob(src + "/traces/*STATS*.txt")
