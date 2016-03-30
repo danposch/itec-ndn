@@ -26,15 +26,15 @@ void OMCCRF::afterReceiveInterest(const Face& inFace, const Interest& interest ,
     return;
   }
 
-  if(pitEntry->hasUnexpiredOutRecords()) //possible rtx or just the same request from a "different" source
+  if(pitEntry->hasUnexpiredOutRecords() && ParameterConfiguration::getInstance ()->getParameter ("RTX_DETECTION") > 0) //possible rtx or just the same request from a "different" source (experimental)
+  {
+    if(!isRtx(inFace, interest))
     {
-      if(!isRtx(inFace, interest))
-      {
-        addToKnownInFaces(inFace, interest); // other client/node requests same content
-        return; // this aggregates the interest
-      }
-      //else just continue as it was a normal interest..
+      addToKnownInFaces(inFace, interest); // other client/node requests same content
+      return; // this aggregates the interest
     }
+    //else just continue as it was a normal interest..
+  }
   addToKnownInFaces(inFace, interest);
 
   std::string prefix = extractContentPrefix(pitEntry->getInterest().getName());
