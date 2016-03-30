@@ -219,14 +219,14 @@ int main(int argc, char* argv[])
     consumer.Start (Seconds(r->GetInteger (0,3)));
     consumer.Stop (Seconds(simTime));
 
-    ns3::ndn::L3RateTracer::Install (videoStreamers.Get (i), std::string(outputFolder + "/videostreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
-    ns3::ndn::AppDelayTracer::Install(videoStreamers.Get (i),std::string(outputFolder +"/videostreamer-app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
+    //ns3::ndn::L3RateTracer::Install (videoStreamers.Get (i), std::string(outputFolder + "/videostreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
+    //ns3::ndn::AppDelayTracer::Install(videoStreamers.Get (i),std::string(outputFolder +"/videostreamer-app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
     ns3::ndn::DASHPlayerTracer::Install(videoStreamers.Get (i), std::string(outputFolder +"/videostreamer-dashplayer-trace_" + boost::lexical_cast<std::string>(i)).append(".txt"));
   }
 
   //install voip consumers
   ns3::ndn::AppHelper consumerVOIPHelper ("ns3::ndn::VoIPClient");
-  //we assume voip packets (G.711) with 10ms speech per packet ==> 100 pakcets per second
+  //we assume voip packets (G.711) with 10ms speech per packet ==> 100 packets per second
   consumerVOIPHelper.SetAttribute ("Frequency", StringValue ("100"));
   consumerVOIPHelper.SetAttribute ("Randomize", StringValue ("none"));
   consumerVOIPHelper.SetAttribute ("LifeTime", StringValue("0.050s"));
