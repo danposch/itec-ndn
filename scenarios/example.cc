@@ -163,7 +163,11 @@ int main (int argc, char *argv[])
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMPIFClient>(client,"/");
   }
   else if (strategy.compare ("omccrf") == 0)
+  {
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::OMCCRF>(gen.getAllASNodes (),"/");
+    //enable rtx detection:
+    ParameterConfiguration::getInstance ()->setParameter ("RTX_DETECTION", 1);
+  }
   else if (strategy.compare ("oracle") == 0)
   {
     //ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::Oracle>(gen.getAllASNodes (),"/");
