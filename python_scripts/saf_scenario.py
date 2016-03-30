@@ -24,7 +24,7 @@ def generateStats(rootdir):
 
 	#calc voip stats
 	voip_res = calcSimpleStats(rootdir, "voipstreamer")
-	voip_res["Avg.DelayS"] -= LOOKAHEAD_VOIP_DELAY / 1000.0 #removes the lookahead time for voip
+	voip_res["Avg.DelayS"] -= (LOOKAHEAD_VOIP_DELAY / 1000.0) #removes the lookahead time for voip
 	voip_res["Ppl"] = (1-(voip_res["SatisfiedInterests"]/voip_res["TotalInterests"])) *100 #Ppl is actually a probabilty * 100 WTF?
 	voip_res["BurstR"] = calcVOIPBurstR(rootdir, voip_res["Ppl"])
 	voip_res["AvgMos"] = calcVoIPMOS(voip_res)
@@ -291,7 +291,6 @@ def calcSimpleStats(rootdir, filter_str):
 	avg_number_of_hops = 0.0
 	avg_number_of_rtx = 0.0
 	avg_delay_of_request = 0.0
-	avg_delay_var = 0.0
 
 	for root, dirs, files in os.walk(rootdir):
 		for f in files:
@@ -316,6 +315,8 @@ def calcSimpleStats(rootdir, filter_str):
 		avg_number_of_hops /= total_number_of_statisfied_requests
 		avg_number_of_rtx /= total_number_of_statisfied_requests
 		avg_delay_of_request /= total_number_of_statisfied_requests
+	else:
+		avg_delay_of_request = 100.0 #well define some very high delay if nothing arrived.. (e.g. 100 sec)
 
 	result = {}
  	result["TotalInterests"] = total_number_of_requests
