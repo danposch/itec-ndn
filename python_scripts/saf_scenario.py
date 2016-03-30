@@ -311,10 +311,11 @@ def calcSimpleStats(rootdir, filter_str):
 					avg_delay_of_request += app_stats[key]['DelayS']
 					avg_number_of_hops += app_stats[key]['HopCount']
 					avg_number_of_rtx += app_stats[key]['RtxCount']
-	
-	avg_number_of_hops /= total_number_of_statisfied_requests
-	avg_number_of_rtx /= total_number_of_statisfied_requests
-	avg_delay_of_request /= total_number_of_statisfied_requests
+
+	if total_number_of_statisfied_requests > 0:
+		avg_number_of_hops /= total_number_of_statisfied_requests
+		avg_number_of_rtx /= total_number_of_statisfied_requests
+		avg_delay_of_request /= total_number_of_statisfied_requests
 
 	result = {}
  	result["TotalInterests"] = total_number_of_requests
@@ -362,7 +363,6 @@ def threadFinished(job_number,src,dst,returncode):
 
 	global curActiveThreads, invalid_runs
 
-	TODO ADD CODE AGAIN
 	if(returncode != 0):
 		invalid_runs += 1
 		print "Error in job_" + str(job_number) +". Simulation incomplete!"
@@ -505,7 +505,7 @@ oracle="--fw-strategy=oracle"
 ompif="--fw-strategy=ompif"
 
 #forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
-forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute]
+forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute, oracle]
 
 SCENARIOS = {}
 
