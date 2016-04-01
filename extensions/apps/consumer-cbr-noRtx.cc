@@ -158,7 +158,7 @@ ConsumerCbrNoRtx::SendPacket()
   interest->setInterestLifetime(interestLifeTime);
 
   // NS_LOG_INFO ("Requesting Interest: \n" << *interest);
-  NS_LOG_INFO("> Interest for " << seq);
+  //NS_LOG_INFO("> Interest for " << seq);
 
   WillSendOutInterest(seq);
 
@@ -180,13 +180,13 @@ ConsumerCbrNoRtx::OnData(shared_ptr<const Data> data)
 
   App::OnData(data); // tracing inside
 
-  NS_LOG_FUNCTION(this << data);
+  //NS_LOG_FUNCTION(this << data);
 
   // NS_LOG_INFO ("Received content object: " << boost::cref(*data));
 
   // This could be a problem......
   uint32_t seq = data->getName().at(-1).toSequenceNumber();
-  NS_LOG_INFO("< DATA for " << seq);
+  //NS_LOG_INFO("< DATA for " << seq);
 
   int hopCount = -1;
   auto ns3PacketTag = data->getTag<Ns3PacketTag>();
@@ -194,7 +194,7 @@ ConsumerCbrNoRtx::OnData(shared_ptr<const Data> data)
     FwHopCountTag hopCountTag;
     if (ns3PacketTag->getPacket()->PeekPacketTag(hopCountTag)) {
       hopCount = hopCountTag.Get();
-      NS_LOG_DEBUG("Hop count: " << hopCount);
+      //NS_LOG_DEBUG("Hop count: " << hopCount);
     }
   }
 
@@ -220,8 +220,8 @@ ConsumerCbrNoRtx::OnData(shared_ptr<const Data> data)
 void
 ConsumerCbrNoRtx::WillSendOutInterest(uint32_t sequenceNumber)
 {
-  NS_LOG_DEBUG("Trying to add " << sequenceNumber << " with " << Simulator::Now() << ". already "
-                                << m_seqTimeouts.size() << " items");
+  /*NS_LOG_DEBUG("Trying to add " << sequenceNumber << " with " << Simulator::Now() << ". already "
+                                << m_seqTimeouts.size() << " items");*/
 
   m_seqTimeouts.insert(SeqTimeout(sequenceNumber, Simulator::Now()));
   m_seqFullDelay.insert(SeqTimeout(sequenceNumber, Simulator::Now()));
