@@ -20,6 +20,8 @@ extensions/fw/safforwardingtable.h
 extensions/fw/safforwardingtable.cc
 extensions/fw/mratio.h
 extensions/fw/mratio.cc
+extensions/fw/mratio_weighted.h
+extensions/fw/mratio_weighted.cc
 extensions/fw/mdelay.h
 extensions/fw/mdelay.cc
 extensions/fw/mhop.h
