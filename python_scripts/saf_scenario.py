@@ -39,7 +39,7 @@ def generateStats(rootdir):
 	#print data_res
 	
 	#calc costs
-	total_costs, avg_costs = calcCosts(rootdir)
+	total_costs, avg_costs, raw_kilo_bytes_costs = calcCosts(rootdir)
 	#print costs
 
 	#write file
@@ -67,6 +67,7 @@ def generateStats(rootdir):
 	output_file.write("\n")
 	output_file.write("Total_Costs:" + str(total_costs) + "\n")
 	output_file.write("Avg_Costs:" + str(avg_costs) + "\n")
+	output_file.write("Raw_Kilobytes_Costs:" + str(raw_kilo_bytes_costs) + "\n")
 
 	output_file.close()
 
@@ -210,10 +211,12 @@ def calcCosts(rootdir):
 
 	costs = 0.0
 	total_interests = 0.0
+	raw_kilo_bytes_costs  = 0.0
 
 	FACE_INDEX = 2 
 	TYPE_INDEX = 4
 	PACKET_NR_INDEX = 7
+	KILOBYTES_RAW_INDEX = 8
 
 	for root, dirs, files in os.walk(rootdir):
 		for f in files:
@@ -230,10 +233,17 @@ def calcCosts(rootdir):
 						if "OutInterests" in l[TYPE_INDEX]:
 							costs += cost_function[l[FACE_INDEX]] * float(l[PACKET_NR_INDEX])
 							total_interests += float(l[PACKET_NR_INDEX])
+
+						#gather raw bytes
+						if "OutInterests" in l[TYPE_INDEX]:
+							raw_kilo_bytes_costs  += cost_function[l[FACE_INDEX]] * float(l[KILOBYTES_RAW_INDEX])
+						if "InData" in l[TYPE_INDEX]:
+							raw_kilo_bytes_costs  += cost_function[l[FACE_INDEX]] * float(l[KILOBYTES_RAW_INDEX])
+
 				break
 
 	avg_costs = costs / total_interests	
-	return costs, avg_costs
+	return costs, avg_costs, raw_kilo_bytes_costs 
 
 def calcVideoStats(rootdir):
 
@@ -469,8 +479,8 @@ def getScenarioName(strategy):
 ###NOTE Start this script FROM itec-scenarios MAIN-FOLDER!!!
 SIMULATION_DIR=os.getcwd()
 
-THREADS = 4
-SIMULATION_RUNS = 1
+THREADS = 3
+SIMULATION_RUNS = 20
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/output_saf/"
@@ -478,6 +488,7 @@ LOOKAHEAD_VOIP_DELAY = 250.0 #ms
 FIXED_JITTER_BUFFER = 50.0 #ms
 CODEC_DELAY = 0.25 #ms
 
+#SIMULATION_OUTPUT = "/media/dposch/Volume/sims/computer_communication_review/output/"
 '''for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 		for d in dirs:
 			if "output_run" not in d:
@@ -506,7 +517,8 @@ oracle="--fw-strategy=oracle"
 ompif="--fw-strategy=ompif"
 
 #forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
-forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute, oracle]
+#forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute, oracle]
+forwardingStrategies = [saf]
 
 SCENARIOS = {}
 
