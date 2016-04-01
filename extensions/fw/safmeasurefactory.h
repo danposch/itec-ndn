@@ -24,6 +24,7 @@
 #include "mdelay.h"
 #include "mhop.h"
 #include "tuple"
+#include "mratio_weighted.h"
 
 namespace nfd
 {

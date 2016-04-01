@@ -89,6 +89,31 @@ boost::shared_ptr<SAFStatisticMeasure> SAFMeasureFactory::getMeasure(std::string
       }
       return boost::shared_ptr<Mratio>(new MHop(faces, max_hops));
     }
+    case SAFStatisticMeasure::MWeightedThrouput:
+    {
+      //check for known attributes
+      int sat_weight = 1;
+      int unsat_weight = 1;
+
+      MeasureAttributeMap::iterator it = amap.find (match->first);
+
+      if(it != amap.end ())
+      {
+        for(std::map<std::string, std::string>::iterator k = it->second.begin(); k != it->second.end(); k++)
+        {
+          if(k->first.compare("SatisfiedWeight") == 0)
+          {
+            sat_weight = boost::lexical_cast<int>(k->second);
+          }
+
+          if(k->first.compare("UnsatisfiedWeight") == 0)
+          {
+            unsat_weight = boost::lexical_cast<int>(k->second);
+          }
+        }
+      }
+      return boost::shared_ptr<Mratio>(new MWeightedRatio(faces, sat_weight,unsat_weight));
+    }
       default:
         return boost::shared_ptr<Mratio>(new Mratio(faces));
     }
