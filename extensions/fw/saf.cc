@@ -60,6 +60,8 @@ void SAF::afterReceiveInterest(const Face& inFace, const Interest& interest ,sha
   if(prefix.compare("NACK") != 0)
     addToKnownInFaces(inFace, interest);
 
+  //alreadyTriedFaces.push_back (inFace.getId ());
+
   const Interest int_to_forward = pitEntry->getInterest();
   int nextHop = engine->determineNextHop(int_to_forward, alreadyTriedFaces, fibEntry);
   while(nextHop != DROP_FACE_ID && (std::find(originInFaces.begin (),originInFaces.end (), nextHop) == originInFaces.end ()))
