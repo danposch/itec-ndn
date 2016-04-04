@@ -34,7 +34,7 @@ void MWeightedRatio::logExpiredInterest(shared_ptr<pit::Entry> pitEntry)
 void MWeightedRatio::logNack(const Face &inFace, const Interest &interest)
 {
   int ilayer = SAFStatisticMeasure::determineContentLayer(interest);
-  stats[ilayer].unsatisfied_requests[inFace.getId()] += (1*unsatisfied_weight);
+  stats[ilayer].unsatisfied_requests[inFace.getId()] += unsatisfied_weight;
 }
 
 void MWeightedRatio::logRejectedInterest (shared_ptr<pit::Entry> pitEntry, int face_id)
