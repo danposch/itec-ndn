@@ -254,30 +254,33 @@ def calcVideoStats(rootdir):
 	clients = 0
 
 	avg_qoe_variations = 0.0
-	avg_qoe_stalling = 0.0
+	avg_qoe_bitrate_sum = 0.0
 	
 	for root, dirs, files in os.walk(rootdir):
 		for f in files:
 			if "videostreamer-dashplayer" in f:			
 				clients += 1
-				ds_stats = ds.process_dash_trace(rootdir+"/"+f)
+				ds_stats = ds.process_dash_trace(rootdir+"/"+f,0)
 				#print ds_stats
 
 				#see dashplayer_stats for magic numbers
+				parsed_segments = ds_stats[96]
+
 				avg_number_switches += ds_stats[99]
 				avg_stalling_duration += ds_stats[6]
 				avg_segment_bitrate += ds_stats[5]
 				avg_representation += ds_stats[4]
 		
-				avg_qoe_variations += ds_stats[98]
-				avg_qoe_stalling += ds_stats[97]
+				avg_qoe_variations += ds_stats[98]	#sum of quality variations per client
+				avg_qoe_bitrate_sum += ds_stats[95] #sum of received segment bitrates
 					
+	#no calculate the average over the clients
 	avg_number_switches /= clients
 	avg_stalling_duration /= clients
 	avg_segment_bitrate /= clients
 	avg_representation /= clients
 	avg_qoe_variations /= clients
-	avg_qoe_stalling /= clients
+	avg_qoe_bitrate_sum /= clients
 
 	result = {}
 	result["Avg.Switches"] = avg_number_switches
@@ -286,11 +289,10 @@ def calcVideoStats(rootdir):
 	result["Avg.Representation"] = avg_representation
 
 	#QoE values according to: A Control-Theoretic Approach for Dynamic Adaptive Video Streaming over HTTP
-	result["Avg.QoE.VideoQuality"] = avg_segment_bitrate
+	result["Avg.QoE.VideoQuality"] = avg_qoe_bitrate_sum
 	result["Avg.QoE.QualityVariations"] = avg_qoe_variations
-	result["Avg.QoE.StallingTime"] = avg_qoe_stalling
+	result["Avg.QoE.StallingTime"] = avg_stalling_duration / 1000.0 #convert to seconds
 	
-
 	return result
 
 def calcSimpleStats(rootdir, filter_str):
@@ -488,8 +490,8 @@ LOOKAHEAD_VOIP_DELAY = 250.0 #ms
 FIXED_JITTER_BUFFER = 50.0 #ms
 CODEC_DELAY = 0.25 #ms
 
-#SIMULATION_OUTPUT = "/media/dposch/Volume/sims/computer_communication_review/output/"
-'''for root, dirs, files in os.walk(SIMULATION_OUTPUT):
+'''SIMULATION_OUTPUT = "/media/dposch/Volume/sims/computer_communication_review/output/"
+for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 		for d in dirs:
 			if "output_run" not in d:
 				for r, folders, files in os.walk(SIMULATION_OUTPUT+d):
