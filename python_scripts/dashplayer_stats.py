@@ -20,11 +20,11 @@ SEGMENT_BITRATE_INDEX = 5
 STALLING_MSEC_INDEX = 6
 
 ALOGIC_NUMBER_SWITCHES_INDEX = 99
-AVG_SEGMENT_SWITCHES_BITRATE_DIFF = 98
-AVG_STALLING_TIME = 97
+SEGMENT_SWITCHES_BITRATE_DIFF = 98
+PARSED_SEGMENTS = 96
+SUM_OF_SEGMENT_BITRATES = 95
 
-def process_dash_trace(f):
-	
+def process_dash_trace(f, considerNotDownloadedSegments=1):
 
 	file = open(f, "r")
 	next(file) #skip header
@@ -33,8 +33,10 @@ def process_dash_trace(f):
 					STALLING_MSEC_INDEX: 0.0,
 					SEGMENT_BITRATE_INDEX: 0.0,
 					ALOGIC_NUMBER_SWITCHES_INDEX: 0.0,
-					AVG_SEGMENT_SWITCHES_BITRATE_DIFF: 0.0,
-					AVG_STALLING_TIME: 0.0}
+					SEGMENT_SWITCHES_BITRATE_DIFF: 0.0,
+					PARSED_SEGMENTS: 0.0,
+					SUM_OF_SEGMENT_BITRATES: 0.0 #only needed qoe model...
+					}
 	
 	line_counter = 0
 	last_rep_layer = -1
@@ -45,6 +47,9 @@ def process_dash_trace(f):
 		if(len(l) < STALLING_MSEC_INDEX+1):
 			continue
 
+		if(considerNotDownloadedSegments != 1 and float(l[SEGMENT_DUR_INDEX]) < 0):
+			continue #skip not downloaded/played segments
+
 		#print "adding stats"
 		stats[SEGMENT_REP_INDEX] += float(l[SEGMENT_REP_INDEX])
 		stats[SEGMENT_BITRATE_INDEX] += float(l[SEGMENT_BITRATE_INDEX])
@@ -53,7 +58,7 @@ def process_dash_trace(f):
 		if line_counter > 1:
 			if(last_rep_layer != l[SEGMENT_REP_INDEX]):
 				stats[ALOGIC_NUMBER_SWITCHES_INDEX] += 1
-				stats[AVG_SEGMENT_SWITCHES_BITRATE_DIFF] += abs(last_rep_bitrate - float(l[SEGMENT_BITRATE_INDEX]))
+				stats[SEGMENT_SWITCHES_BITRATE_DIFF] += abs(last_rep_bitrate - float(l[SEGMENT_BITRATE_INDEX]))
 				last_rep_layer = l[SEGMENT_REP_INDEX]
 				last_rep_bitrate = float(l[SEGMENT_BITRATE_INDEX])
 		else:
@@ -62,14 +67,17 @@ def process_dash_trace(f):
 
 		line_counter += 1
 
+	stats[SUM_OF_SEGMENT_BITRATES] = stats[SEGMENT_BITRATE_INDEX]
+
 	if(line_counter > 0):
 		stats[SEGMENT_REP_INDEX] /= line_counter
 		stats[SEGMENT_BITRATE_INDEX] /= line_counter
-		stats[AVG_SEGMENT_SWITCHES_BITRATE_DIFF] /= line_counter
-		stats[AVG_STALLING_TIME ] = stats[STALLING_MSEC_INDEX] / line_counter
+
+	stats[PARSED_SEGMENTS] = line_counter
 
 	file.close()
 	#print stats
+
 	return stats
 
 def process_cs_trace(file):
