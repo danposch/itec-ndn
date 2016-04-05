@@ -34,6 +34,15 @@ using namespace ns3;
 
 int main(int argc, char* argv[])
 {
+
+  //nessacary as the video consumer calcs max packet per second as link capacity / mtu.
+  ns3::Config::SetDefault("ns3::PointToPointNetDevice::Mtu", StringValue("4096"));
+
+  /*LogComponentEnableAll (LOG_ALL);
+  LogComponentDisableAll (LOG_LOGIC);
+  LogComponentDisableAll (LOG_FUNCTION);
+  LogComponentDisableAll (LOG_INFO);*/
+
   std::string outputFolder = "output/";
   std::string strategy = "bestRoute";
   std::string topologyFile = "topologies/saf_scenario.top";
@@ -52,6 +61,18 @@ int main(int argc, char* argv[])
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("MaxDelayMS"), std::string("250"));
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MDelay);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("MaxDelayMS"), std::string("1000"));
+
+  /*nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("SatisfiedWeight"), std::string("1"));
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("UnsatisfiedWeight"), std::string("1"));
+
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("SatisfiedWeight"), std::string("1"));
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("UnsatisfiedWeight"), std::string("1"));
+
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/data", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("SatisfiedWeight"), std::string("1"));
+  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("UnsatisfiedWeight"), std::string("1"));*/
 
   //parse the topology
   AnnotatedTopologyReader topologyReader ("", 5);
