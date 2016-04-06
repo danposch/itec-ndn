@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 
   //install producer application on the providers
   ns3::ndn::AppHelper videoProducerHelper ("ns3::ndn::FileServer");
-  videoProducerHelper.SetAttribute("ContentDirectory", StringValue("/home/dposch/data/concatenated/"));
+  videoProducerHelper.SetAttribute("ContentDirectory", StringValue("/home/dposch/data/concatenated720/"));
   //videoProducerHelper.SetAttribute ("MaxPayloadSize", StringValue("2048"));
 
   Ptr<Node> videoSrc = Names::Find<Node>("VideoSrc");
