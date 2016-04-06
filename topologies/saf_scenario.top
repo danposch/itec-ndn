@@ -75,12 +75,12 @@ RouterNet2     DataSrc  100Mbps      1      1ms    20
 
 #DO NOT CHANGE THE ORDER OF LINK CREATION!!!
 #as the metric feature does not work we simulate the different costs by adding additional hops:
-RouterE       RouterNet3     3Mbps   1      10ms   20
+RouterE       RouterNet3     4Mbps   1      10ms   20
 RouterNet3    RouterNet4   100Mbps   1      0ms    20
 RouterNet4    RouterNet0   100Mbps   1      0ms    20
 
 
-RouterE       RouterNet5     5Mbps   1      20ms   20
+RouterE       RouterNet5     6Mbps   1      20ms   20
 RouterNet5    RouterNet1   100Mbps   1      0ms    20
 
 
