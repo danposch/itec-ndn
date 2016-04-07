@@ -46,15 +46,15 @@ Router2     RouterA      100Mbps      1      1ms    20
 RouterA     RouterE      100Mbps    1        1ms    20
 
 #video streamer use the "local face" capacity and the mtu to calcualte the max interests per second.
-Router0     VideoStreamer0 5Mbps      1      1ms    20
+Router0     VideoStreamer0 3Mbps      1      1ms    20
 Router0     VoIPStreamer0  3Mbps      1      1ms    20
-Router0     DataStreamer0  5Mbps      1      1ms    20
+Router0     DataStreamer0  3Mbps      1      1ms    20
 
-Router1    VideoStreamer1 5Mbps      1      1ms    20
+Router1    VideoStreamer1 3Mbps      1      1ms    20
 Router1    VoIPStreamer1  3Mbps      1      1ms    20
-Router1    DataStreamer1  5Mbps      1      1ms    20
+Router1    DataStreamer1  3Mbps      1      1ms    20
 
-Router2     VideoStreamer2 5Mbps     1      1ms    20
+Router2     VideoStreamer2 3Mbps     1      1ms    20
 Router2     VoIPStreamer2  3Mbps     1      1ms    20
 
 #RouterE     RouterNet0   3Mbps       1      10ms   20
@@ -75,14 +75,14 @@ RouterNet2     DataSrc  100Mbps      1      1ms    20
 
 #DO NOT CHANGE THE ORDER OF LINK CREATION!!!
 #as the metric feature does not work we simulate the different costs by adding additional hops:
-RouterE       RouterNet3     4Mbps   1      10ms   20
+RouterE       RouterNet3     3Mbps   1      10ms   20
 RouterNet3    RouterNet4   100Mbps   1      0ms    20
 RouterNet4    RouterNet0   100Mbps   1      0ms    20
 
 
-RouterE       RouterNet5     6Mbps   1      20ms   20
+RouterE       RouterNet5     5Mbps   1      20ms   20
 RouterNet5    RouterNet1   100Mbps   1      0ms    20
 
 
-RouterE     RouterNet2   8Mbps       1      75ms   20
+RouterE     RouterNet2   6Mbps       1       75ms   20
 

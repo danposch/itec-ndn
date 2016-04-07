@@ -34,7 +34,7 @@ bin/
 doc/
 
 #exclude the out directory
-output*/
+output/
 
 #exclude the tmp directory
 tmp/
