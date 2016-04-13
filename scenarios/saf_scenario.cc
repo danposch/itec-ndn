@@ -62,17 +62,20 @@ int main(int argc, char* argv[])
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MDelay);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("MaxDelayMS"), std::string("1000"));
 
-  /*nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("SatisfiedWeight"), std::string("1"));
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("UnsatisfiedWeight"), std::string("1"));
+  if(strategy.compare ("saf_caa") == 0)
+  {
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("SatisfiedWeight"), std::string("1"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("UnsatisfiedWeight"), std::string("1"));
 
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("SatisfiedWeight"), std::string("1"));
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("UnsatisfiedWeight"), std::string("1"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("SatisfiedWeight"), std::string("1"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("UnsatisfiedWeight"), std::string("10"));
 
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/data", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("SatisfiedWeight"), std::string("1"));
-  nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("UnsatisfiedWeight"), std::string("1"));*/
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/data", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("SatisfiedWeight"), std::string("1"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("UnsatisfiedWeight"), std::string("10"));
+  }
 
   //parse the topology
   AnnotatedTopologyReader topologyReader ("", 5);
@@ -169,7 +172,7 @@ int main(int argc, char* argv[])
 
   //install SAF on routers
 
-  if(strategy.compare ("saf") == 0)
+  if(strategy.compare ("saf") == 0 || strategy.compare ("saf_caa") == 0)
     ns3::ndn::StrategyChoiceHelper::Install<nfd::fw::SAF>(SAFRouter,"/");
   else if(strategy.compare ("bestRoute") == 0)
     ns3::ndn::StrategyChoiceHelper::Install(SAFRouter, "/", "/localhost/nfd/strategy/best-route");

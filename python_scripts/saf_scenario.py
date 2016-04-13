@@ -459,6 +459,8 @@ def getScenarioName(strategy):
 		name += "BestRoute"
 	elif("fw-strategy=smartflooding" in strategy):
 		name += "SmartFlooding"
+	elif("fw-strategy=saf_caa" in strategy):
+		name += "SAF_CAA"
 	elif("fw-strategy=saf" in strategy):
 		name += "SAF"
 	elif("fw-strategy=broadcast" in strategy):
@@ -474,7 +476,6 @@ def getScenarioName(strategy):
 	else:
 		name += "UnknownStrategy"
 
-
 	return name
 	
 
@@ -482,7 +483,7 @@ def getScenarioName(strategy):
 SIMULATION_DIR=os.getcwd()
 
 THREADS = 3
-SIMULATION_RUNS = 20
+SIMULATION_RUNS = 6
 
 SIMULATION_OUTPUT = SIMULATION_DIR 
 SIMULATION_OUTPUT += "/output_saf/"
@@ -490,8 +491,8 @@ LOOKAHEAD_VOIP_DELAY = 250.0 #ms
 FIXED_JITTER_BUFFER = 50.0 #ms
 CODEC_DELAY = 0.25 #ms
 
-'''SIMULATION_OUTPUT = "/media/dposch/Volume/sims/computer_communication_review/output/"
-for root, dirs, files in os.walk(SIMULATION_OUTPUT):
+#SIMULATION_OUTPUT = "/media/dposch/Volume/sims/computer_communication_review/output/"
+'''for root, dirs, files in os.walk(SIMULATION_OUTPUT):
 		for d in dirs:
 			if "output_run" not in d:
 				for r, folders, files in os.walk(SIMULATION_OUTPUT+d):
@@ -514,12 +515,13 @@ bestRoute="--fw-strategy=bestRoute"
 ncc="--fw-strategy=ncc"
 broadcast="--fw-strategy=broadcast"
 saf="--fw-strategy=saf"
+saf_caa="--fw-strategy=saf_caa"
 omccrf="--fw-strategy=omccrf"
 oracle="--fw-strategy=oracle"
 ompif="--fw-strategy=ompif"
 
 #forwardingStrategies = [bestRoute, ncc, broadcast, saf, oracle, omccrf, ompif]
-#forwardingStrategies = [saf, ompif, ncc, omccrf, broadcast, bestRoute, oracle]
+#forwardingStrategies = [saf, ompif, omccrf, broadcast, bestRoute, oracle, saf_caa]
 forwardingStrategies = [saf]
 
 SCENARIOS = {}
