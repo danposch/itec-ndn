@@ -42,7 +42,7 @@ void MWeightedRatio::logRejectedInterest (shared_ptr<pit::Entry> pitEntry, int f
   int ilayer = SAFStatisticMeasure::determineContentLayer(pitEntry->getInterest());
 
   if(face_id == DROP_FACE_ID)
-    stats[ilayer].satisfied_requests[face_id] += satisfied_weight;
+    stats[ilayer].satisfied_requests[face_id] += 1; // in this we shall only add +1
   else
     stats[ilayer].unsatisfied_requests[face_id] += unsatisfied_weight;
 }
