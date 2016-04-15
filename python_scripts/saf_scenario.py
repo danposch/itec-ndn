@@ -39,7 +39,7 @@ def generateStats(rootdir):
 	#print data_res
 	
 	#calc costs
-	total_costs, avg_costs, raw_kilo_bytes_costs = calcCosts(rootdir)
+	total_costs, avg_costs, raw_kilo_bytes_costs, avg_cost_per_kilo_byte, total_kilo_bytes = calcCosts(rootdir)
 	#print costs
 
 	#write file
@@ -68,6 +68,8 @@ def generateStats(rootdir):
 	output_file.write("Total_Costs:" + str(total_costs) + "\n")
 	output_file.write("Avg_Costs:" + str(avg_costs) + "\n")
 	output_file.write("Raw_Kilobytes_Costs:" + str(raw_kilo_bytes_costs) + "\n")
+	output_file.write("AVG_Cost_Per_Kilobyte:" + str(avg_cost_per_kilo_byte) + "\n")
+	output_file.write("Total_Transmitted_Kilobytes:" + str(total_kilo_bytes) + "\n")
 
 	output_file.close()
 
@@ -212,6 +214,7 @@ def calcCosts(rootdir):
 	costs = 0.0
 	total_interests = 0.0
 	raw_kilo_bytes_costs  = 0.0
+	total_kilo_bytes = 0.0
 
 	FACE_INDEX = 2 
 	TYPE_INDEX = 4
@@ -237,13 +240,17 @@ def calcCosts(rootdir):
 						#gather raw bytes
 						if "OutInterests" in l[TYPE_INDEX]:
 							raw_kilo_bytes_costs  += cost_function[l[FACE_INDEX]] * float(l[KILOBYTES_RAW_INDEX])
+							total_kilo_bytes += float(l[KILOBYTES_RAW_INDEX])
 						if "InData" in l[TYPE_INDEX]:
 							raw_kilo_bytes_costs  += cost_function[l[FACE_INDEX]] * float(l[KILOBYTES_RAW_INDEX])
+							total_kilo_bytes += float(l[KILOBYTES_RAW_INDEX])
 
 				break
 
 	avg_costs = costs / total_interests	
-	return costs, avg_costs, raw_kilo_bytes_costs 
+	avg_cost_per_kilo_byte = raw_kilo_bytes_costs / total_kilo_bytes
+
+	return costs, avg_costs, raw_kilo_bytes_costs , avg_cost_per_kilo_byte, total_kilo_bytes
 
 def calcVideoStats(rootdir):
 
