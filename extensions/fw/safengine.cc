@@ -10,6 +10,8 @@ SAFEngine::SAFEngine(const FaceTable& table, unsigned int prefixComponentNumber)
   initFaces(table);
   this->prefixComponentNumber = prefixComponentNumber;
 
+  adaptEngine = boost::shared_ptr<AdaptationEngine>(new AdaptationEngine(faces));
+
   updateEventFWT = ns3::Simulator::Schedule(
         ns3::Seconds(ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL")), &SAFEngine::update, this);
 }
@@ -41,7 +43,7 @@ int SAFEngine::determineNextHop(const Interest& interest, std::vector<int> alrea
 
   if(entryMap.find(prefix) == entryMap.end ())
   {
-    entryMap[prefix] = boost::shared_ptr<SAFEntry>(new SAFEntry(faces, fibEntry, prefix));
+    entryMap[prefix] = boost::shared_ptr<SAFEntry>(new SAFEntry(faces, fibEntry, prefix, adaptEngine));
 
     // add buckets for all faces
     for(FaceLimitMap::iterator it = fbMap.begin (); it != fbMap.end (); it++)
@@ -82,6 +84,10 @@ void SAFEngine::update ()
     NS_LOG_DEBUG("Updating Prefix " << it->first);
     it->second->update();
   }
+
+  //TODO adaptation?
+  if(ParameterConfiguration::getInstance ()->getParameter ("CONTENT_AWARE_ADAPTATION") > 0)
+    adaptEngine->setAndUpdateWeights ();
 
   updateEventFWT = ns3::Simulator::Schedule(
         ns3::Seconds(ParameterConfiguration::getInstance ()->getParameter ("UPDATE_INTERVALL")), &SAFEngine::update, this);
@@ -186,6 +192,7 @@ void SAFEngine::addFace(shared_ptr<Face> face)
   {
     it->second->addFace(face);
   }
+  adaptEngine->updateFaces(faces);
 }
 
 void SAFEngine::removeFace(shared_ptr<Face> face)
@@ -201,5 +208,5 @@ void SAFEngine::removeFace(shared_ptr<Face> face)
   faces.erase(std::find(faces.begin (), faces.end (), face->getId()));
   fbMap.erase (face->getId());
   std::sort(faces.begin(), faces.end());
-
+  adaptEngine->updateFaces(faces);
 }

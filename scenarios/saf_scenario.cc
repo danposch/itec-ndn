@@ -53,6 +53,7 @@ int main(int argc, char* argv[])
   cmd.AddValue ("fw-strategy", "Forwarding Strategy", strategy);
   cmd.Parse (argc, argv);
 
+  ParameterConfiguration::getInstance ()->setParameter ("RELIABILITY_THRESHOLD_MIN", 0.9);
   ParameterConfiguration::getInstance ()->setParameter ("UPDATE_INTERVALL", 0.5);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/", nfd::fw::SAFStatisticMeasure::MHop);
   //nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/", std::string("MaxHops"), std::string("5"));
@@ -64,17 +65,19 @@ int main(int argc, char* argv[])
 
   if(strategy.compare ("saf_caa") == 0)
   {
-    nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
+    fprintf(stderr, "Enabling Context Aware Adaptation\n");
+    ParameterConfiguration::getInstance ()->setParameter ("CONTENT_AWARE_ADAPTATION", 1);
+    /*nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/voip", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
     nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("SatisfiedWeight"), std::string("1"));
     nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/voip", std::string("UnsatisfiedWeight"), std::string("1"));
 
     nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/video", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
     nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("SatisfiedWeight"), std::string("1"));
-    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("UnsatisfiedWeight"), std::string("10"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/video", std::string("UnsatisfiedWeight"), std::string("1"));
 
     nfd::fw::SAFMeasureFactory::getInstance ()->registerMeasure ("/data", nfd::fw::SAFStatisticMeasure::MWeightedThrouput);
     nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("SatisfiedWeight"), std::string("1"));
-    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("UnsatisfiedWeight"), std::string("10"));
+    nfd::fw::SAFMeasureFactory::getInstance ()->registerAttribute("/data", std::string("UnsatisfiedWeight"), std::string("1"));*/
   }
 
   //parse the topology

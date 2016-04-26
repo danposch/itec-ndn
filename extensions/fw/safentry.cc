@@ -3,7 +3,7 @@
 using namespace nfd;
 using namespace nfd::fw;
 
-SAFEntry::SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry, std::string prefix)
+SAFEntry::SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry, std::string prefix, boost::shared_ptr<AdaptationEngine> adaptEngine)
 {
   this->fibEntry = fibEntry;
   this->faces = faces;
@@ -11,6 +11,7 @@ SAFEntry::SAFEntry(std::vector<int> faces, shared_ptr<fib::Entry> fibEntry, std:
 
   smeasure = SAFMeasureFactory::getInstance ()->getMeasure (prefix, faces);
   ftable = boost::shared_ptr<SAFForwardingTable>(new SAFForwardingTable(this->faces, this->preferedFaces));
+  adaptEngine->registerSMeasure (prefix, smeasure, ftable);
   fallbackCounter = 0;
 }
 

@@ -24,6 +24,8 @@ SAFStatisticMeasure::SAFStatisticMeasure(std::vector<int> faces)
       stats[layer].last_unsatisfied_requests[*it] = 0;
       stats[layer].last_satisfied_requests[*it] = 0;
       stats[layer].ema_alpha[*it] = 0.0;
+
+      stats[layer].u_weights[*it] = 1.0;
     }
   }
 }
@@ -32,8 +34,21 @@ SAFStatisticMeasure::~SAFStatisticMeasure()
 {
 }
 
+void SAFStatisticMeasure::considerWeights()
+{
+  for(int layer=0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); layer ++) // for each layer
+   {
+     for(std::vector<int>::iterator it = faces.begin(); it != faces.end(); ++it)
+     {
+      stats[layer].unsatisfied_requests[*it] = ceil( stats[layer].unsatisfied_requests[*it] * stats[layer].u_weights[*it]);
+     }
+  }
+}
+
 void SAFStatisticMeasure::update (std::map<int,double> reliability_t)
 {
+  considerWeights();
+
   for(int layer=0; layer < (int)ParameterConfiguration::getInstance ()->getParameter ("MAX_LAYERS"); layer ++) // for each layer
   {
     // clear old computed values
@@ -256,11 +271,12 @@ void SAFStatisticMeasure::addFace(shared_ptr<Face> face)
     stats[layer].last_unsatisfied_requests[face_id] = 0;
     stats[layer].last_satisfied_requests[face_id] = 0;
     stats[layer].ema_alpha[face_id] = 0.0;
+
+    stats[layer].u_weights[face_id] = 1.0;
   }
 
   // push face back
   faces.push_back (face_id);
-
 }
 
 void SAFStatisticMeasure::removeFace(shared_ptr<Face> face)
@@ -282,5 +298,7 @@ void SAFStatisticMeasure::removeFace(shared_ptr<Face> face)
     stats[layer].last_unsatisfied_requests.erase(id);
     stats[layer].last_satisfied_requests.erase(id);
     stats[layer].ema_alpha.erase(id);
+
+    stats[layer].u_weights.erase(id);
   }
 }

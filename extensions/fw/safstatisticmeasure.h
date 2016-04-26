@@ -191,6 +191,7 @@ public:
    */
   void removeFace(shared_ptr<Face> face);
 
+  void setUnsatisfiedWeight(int face_id, int layer, double weight){stats[layer].u_weights[face_id] = weight;}
 
 protected:
   SAFStatisticMeasure(std::vector<int> faces);
@@ -201,6 +202,8 @@ protected:
   void calculateActualForwardingProbabilities (int layer);
   void updateVariance(int layer);
   void calculateEMAAlpha(int layer);
+
+  void considerWeights();
 
   std::vector<int> faces;
 
@@ -240,6 +243,8 @@ protected:
 
     MeasureDoubleMap ema_alpha;
 
+    MeasureDoubleMap u_weights; //unsatisfeid weight
+
     SAFMesureStats()
     {
       total_forwarded_requests = 0;
@@ -262,6 +267,8 @@ protected:
       satisfied_requests_history = other.satisfied_requests_history;
 
       ema_alpha = other.ema_alpha;
+
+      u_weights = other.u_weights;
     }
   };
 

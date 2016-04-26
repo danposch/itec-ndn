@@ -25,6 +25,7 @@
 #include "ns3/names.h"
 #include "ns3/log.h"
 #include "safentry.h"
+#include "adaptationengine.h"
 
 namespace nfd
 {
@@ -121,6 +122,8 @@ protected:
     < int, /*face ID*/
       boost::shared_ptr<FaceLimitManager> /*face limit manager*/
     > FaceLimitMap;
+
+  boost::shared_ptr<AdaptationEngine> adaptEngine;
 
   FaceLimitMap fbMap;
 

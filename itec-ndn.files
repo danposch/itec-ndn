@@ -76,3 +76,5 @@ extensions/apps/voip_producer.h
 extensions/apps/voip_producer.cc
 extensions/apps/fixedjitterbuffer.h
 extensions/apps/fixedjitterbuffer.cc
+extensions/fw/adaptationengine.h
+extensions/fw/adaptationengine.cc
