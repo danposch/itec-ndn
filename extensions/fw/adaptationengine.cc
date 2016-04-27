@@ -66,7 +66,7 @@ void AdaptationEngine::setAndUpdateWeights()
                           /
                           ((double)(smap[relevant[j]].smeasure->getS(*it,0) *  smap[relevant[j+1]].smeasure->getU(*it,0)))
                           ,
-                          ((double)(smap[relevant[j+1]].smeasure->getS(*it,0) - smap[relevant[j+1]].smeasure->getU(*it,0)* smap[relevant[j+1]].ftable->getCurrentReliability()[0]))
+                          ((double)(smap[relevant[j+1]].smeasure->getS(*it,0) - smap[relevant[j+1]].smeasure->getS(*it,0)* smap[relevant[j+1]].ftable->getCurrentReliability()[0]))
                           /
                           ((double)(smap[relevant[j+1]].smeasure->getU(*it,0)* smap[relevant[j+1]].ftable->getCurrentReliability()[0]))
                           );
