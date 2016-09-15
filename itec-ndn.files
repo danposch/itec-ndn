@@ -78,3 +78,8 @@ extensions/apps/fixedjitterbuffer.h
 extensions/apps/fixedjitterbuffer.cc
 extensions/fw/adaptationengine.h
 extensions/fw/adaptationengine.cc
+scenarios/example_tree_network_tcp.cc
+scenarios/mpath.cc
+scenarios/mpath_tcp.cc
+extensions/utils/prefixtracer.h
+extensions/utils/prefixtracer.cc
