@@ -30,28 +30,28 @@ DataStreamerB5   NA       10       35
 link
 
 # srcNode    dstNode    bandwidth   metric    delay  queue
-Provider     Router0     10Mbps       1       20ms    50
+Provider     Router0     10Mbps       1       20ms    10
 
-Router1     Router0      6Mbps        1       10ms    50
-Router2     Router0      6Mbps        1       10ms    50
+Router1     Router0      6Mbps        1       10ms    10
+Router2     Router0      6Mbps        1       10ms    10
 
-Router1     Router3      5Mbps        1       10ms    50
-Router1     Router4      5Mbps        1       10ms    50
-Router2     Router5      5Mbps        1       10ms    50
-Router2     Router6      5Mbps        1       10ms    50
+Router1     Router3      5Mbps        1       10ms    10
+Router1     Router4      5Mbps        1       10ms    10
+Router2     Router5      5Mbps        1       10ms    10
+Router2     Router6      5Mbps        1       10ms    10
 
-Router3     DataStreamerA0      5Mbps        1       5ms    50
-Router3     DataStreamerA1      5Mbps        1       5ms    50
-Router3     DataStreamerB0      5Mbps        1       5ms    50
+Router3     DataStreamerA0      5Mbps        1       5ms    10
+Router3     DataStreamerA1      5Mbps        1       5ms    10
+Router3     DataStreamerB0      5Mbps        1       5ms    10
 
-Router4     DataStreamerB1      5Mbps        1       5ms    50
-Router4     DataStreamerB2      5Mbps        1       5ms    50
-Router4     DataStreamerA2      5Mbps        1       5ms    50
+Router4     DataStreamerB1      5Mbps        1       5ms    10
+Router4     DataStreamerB2      5Mbps        1       5ms    10
+Router4     DataStreamerA2      5Mbps        1       5ms    10
 
-Router5     DataStreamerA3      5Mbps        1       5ms    50
-Router5     DataStreamerB3      5Mbps        1       5ms    50
-Router5     DataStreamerB4      5Mbps        1       5ms    50
+Router5     DataStreamerA3      5Mbps        1       5ms    10
+Router5     DataStreamerB3      5Mbps        1       5ms    10
+Router5     DataStreamerB4      5Mbps        1       5ms    10
 
-Router6     DataStreamerA4      5Mbps        1       5ms    50
-Router6     DataStreamerB5      5Mbps        1       5ms    50
-Router6     DataStreamerA5      5Mbps        1       5ms    50
+Router6     DataStreamerA4      5Mbps        1       5ms    10
+Router6     DataStreamerB5      5Mbps        1       5ms    10
+Router6     DataStreamerA5      5Mbps        1       5ms    10

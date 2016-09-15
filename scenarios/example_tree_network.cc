@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   // Install NDN applications
   //install data consumers
   ns3::ndn::AppHelper consumerDataHelper ("ns3::ndn::ConsumerCbr");
-  consumerDataHelper.SetAttribute ("Frequency", StringValue ("60")); //2 Mbit with 4096 byte large chunks
+  consumerDataHelper.SetAttribute ("Frequency", StringValue ("120")); //2 Mbit with 2048 byte large chunks
   consumerDataHelper.SetAttribute ("Randomize", StringValue ("uniform"));
   consumerDataHelper.SetAttribute ("LifeTime", StringValue("2s"));
 
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
       consumerDataHelper.SetPrefix(std::string("/data/A/"+boost::lexical_cast<std::string>(i)));
 
     ApplicationContainer consumer = consumerDataHelper.Install (dataStreamersA.Get (i));
-    consumer.Start (Seconds(r->GetInteger (0,10)));
+    consumer.Start (Seconds(r->GetValue(0,5)));
     consumer.Stop (Seconds(simTime));
 
     ns3::ndn::L3RateTracer::Install (dataStreamersA.Get (i), std::string(outputFolder + "/datastreamer-aggregate-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"), Seconds (simTime));
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 
   ns3::ndn::AppHelper producerHelper ("ns3::ndn::Producer");
   Ptr<Node> dataSrc = Names::Find<Node>("Provider");
-  producerHelper.SetAttribute ("PayloadSize", StringValue("4096"));
+  producerHelper.SetAttribute ("PayloadSize", StringValue("2048"));
   std::string pref = "/data";
   producerHelper.SetPrefix (pref);
   producerHelper.Install (dataSrc);
