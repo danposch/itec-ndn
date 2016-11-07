@@ -51,7 +51,11 @@ Install Guide (testet on Ubuntu 14.04 64bit)
 		* git clone https://github.com/ChristianKreuzberger/amus-ndnSIM.git ns-3/src/ndnSIM
 		* git clone https://github.com/danposch/itec-ndn.git
 
-		# (RECOMMENDED) checkout verified compatible versions of ndn-cxx and ndnsim
+		# (RECOMMENDED) checkout verified compatible versions of ns-3 ndn-cxx and ndnsim
+    
+    * cd ns-3
+		* git checkout  4e388e47d715c3206374974a40cbab7ce428936f
+		* cd ..
     * cd ndn-cxx
 		* git checkout ndn-cxx-0.3.2
 		* cd ..
