@@ -81,5 +81,6 @@ extensions/fw/adaptationengine.cc
 scenarios/example_tree_network_tcp.cc
 scenarios/mpath.cc
 scenarios/mpath_tcp.cc
+scenarios/ccr_scenario.cc
 extensions/utils/prefixtracer.h
 extensions/utils/prefixtracer.cc

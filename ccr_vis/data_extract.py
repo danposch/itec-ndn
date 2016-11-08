@@ -180,7 +180,7 @@ SETTINGS_FILTERS["voip_mos"] = ["VoIP_MOS"]
 #SETTINGS_FILTERS= ["VoIP_Satisfaction_Ratio", "VoIP_Satisfaction_Delay", "Data_Satisfaction_Ratio", "Data_Satisfaction_Delay", "Video_StallingMS", "Video_Representation", "Video_SegmentBitrate", "Video_Switches", "Costs"]
 
 #ALGORITHM_FILTERS= ["Broadcast", "NCC", "OMCCRF", "OMPIF", "SAF", "NRR", "BestRoute". "SAF_CAA_1_100_1000"]
-ALGORITHM_FILTERS= ["Broadcast", "NCC", "OMCCRF", "OMPIF", "SAF", "NRR", "BestRoute", "SAF_rel_90", "SAF_CAA_rel_90"]
+ALGORITHM_FILTERS= ["Broadcast", "NCC", "OMCCRF", "OMPIF", "SAF", "NRR", "BestRoute", "SAF", "SAF_CAA"]
 #ALGORITHM_FILTERS= ["OMCCRF", "OMPIF", "SAF"]
 
 #write interest_data_ratio
