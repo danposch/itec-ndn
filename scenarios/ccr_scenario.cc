@@ -291,8 +291,8 @@ int main(int argc, char* argv[])
     ns3::ndn::AppDelayTracer::Install(dataStreamers.Get (i),std::string(outputFolder +"/datastreamer-app-delays-trace_"  + boost::lexical_cast<std::string>(i)).append(".txt"));
   }
 
-  //ns3::ndn::L3RateTracer::Install (SAFRouter, std::string(outputFolder + "/saf-router-aggregate-trace.txt"), Seconds (simTime));
-  ns3::ndn::PrefixTracer::Install (SAFRouter, std::string(outputFolder + "/saf-router-prefix-trace.txt"), Seconds (simTime));
+  ns3::ndn::L3RateTracer::Install (SAFRouter, std::string(outputFolder + "/saf-router-aggregate-trace.txt"), Seconds (simTime));
+  //ns3::ndn::PrefixTracer::Install (SAFRouter, std::string(outputFolder + "/saf-router-prefix-trace.txt"), Seconds (simTime));
 
   // Installing global routing interface on all nodes
   ns3::ndn::ExtendedGlobalRoutingHelper ndnGlobalRoutingHelper;
